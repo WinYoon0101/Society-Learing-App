@@ -1,8 +1,10 @@
 package com.example.frontend.ui.auth;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.frontend.R;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.ui.main.HomeActivity;
 import com.example.frontend.utils.Result;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -21,16 +24,18 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputEditText edtEmail, edtPassword;
     private MaterialButton btnLogin;
 
+    private TextView tvSignUpLink;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // 1. Ánh xạ View từ file XML của bạn
-        // Lưu ý: Đảm bảo bạn đã thêm android:id="@+id/..." vào các thẻ tương ứng trong XML
+        // 1. Ánh xạ View từ file XML
         edtEmail = findViewById(R.id.edtEmail);
         edtPassword = findViewById(R.id.edtPassword);
         btnLogin = findViewById(R.id.btnLogin);
+        tvSignUpLink = findViewById(R.id.tvSignUpLink);
 
         // 2. Khởi tạo ViewModel
         viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
@@ -49,6 +54,12 @@ public class LoginActivity extends AppCompatActivity {
             viewModel.login(email, password);
             observeViewModel();
         });
+
+        // Bắt sự kiện bấm chữ "Sign Up" để qua màn hình Đăng ký
+        tvSignUpLink.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
+        });
     }
 
     // 4. Lắng nghe và xử lý kết quả
@@ -66,24 +77,24 @@ public class LoginActivity extends AppCompatActivity {
 
                     case SUCCESS:
                         btnLogin.setEnabled(true);
-                        btnLogin.setText("Login");
+                        btnLogin.setText("Đăng nhập");
 
-                        // Kiểm tra an toàn trước khi lấy dữ liệu
                         if (result.data != null && result.data.getData() != null) {
-
-                            // Chui vào getData() để lấy token và username
                             String token = result.data.getData().getToken();
                             String username = result.data.getData().getUsername();
 
                             // Lưu Token vào SharedPreferences
                             SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-                            SharedPreferences.Editor editor = sharedPref.edit();
-                            editor.putString("JWT_TOKEN", token);
-                            editor.apply();
+                            sharedPref.edit().putString("JWT_TOKEN", token).apply();
 
-                            Toast.makeText(LoginActivity.this, "Đăng nhập thành công! Chào " + username, Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(LoginActivity.this, "Lỗi đọc dữ liệu từ Server", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(LoginActivity.this, "Đăng nhập thành công! Chào mừng " + username, Toast.LENGTH_SHORT).show();
+
+                            // ------------------ CHUYỂN SANG TRANG HOME ------------------
+                            Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                            // Xóa lịch sử màn hình Login để không Back lại được
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            finish();
                         }
                         break;
 
