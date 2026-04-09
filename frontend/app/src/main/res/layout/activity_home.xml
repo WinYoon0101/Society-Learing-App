@@ -1,228 +1,251 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#F4F7EE"
     android:fitsSystemWindows="true">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="12dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#ffffff">
 
-        <ImageView
-            android:layout_width="150dp"
-            android:layout_height="50dp"
-            android:src="@drawable/text_logo"
-            android:scaleType="centerInside" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:orientation="horizontal">
+            android:paddingHorizontal="12dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="8dp">
+
+            <ImageView
+                android:id="@+id/btnOpenMenu"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="8dp"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_menu"
+                app:tint="#283633"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless" />
+
+            <ImageView
+                android:id="@+id/imgLogo"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_toEndOf="@id/btnOpenMenu"
+                android:layout_marginStart="4dp"
+                android:layout_centerVertical="true"
+                android:src="@drawable/text_logo"
+                android:scaleType="centerInside" />
 
             <ImageView
                 android:id="@+id/iconSearch"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_marginEnd="16dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="8dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
                 android:src="@android:drawable/ic_menu_search"
-                app:tint="#283633" />
+                app:tint="#283633"
+                android:background="?attr/selectableItemBackgroundBorderless" />
+        </RelativeLayout>
 
-            <ImageView
-                android:id="@+id/iconLogout"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/ic_logout"
-                app:tint="#FF5252" />
-        </LinearLayout>
-    </RelativeLayout>
-
-    <!-- TAB -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
-        android:paddingBottom="6dp">
-
-        <!-- HOME -->
         <LinearLayout
-            android:id="@+id/tabHome"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true">
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:orientation="horizontal"
+            android:weightSum="6"
+            android:paddingHorizontal="0dp">
 
-            <ImageView
-                android:id="@+id/imgHome"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/ic_home"
-                app:tint="@color/tab_icon_color" />
+            <LinearLayout
+                android:id="@+id/tabHome"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+                <ImageView
+                    android:id="@+id/imgHome"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/ic_home"
+                    app:tint="@color/tab_icon_color" />
+                <View
+                    android:id="@+id/lineHome"
+                    android:layout_width="28dp"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="6dp"
+                    android:background="#0B8A00" />
+            </LinearLayout>
 
-            <View
-                android:id="@+id/lineHome"
-                android:layout_width="24dp"
-                android:layout_height="3dp"
-                android:layout_marginTop="6dp"
-                android:background="#0B8A00" />
+            <LinearLayout
+                android:id="@+id/tabFriend"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackground">
+                <ImageView
+                    android:id="@+id/imgFriend"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/ic_group"
+                    app:tint="@color/tab_icon_color" />
+                <View
+                    android:id="@+id/lineFriend"
+                    android:layout_width="28dp"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="6dp"
+                    android:background="#0B8A00"
+                    android:visibility="invisible" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tabChat"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackground">
+                <ImageView
+                    android:id="@+id/imgChat"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/ic_chat"
+                    app:tint="@color/tab_icon_color" />
+                <View
+                    android:id="@+id/lineChat"
+                    android:layout_width="28dp"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="6dp"
+                    android:background="#0B8A00"
+                    android:visibility="invisible" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tabLibrary"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackground">
+                <ImageView
+                    android:id="@+id/imgLibrary"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/ic_library"
+                    app:tint="@color/tab_icon_color" />
+                <View
+                    android:id="@+id/lineLibrary"
+                    android:layout_width="28dp"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="6dp"
+                    android:background="#0B8A00"
+                    android:visibility="invisible" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tabNotify"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackground">
+                <ImageView
+                    android:id="@+id/imgNotify"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/ic_notify"
+                    app:tint="@color/tab_icon_color" />
+                <View
+                    android:id="@+id/lineNotify"
+                    android:layout_width="28dp"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="6dp"
+                    android:background="#0B8A00"
+                    android:visibility="invisible" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tabProfile"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackground">
+                <ImageView
+                    android:id="@+id/imgProfile"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/ic_profile"
+                    app:tint="@color/tab_icon_color" />
+                <View
+                    android:id="@+id/lineProfile"
+                    android:layout_width="28dp"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="6dp"
+                    android:background="#0B8A00"
+                    android:visibility="invisible" />
+            </LinearLayout>
+
         </LinearLayout>
 
-        <!-- FRIEND -->
-        <LinearLayout
-            android:id="@+id/tabFriend"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true">
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0" />
 
-            <ImageView
-                android:id="@+id/imgFriend"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/ic_group"
-                app:tint="@color/tab_icon_color" />
-
-            <View
-                android:id="@+id/lineFriend"
-                android:layout_width="24dp"
-                android:layout_height="3dp"
-                android:layout_marginTop="6dp"
-                android:background="#0B8A00"
-                android:visibility="invisible" />
-        </LinearLayout>
-
-        <!-- CHAT -->
-        <LinearLayout
-            android:id="@+id/tabChat"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true">
-
-            <ImageView
-                android:id="@+id/imgChat"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/ic_chat"
-                app:tint="@color/tab_icon_color" />
-
-            <View
-                android:id="@+id/lineChat"
-                android:layout_width="24dp"
-                android:layout_height="3dp"
-                android:layout_marginTop="6dp"
-                android:background="#0B8A00"
-                android:visibility="invisible" />
-        </LinearLayout>
-
-        <!-- LIBRARY -->
-        <LinearLayout
-            android:id="@+id/tabLibrary"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true">
-
-            <ImageView
-                android:id="@+id/imgLibrary"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/ic_library"
-                app:tint="@color/tab_icon_color" />
-
-            <View
-                android:id="@+id/lineLibrary"
-                android:layout_width="24dp"
-                android:layout_height="3dp"
-                android:layout_marginTop="6dp"
-                android:background="#0B8A00"
-                android:visibility="invisible" />
-        </LinearLayout>
-
-        <!-- NOTIFY -->
-        <LinearLayout
-            android:id="@+id/tabNotify"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true">
-
-            <ImageView
-                android:id="@+id/imgNotify"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/ic_notify"
-                app:tint="@color/tab_icon_color" />
-
-            <View
-                android:id="@+id/lineNotify"
-                android:layout_width="24dp"
-                android:layout_height="3dp"
-                android:layout_marginTop="6dp"
-                android:background="#0B8A00"
-                android:visibility="invisible" />
-        </LinearLayout>
-
-        <!-- PROFILE -->
-        <LinearLayout
-            android:id="@+id/tabProfile"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true">
-
-            <ImageView
-                android:id="@+id/imgProfile"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/ic_profile"
-                app:tint="@color/tab_icon_color" />
-
-            <View
-                android:id="@+id/lineProfile"
-                android:layout_width="24dp"
-                android:layout_height="3dp"
-                android:layout_marginTop="6dp"
-                android:background="#0B8A00"
-                android:visibility="invisible" />
-        </LinearLayout>
+        <FrameLayout
+            android:id="@+id/fragment_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E0E0E0" />
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="300dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="#FFFFFF"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu"
+        android:fitsSystemWindows="true">
 
-    <FrameLayout
-        android:id="@+id/fragment_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:padding="20dp">
 
-</LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNavLogout"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:text="Đăng xuất"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                app:backgroundTint="#FF5252"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_logout"
+                app:iconGravity="textStart"
+                app:iconTint="#FFFFFF" />
+        </FrameLayout>
+
+    </com.google.android.material.navigation.NavigationView>
+
+</androidx.drawerlayout.widget.DrawerLayout>

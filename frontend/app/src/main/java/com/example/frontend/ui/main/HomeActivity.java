@@ -10,6 +10,8 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
 import com.example.frontend.R;
@@ -20,13 +22,19 @@ import com.example.frontend.ui.chat.ChatFragment;
 import com.example.frontend.ui.library.LibraryFragment;
 import com.example.frontend.ui.notify.NotifyFragment;
 import com.example.frontend.ui.profile.ProfileFragment;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.navigation.NavigationView;
 
 public class HomeActivity extends AppCompatActivity {
 
     private LinearLayout tabHome, tabFriend, tabChat, tabLibrary, tabNotify, tabProfile;
     private ImageView imgHome, imgFriend, imgChat, imgLibrary, imgNotify, imgProfile;
     private View lineHome, lineFriend, lineChat, lineLibrary, lineNotify, lineProfile;
-    private ImageView iconSearch, iconLogout;
+    private ImageView iconSearch;
+
+    private DrawerLayout drawerLayout;
+    private ImageView btnOpenMenu;
+    private NavigationView navigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +64,26 @@ public class HomeActivity extends AppCompatActivity {
         lineProfile = findViewById(R.id.lineProfile);
 
         iconSearch = findViewById(R.id.iconSearch);
-        iconLogout = findViewById(R.id.iconLogout);
+
+
+
+        // 2. Bind view mới cho Drawer
+        drawerLayout = findViewById(R.id.drawer_layout);
+        btnOpenMenu = findViewById(R.id.btnOpenMenu);
+        navigationView = findViewById(R.id.nav_view);
+
+        // 3. Sự kiện mở Drawer (Nhấn nút 3 gạch)
+        btnOpenMenu.setOnClickListener(v -> {
+            drawerLayout.openDrawer(GravityCompat.START);
+        });
+
+        // Xử lý nút Đăng xuất trong Drawer (Nằm dưới đáy)
+        // nằm trong NavigationView nên phải dùng navigationView.findViewById
+        MaterialButton btnNavLogout = navigationView.findViewById(R.id.btnNavLogout);
+        btnNavLogout.setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.START); // Đóng menu trước
+            performLogout(); // Gọi hàm đăng xuất
+        });
 
         // 2. Default tab
         selectTab(imgHome, lineHome, new FeedFragment());
@@ -74,18 +101,21 @@ public class HomeActivity extends AppCompatActivity {
                 Toast.makeText(this, "Mở tìm kiếm...", Toast.LENGTH_SHORT).show()
         );
 
-        // 5. Logout
-        iconLogout.setOnClickListener(v -> {
-            SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-            sharedPref.edit().clear().apply();
 
-            Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+    }
 
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        });
+
+    // Hàm thực hiện đăng xuất
+    private void performLogout() {
+        SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+        sharedPref.edit().clear().apply();
+
+        Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     // 👉 Chọn tab

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="Cá nhân">
+        <menu>
+            <item
+                android:id="@+id/nav_saved"
+                android:icon="@drawable/ic_bookmark"
+                android:title="Mục đã lưu" />
+            <item
+                android:id="@+id/nav_docs"
+                android:icon="@drawable/ic_folder"
+                android:title="Tài liệu của tôi" />
+        </menu>
+    </item>
+
+    <item android:title="Tiện ích">
+        <menu>
+            <item
+                android:id="@+id/nav_calendar"
+                android:icon="@drawable/ic_calendar"
+                android:title="Lịch" />
+            <item
+                android:id="@+id/nav_group"
+                android:icon="@drawable/ic_group"
+                android:title="Nhóm" />
+            <item
+                android:id="@+id/nav_meeting"
+                android:icon="@drawable/ic_video"
+                android:title="Cuộc họp nhanh" />
+        </menu>
+    </item>
+</menu>
