@@ -15,7 +15,7 @@ import androidx.fragment.app.Fragment;
 import com.example.frontend.R;
 import com.example.frontend.ui.auth.LoginActivity;
 import com.example.frontend.ui.feed.FeedFragment;
-import com.example.frontend.ui.groups.GroupsFragment;
+import com.example.frontend.ui.friend.FriendFragment;
 import com.example.frontend.ui.chat.ChatFragment;
 import com.example.frontend.ui.library.LibraryFragment;
 import com.example.frontend.ui.notify.NotifyFragment;
@@ -23,9 +23,9 @@ import com.example.frontend.ui.profile.ProfileFragment;
 
 public class HomeActivity extends AppCompatActivity {
 
-    private LinearLayout tabHome, tabGroups, tabChat, tabLibrary, tabNotify, tabProfile;
-    private ImageView imgHome, imgGroups, imgChat, imgLibrary, imgNotify, imgProfile;
-    private View lineHome, lineGroups, lineChat, lineLibrary, lineNotify, lineProfile;
+    private LinearLayout tabHome, tabFriend, tabChat, tabLibrary, tabNotify, tabProfile;
+    private ImageView imgHome, imgFriend, imgChat, imgLibrary, imgNotify, imgProfile;
+    private View lineHome, lineFriend, lineChat, lineLibrary, lineNotify, lineProfile;
     private ImageView iconSearch, iconLogout;
 
     @Override
@@ -35,21 +35,21 @@ public class HomeActivity extends AppCompatActivity {
 
         // 1. Bind view
         tabHome = findViewById(R.id.tabHome);
-        tabGroups = findViewById(R.id.tabGroups);
+        tabFriend = findViewById(R.id.tabFriend);
         tabChat = findViewById(R.id.tabChat);
         tabLibrary = findViewById(R.id.tabLibrary);
         tabNotify = findViewById(R.id.tabNotify);
         tabProfile = findViewById(R.id.tabProfile);
 
         imgHome = findViewById(R.id.imgHome);
-        imgGroups = findViewById(R.id.imgGroups);
+        imgFriend = findViewById(R.id.imgFriend);
         imgChat = findViewById(R.id.imgChat);
         imgLibrary = findViewById(R.id.imgLibrary);
         imgNotify = findViewById(R.id.imgNotify);
         imgProfile = findViewById(R.id.imgProfile);
 
         lineHome = findViewById(R.id.lineHome);
-        lineGroups = findViewById(R.id.lineGroups);
+        lineFriend = findViewById(R.id.lineFriend);
         lineChat = findViewById(R.id.lineChat);
         lineLibrary = findViewById(R.id.lineLibrary);
         lineNotify = findViewById(R.id.lineNotify);
@@ -63,7 +63,7 @@ public class HomeActivity extends AppCompatActivity {
 
         // 3. Click events
         tabHome.setOnClickListener(v -> selectTab(imgHome, lineHome, new FeedFragment()));
-        tabGroups.setOnClickListener(v -> selectTab(imgGroups, lineGroups, new GroupsFragment()));
+        tabFriend.setOnClickListener(v -> selectTab(imgFriend, lineFriend, new FriendFragment()));
         tabChat.setOnClickListener(v -> selectTab(imgChat, lineChat, new ChatFragment()));
         tabLibrary.setOnClickListener(v -> selectTab(imgLibrary, lineLibrary, new LibraryFragment()));
         tabNotify.setOnClickListener(v -> selectTab(imgNotify, lineNotify, new NotifyFragment()));
@@ -107,14 +107,14 @@ public class HomeActivity extends AppCompatActivity {
     // 👉 Reset tab
     private void resetTabs() {
         imgHome.setSelected(false);
-        imgGroups.setSelected(false);
+        imgFriend.setSelected(false);
         imgChat.setSelected(false);
         imgLibrary.setSelected(false);
         imgNotify.setSelected(false);
         imgProfile.setSelected(false);
 
         lineHome.setVisibility(View.INVISIBLE);
-        lineGroups.setVisibility(View.INVISIBLE);
+        lineFriend.setVisibility(View.INVISIBLE);
         lineChat.setVisibility(View.INVISIBLE);
         lineLibrary.setVisibility(View.INVISIBLE);
         lineNotify.setVisibility(View.INVISIBLE);
@@ -122,7 +122,7 @@ public class HomeActivity extends AppCompatActivity {
 
         // reset scale (nếu có animation)
         imgHome.setScaleX(1f); imgHome.setScaleY(1f);
-        imgGroups.setScaleX(1f); imgGroups.setScaleY(1f);
+        imgFriend.setScaleX(1f); imgFriend.setScaleY(1f);
         imgChat.setScaleX(1f); imgChat.setScaleY(1f);
         imgLibrary.setScaleX(1f); imgLibrary.setScaleY(1f);
         imgNotify.setScaleX(1f); imgNotify.setScaleY(1f);

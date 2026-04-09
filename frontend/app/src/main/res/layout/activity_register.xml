@@ -71,7 +71,7 @@
                         android:id="@+id/edtFullName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Họ và tên"
+                        android:hint="Username"
                         android:inputType="textPersonName"
                         android:textColor="#1A1A1A" />
                 </com.google.android.material.textfield.TextInputLayout>

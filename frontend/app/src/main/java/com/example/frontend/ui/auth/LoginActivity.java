@@ -79,9 +79,10 @@ public class LoginActivity extends AppCompatActivity {
                         btnLogin.setEnabled(true);
                         btnLogin.setText("Đăng nhập");
 
-                        if (result.data != null && result.data.getData() != null) {
-                            String token = result.data.getData().getToken();
-                            String username = result.data.getData().getUsername();
+                        if (result.data != null && result.data.getUser() != null) {
+
+                            String token = result.data.getAccessToken();
+                            String username = result.data.getUser().getUsername();
 
                             // Lưu Token vào SharedPreferences
                             SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
