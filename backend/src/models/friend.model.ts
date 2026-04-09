@@ -34,6 +34,13 @@ const FriendSchema = new Schema<IFriend>(
 // Tránh việc gửi nhiều lời mời giữa 2 người dùng chưa được xử lý
 FriendSchema.index({ requester: 1, recipient: 1 }, { unique: true });
 
+// Tối ưu query theo requester
+FriendSchema.index({ requester: 1, status: 1 });
+
+// Tối ưu query theo recipient
+FriendSchema.index({ recipient: 1, status: 1 });
+
+
 const Friend = mongoose.model<IFriend>("Friend", FriendSchema);
 
 export default Friend;

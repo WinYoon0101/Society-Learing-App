@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F4F7EE"
@@ -23,111 +24,86 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="8dp">
 
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:text="Lời mời kết bạn"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="#3D594B" />
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Xem tất cả"
-                    android:textColor="#4CAF50"
-                    android:textSize="14sp"
+                    android:id="@+id/tvRequestCount"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_red_badge"
+                    android:gravity="center"
+                    android:text="0"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+<!--                <TextView-->
+<!--                    android:id="@+id/tvSeeAllRequests"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="Xem tất cả"-->
+<!--                    android:textColor="#4CAF50"-->
+<!--                    android:textSize="14sp"-->
+<!--                    android:textStyle="bold" />-->
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/layoutEmptyRequests"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingVertical="10dp"
+                android:visibility="gone"> <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/animationView"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                app:lottie_rawRes="@raw/empty_friend_anim"
+                app:lottie_autoPlay="true"
+                app:lottie_loop="true"/>
 
-                <ImageView
-                    android:layout_width="70dp"
-                    android:layout_height="70dp"
-                    android:src="@android:drawable/sym_def_app_icon"
-                    android:background="@drawable/bg_circle"
-                    android:scaleType="centerCrop"/>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:orientation="vertical"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Nguyễn Văn A"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#1A1A1A"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="12 bạn chung"
-                        android:textSize="13sp"
-                        android:textColor="#777777"
-                        android:layout_marginBottom="8dp"/>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:text="Chấp nhận"
-                            android:textAllCaps="false"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            app:cornerRadius="8dp"
-                            app:backgroundTint="#3D594B"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:layout_marginEnd="8dp"/>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:text="Xóa"
-                            android:textAllCaps="false"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:textColor="#1A1A1A"
-                            app:cornerRadius="8dp"
-                            app:backgroundTint="#E4E6DF"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"/>
-                    </LinearLayout>
-                </LinearLayout>
+                    android:layout_marginTop="4dp"
+                    android:text="Bạn chưa có lời mời nào"
+                    android:textColor="#777777"
+                    android:textSize="15sp"/>
             </LinearLayout>
-        </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvFriendRequests"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_friend_request" /> </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="#D5DBD0"
-            android:layout_marginVertical="12dp"/>
+            android:layout_marginVertical="16dp"/>
 
         <LinearLayout
             android:id="@+id/layoutSuggestions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="8dp">
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="match_parent"
@@ -138,78 +114,14 @@
                 android:textColor="#3D594B"
                 android:layout_marginBottom="16dp" />
 
-            <LinearLayout
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvFriendSuggestions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
+                android:nestedScrollingEnabled="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_friend_suggestion" />
 
-                <ImageView
-                    android:layout_width="70dp"
-                    android:layout_height="70dp"
-                    android:src="@android:drawable/sym_def_app_icon"
-                    android:background="@drawable/bg_circle"
-                    android:scaleType="centerCrop"/>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:orientation="vertical"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Trần Thị B"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#1A1A1A"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="5 bạn chung"
-                        android:textSize="13sp"
-                        android:textColor="#777777"
-                        android:layout_marginBottom="8dp"/>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:text="Thêm bạn bè"
-                            android:textAllCaps="false"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            app:cornerRadius="8dp"
-                            app:backgroundTint="#A9C0AE"
-                            android:textColor="#1A1A1A"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:layout_marginEnd="8dp"/>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:text="Gỡ"
-                            android:textAllCaps="false"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:textColor="#1A1A1A"
-                            app:cornerRadius="8dp"
-                            app:backgroundTint="#E4E6DF"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"/>
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>

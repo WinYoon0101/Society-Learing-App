@@ -1,5 +1,7 @@
 package com.example.frontend.data.repository;
 
+import android.content.Context;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
@@ -17,8 +19,8 @@ import retrofit2.Response;
 public class AuthRepository {
     private ApiService apiService;
 
-    public AuthRepository() {
-        apiService = ApiClient.getApiService();
+    public AuthRepository(Context context) {
+        apiService = ApiClient.getApiService(context);
     }
 
     public LiveData<Result<LoginResponse>> login(String email, String password) {

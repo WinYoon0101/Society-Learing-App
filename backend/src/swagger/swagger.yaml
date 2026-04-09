@@ -47,7 +47,7 @@ paths:
 
   # ================= AUTH =================
 
-  /api/register:
+  /auth/register:
     post:
       summary: Đăng ký tài khoản
       tags: [Auth]
@@ -73,7 +73,7 @@ paths:
         201:
           description: Đăng ký thành công
 
-  /api/login:
+  /auth/login:
     post:
       summary: Đăng nhập
       tags: [Auth]
@@ -93,7 +93,7 @@ paths:
         200:
           description: Đăng nhập thành công
 
-  /api/refresh-token:
+  /auth/refresh-token:
     post:
       summary: Làm mới token
       tags: [Auth]
@@ -110,7 +110,7 @@ paths:
         200:
           description: Thành công
 
-  /api/logout:
+  /auth/logout:
     post:
       summary: Đăng xuất
       tags: [Auth]
@@ -120,7 +120,7 @@ paths:
         200:
           description: Đăng xuất thành công
 
-  /api/me:
+  /auth/me:
     get:
       summary: Lấy thông tin user hiện tại
       tags: [Auth]
@@ -132,88 +132,134 @@ paths:
 
   # ================= FRIEND =================
 
-  /api/friends:
+  /friends:
     get:
+      tags: [Friend]
       summary: Lấy danh sách bạn bè
-      tags: [Friends]
       security:
         - bearerAuth: []
       responses:
         200:
-          description: Danh sách bạn bè
+          description: Thành công
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  - _id: "user_id"
+                    username: "duong"
+                    email: "duong@gmail.com"
+                    avatar: "url"
 
-  /api/friends/pending:
+  /friends/pending:
     get:
+      tags: [Friend]
       summary: Lấy danh sách lời mời kết bạn
-      tags: [Friends]
       security:
         - bearerAuth: []
       responses:
         200:
-          description: Danh sách lời mời
+          description: Thành công
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  - _id: "friend_id"
+                    requester:
+                      _id: "user_id"
+                      username: "abc"
+                    mutualFriends: 3
 
-  /api/friends/request/{id}:
-    post:
-      summary: Gửi lời mời kết bạn
-      tags: [Friends]
+  /friends/suggestions:
+    get:
+      tags: [Friend]
+      summary: Gợi ý kết bạn
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Thành công
+
+  /friends/status/{id}:
+    get:
+      tags: [Friend]
+      summary: Kiểm tra trạng thái bạn bè
       security:
         - bearerAuth: []
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
           required: true
-          description: ID người nhận
+          schema:
+            type: string
+      responses:
+        200:
+          description: Trạng thái
+          content:
+            application/json:
+              example:
+                success: true
+                status: "friends"
+
+  /friends/request/{id}:
+    post:
+      tags: [Friend]
+      summary: Gửi lời mời kết bạn
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
           schema:
             type: string
       responses:
         201:
           description: Gửi thành công
 
-  /api/friends/accept/{id}:
+  /friends/accept/{id}:
     put:
+      tags: [Friend]
       summary: Chấp nhận lời mời
-      tags: [Friends]
       security:
         - bearerAuth: []
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
           required: true
-          description: ID người gửi
           schema:
             type: string
       responses:
         200:
           description: Đã chấp nhận
 
-  /api/friends/decline/{id}:
+  /friends/decline/{id}:
     delete:
+      tags: [Friend]
       summary: Từ chối lời mời
-      tags: [Friends]
       security:
         - bearerAuth: []
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
           required: true
-          description: ID người gửi
           schema:
             type: string
       responses:
         200:
           description: Đã từ chối
 
-  /api/friends/remove/{id}:
+  /friends/remove/{id}:
     delete:
+      tags: [Friend]
       summary: Huỷ kết bạn
-      tags: [Friends]
       security:
         - bearerAuth: []
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
           required: true
-          description: ID người bạn
           schema:
             type: string
       responses:
