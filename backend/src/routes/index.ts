@@ -1,17 +1,14 @@
 import { Router } from "express";
-import { getHello } from "../controllers/example.controller";
+
+import authRoutes from "./auth.routes";
+import friendRoutes from "./friend.routes";
 
 const router = Router();
 
-/**
- * @swagger
- * /api/hello:
- *   get:
- *     summary: Hello API
- *     responses:
- *       200:
- *         description: Success
- */
-router.get("/hello", getHello);
+// Auth routes
+router.use("/auth", authRoutes);
+
+// Friend routes
+router.use("/friends", friendRoutes);
 
 export default router;

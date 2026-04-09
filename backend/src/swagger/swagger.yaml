@@ -1,0 +1,221 @@
+openapi: 3.0.0
+
+info:
+  title: Society Mobile API
+  version: 1.0.0
+  description: API documentation cho ứng dụng Society
+
+servers:
+  - url: http://localhost:3000
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        dateOfBirth:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        avatar:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        isVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+paths:
+
+  # ================= AUTH =================
+
+  /api/register:
+    post:
+      summary: Đăng ký tài khoản
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password]
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                dateOfBirth:
+                  type: string
+                gender:
+                  type: string
+      responses:
+        201:
+          description: Đăng ký thành công
+
+  /api/login:
+    post:
+      summary: Đăng nhập
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Đăng nhập thành công
+
+  /api/refresh-token:
+    post:
+      summary: Làm mới token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        200:
+          description: Thành công
+
+  /api/logout:
+    post:
+      summary: Đăng xuất
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Đăng xuất thành công
+
+  /api/me:
+    get:
+      summary: Lấy thông tin user hiện tại
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  # ================= FRIEND =================
+
+  /api/friends:
+    get:
+      summary: Lấy danh sách bạn bè
+      tags: [Friends]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Danh sách bạn bè
+
+  /api/friends/pending:
+    get:
+      summary: Lấy danh sách lời mời kết bạn
+      tags: [Friends]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Danh sách lời mời
+
+  /api/friends/request/{id}:
+    post:
+      summary: Gửi lời mời kết bạn
+      tags: [Friends]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID người nhận
+          schema:
+            type: string
+      responses:
+        201:
+          description: Gửi thành công
+
+  /api/friends/accept/{id}:
+    put:
+      summary: Chấp nhận lời mời
+      tags: [Friends]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID người gửi
+          schema:
+            type: string
+      responses:
+        200:
+          description: Đã chấp nhận
+
+  /api/friends/decline/{id}:
+    delete:
+      summary: Từ chối lời mời
+      tags: [Friends]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID người gửi
+          schema:
+            type: string
+      responses:
+        200:
+          description: Đã từ chối
+
+  /api/friends/remove/{id}:
+    delete:
+      summary: Huỷ kết bạn
+      tags: [Friends]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID người bạn
+          schema:
+            type: string
+      responses:
+        200:
+          description: Đã huỷ kết bạn

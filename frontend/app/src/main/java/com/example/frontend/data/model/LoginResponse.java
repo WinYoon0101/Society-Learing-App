@@ -3,16 +3,16 @@ package com.example.frontend.data.model;
 import com.google.gson.annotations.SerializedName;
 
 public class LoginResponse {
-    @SerializedName("status")
-    private String status;
+    @SerializedName("user")
+    private User user;
 
-    @SerializedName("message")
-    private String message;
+    @SerializedName("accessToken")
+    private String accessToken;
 
-    @SerializedName("data")
-    private User data;
+    @SerializedName("refreshToken")
+    private String refreshToken;
 
-    public String getStatus() { return status; }
-    public String getMessage() { return message; }
-    public User getData() { return data; }
+    public User getUser() { return user; }
+    public String getAccessToken() { return accessToken; }
+    public String getRefreshToken() { return refreshToken; }
 }

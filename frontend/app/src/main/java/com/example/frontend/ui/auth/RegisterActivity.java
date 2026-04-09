@@ -109,49 +109,39 @@ public class RegisterActivity extends AppCompatActivity {
                 if (result == null) return;
 
                 switch (result.status) {
+
                     case LOADING:
                         btnRegister.setEnabled(false);
                         btnRegister.setText("Đang xử lý...");
                         break;
 
                     case SUCCESS:
-                        // Đảm bảo dữ liệu không bị null trước khi chui vào trong để tránh văng app
-                        if (result.data != null && result.data.getData() != null) {
+                        btnRegister.setEnabled(true);
+                        btnRegister.setText("Đăng ký");
 
-                            // THỨ TỰ XỬ LÝ:
-                            // 1. Nếu đây là kết quả của Đăng ký (không có Token trong data)
-                            if (result.data.getData().getToken() == null) {
-                                String email = edtEmail.getText().toString().trim();
-                                String password = edtPassword.getText().toString().trim();
+                        if (result.data != null && result.data.getUser() != null) {
 
-                                // Gọi tiếp hàm Login ngay lập tức
-                                viewModel.login(email, password);
-                            }
-                            // 2. Nếu đây là kết quả của Đăng nhập (đã có Token)
-                            else {
-                                btnRegister.setEnabled(true);
-                                btnRegister.setText("Hoàn tất");
+                            String token = result.data.getAccessToken();
+                            String username = result.data.getUser().getUsername();
 
-                                String token = result.data.getData().getToken();
-                                String username = result.data.getData().getUsername();
+                            // ✅ Lưu token
+                            SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                            sharedPref.edit().putString("JWT_TOKEN", token).apply();
 
-                                // Lưu Token vào máy
-                                SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-                                sharedPref.edit().putString("JWT_TOKEN", token).apply();
+                            Toast.makeText(RegisterActivity.this,
+                                    "Đăng ký thành công! Chào mừng " + username,
+                                    Toast.LENGTH_SHORT).show();
 
-                                Toast.makeText(RegisterActivity.this, "Đăng ký thành công! Chào mừng " + username, Toast.LENGTH_SHORT).show();
+                            // ✅ chuyển Home
+                            Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            finish();
 
-                                // CHUYỂN SANG TRANG HOME VÀ XÓA LỊCH SỬ
-                                Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
-                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                startActivity(intent);
-                                finish();
-                            }
                         } else {
-                            // Trường hợp bị lỗi mất cục data
-                            btnRegister.setEnabled(true);
-                            btnRegister.setText("Đăng ký");
-                            Toast.makeText(RegisterActivity.this, "Lỗi đọc dữ liệu từ Server", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(RegisterActivity.this,
+                                    "Lỗi dữ liệu từ server",
+                                    Toast.LENGTH_SHORT).show();
                         }
                         break;
 

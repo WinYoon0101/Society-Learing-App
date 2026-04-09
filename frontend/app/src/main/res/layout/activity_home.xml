@@ -78,9 +78,9 @@
                 android:background="#0B8A00" />
         </LinearLayout>
 
-        <!-- GROUPS -->
+        <!-- FRIEND -->
         <LinearLayout
-            android:id="@+id/tabGroups"
+            android:id="@+id/tabFriend"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -90,14 +90,14 @@
             android:focusable="true">
 
             <ImageView
-                android:id="@+id/imgGroups"
+                android:id="@+id/imgFriend"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/ic_group"
                 app:tint="@color/tab_icon_color" />
 
             <View
-                android:id="@+id/lineGroups"
+                android:id="@+id/lineFriend"
                 android:layout_width="24dp"
                 android:layout_height="3dp"
                 android:layout_marginTop="6dp"
