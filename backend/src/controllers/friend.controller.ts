@@ -1,7 +1,9 @@
 import { Response } from "express";
+import mongoose from "mongoose";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import Friend from "../models/friend.model";
 import User from "../models/user.model";
+
 
 // 1. Gửi lời mời kết bạn
 export const sendFriendRequest = async (
@@ -175,12 +177,17 @@ export const getFriends = async (
   try {
     const userId = req.user?.id;
 
+    if (!userId) {
+  res.status(401).json({ success: false, message: "Không tìm thấy thông tin xác thực." });
+  return;
+}
+
     const friendships = await Friend.find({
       $or: [{ requester: userId }, { recipient: userId }],
       status: "accepted",
     })
-      .populate("requester", "_id username email avatar")
-      .populate("recipient", "_id username email avatar");
+      .populate("requester", "_id username avatar")
+      .populate("recipient", "_id username avatar");
 
     const friends = friendships.map((f: any) => {
       // Lọc ra người kia
@@ -208,16 +215,306 @@ export const getPendingRequests = async (
   try {
     const userId = req.user?.id;
 
+    if (!userId) {
+  res.status(401).json({ success: false, message: "Không tìm thấy thông tin xác thực." });
+  return;
+}
+
+    // 1. Lấy danh sách lời mời
     const requests = await Friend.find({
       recipient: userId,
       status: "pending",
     }).populate("requester", "_id username email avatar");
 
+    // 2. Lấy danh sách ID bạn bè của user hiện tại (để chuẩn bị so sánh bạn chung)
+    const myFriends = await Friend.find({
+      $or: [{ requester: userId }, { recipient: userId }],
+      status: "accepted",
+    });
+    const myFriendIds = myFriends.map((f) =>
+      f.requester.toString() === userId ? f.recipient.toString() : f.requester.toString()
+    );
+
+    // 3. Đếm bạn chung cho từng lời mời
+    const requestsWithMutual = await Promise.all(
+      requests.map(async (reqItem: any) => {
+        const otherUserId = reqItem.requester._id.toString();
+
+        // Lấy bạn bè của người kia
+        const theirFriends = await Friend.find({
+          $or: [{ requester: otherUserId }, { recipient: otherUserId }],
+          status: "accepted",
+        });
+        const theirFriendIds = theirFriends.map((f) =>
+          f.requester.toString() === otherUserId ? f.recipient.toString() : f.requester.toString()
+        );
+
+        // Giao của 2 mảng ID chính là số bạn chung
+        const mutualCount = myFriendIds.filter((id) => theirFriendIds.includes(id)).length;
+
+        // Trả về object mới có thêm trường mutualFriends
+        return {
+          _id: reqItem.requester._id, // Trả ID của người gửi để Mobile gọi API Chấp nhận
+          username: reqItem.requester.username,
+          email: reqItem.requester.email,
+          avatar: reqItem.requester.avatar,
+          mutualFriends: mutualCount,
+        };
+      })
+    );
+
     res.status(200).json({
       success: true,
-      data: requests,
+      data: requestsWithMutual,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server", error });
+  }
+};
+
+export const checkFriendStatus = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const me = req.user?.id;
+    const otherUser = req.params.id;
+
+    if (me === otherUser) {
+      res.status(200).json({ success: true, status: "self" });
+      return;
+    }
+
+    const friendship = await Friend.findOne({
+      $or: [
+        { requester: me, recipient: otherUser },
+        { requester: otherUser, recipient: me },
+      ],
+    });
+
+    if (!friendship) {
+      res.status(200).json({ success: true, status: "none" }); // Chưa kết bạn -> Hiện nút "Thêm bạn bè"
+      return;
+    }
+
+    if (friendship.status === "accepted") {
+      res.status(200).json({ success: true, status: "friends" }); // Đã là bạn -> Hiện nút "Bạn bè / Hủy kết bạn"
+      return;
+    }
+
+    if (friendship.status === "pending") {
+      if (friendship.requester.toString() === me) {
+        res.status(200).json({ success: true, status: "request_sent" }); // Mình gửi -> Hiện nút "Đã gửi lời mời / Hủy"
+      } else {
+        res.status(200).json({ success: true, status: "request_received" }); // Họ gửi -> Hiện nút "Chấp nhận / Từ chối"
+      }
+      return;
+    }
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server", error });
+  }
+};
+
+
+export const getFriendSuggestions = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "Không tìm thấy thông tin xác thực.",
+      });
+      return;
+    }
+
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const suggestions = await User.aggregate([
+      // 1. Loại chính mình
+      {
+        $match: {
+          _id: { $ne: userObjectId },
+        },
+      },
+
+      // 2. Lookup tất cả connection của mình
+      {
+        $lookup: {
+          from: "friends",
+          let: { currentUserId: userObjectId },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $eq: ["$requester", "$$currentUserId"] },
+                    { $eq: ["$recipient", "$$currentUserId"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "myConnections",
+        },
+      },
+
+      // 3. Tạo danh sách excludedIds
+      {
+        $addFields: {
+          excludedIds: {
+            $setUnion: [
+              ["$myConnections.requester"],
+              ["$myConnections.recipient"],
+            ],
+          },
+        },
+      },
+
+      // 4. Loại user đã connect
+      {
+        $match: {
+          $expr: {
+            $not: { $in: ["$_id", "$excludedIds"] },
+          },
+        },
+      },
+
+      // 5. Lấy bạn của mình (accepted)
+      {
+        $lookup: {
+          from: "friends",
+          let: { currentUserId: userObjectId },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $or: [
+                        { $eq: ["$requester", "$$currentUserId"] },
+                        { $eq: ["$recipient", "$$currentUserId"] },
+                      ],
+                    },
+                    { $eq: ["$status", "accepted"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "myFriends",
+        },
+      },
+
+      // 6. Convert myFriends → myFriendIds
+      {
+        $addFields: {
+          myFriendIds: {
+            $map: {
+              input: "$myFriends",
+              as: "f",
+              in: {
+                $cond: [
+                  { $eq: ["$$f.requester", userObjectId] },
+                  "$$f.recipient",
+                  "$$f.requester",
+                ],
+              },
+            },
+          },
+        },
+      },
+
+      // 7. Lookup bạn của candidate
+      {
+        $lookup: {
+          from: "friends",
+          let: { otherUserId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $or: [
+                        { $eq: ["$requester", "$$otherUserId"] },
+                        { $eq: ["$recipient", "$$otherUserId"] },
+                      ],
+                    },
+                    { $eq: ["$status", "accepted"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "theirFriends",
+        },
+      },
+
+      // 8. Convert → theirFriendIds
+      {
+        $addFields: {
+          theirFriendIds: {
+            $map: {
+              input: "$theirFriends",
+              as: "f",
+              in: {
+                $cond: [
+                  { $eq: ["$$f.requester", "$_id"] },
+                  "$$f.recipient",
+                  "$$f.requester",
+                ],
+              },
+            },
+          },
+        },
+      },
+
+      // 9. Tính mutual friends
+      {
+        $addFields: {
+          mutualFriends: {
+            $size: {
+              $setIntersection: ["$myFriendIds", "$theirFriendIds"],
+            },
+          },
+        },
+      },
+
+      // 10. Sort theo mutual giảm dần
+      {
+        $sort: { mutualFriends: -1 },
+      },
+
+      // 11. Limit
+      {
+        $limit: 10,
+      },
+
+      // 12. Select field trả về
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          avatar: 1,
+          mutualFriends: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: suggestions,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+      error,
+    });
   }
 };

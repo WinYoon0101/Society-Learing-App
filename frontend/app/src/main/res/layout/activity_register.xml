@@ -59,6 +59,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:hintTextColor="@color/green_main"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     app:boxCornerRadiusTopStart="18dp"
                     app:boxCornerRadiusTopEnd="18dp"
@@ -72,6 +73,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Username"
+                        android:textCursorDrawable="@null"
                         android:inputType="textPersonName"
                         android:textColor="#1A1A1A" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -79,6 +81,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:hintTextColor="@color/green_main"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     app:boxCornerRadiusTopStart="18dp"
                     app:boxCornerRadiusTopEnd="18dp"
@@ -92,6 +95,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Email"
+                        android:textCursorDrawable="@null"
                         android:inputType="textEmailAddress"
                         android:textColor="#1A1A1A" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -99,6 +103,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:hintTextColor="@color/green_main"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     app:endIconMode="password_toggle"
                     app:endIconTint="#888888"
@@ -114,12 +119,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Mật khẩu"
+                        android:textCursorDrawable="@null"
                         android:inputType="textPassword" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:hintTextColor="@color/green_main"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     app:endIconMode="password_toggle"
                     app:endIconTint="#888888"
@@ -135,12 +142,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Xác nhận mật khẩu"
+                        android:textCursorDrawable="@null"
                         android:inputType="textPassword" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:hintTextColor="@color/green_main"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     app:boxCornerRadiusTopStart="18dp"
                     app:boxCornerRadiusTopEnd="18dp"

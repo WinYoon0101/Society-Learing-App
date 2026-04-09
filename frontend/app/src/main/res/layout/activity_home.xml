@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="20dp"
-        android:paddingTop="6dp"
+        android:paddingTop="16dp"
         android:paddingBottom="12dp">
 
         <ImageView
@@ -33,7 +33,7 @@
                 android:layout_height="28dp"
                 android:layout_marginEnd="16dp"
                 android:src="@android:drawable/ic_menu_search"
-                app:tint="#323633" />
+                app:tint="#283633" />
 
             <ImageView
                 android:id="@+id/iconLogout"
@@ -50,7 +50,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp"
-        android:paddingBottom="8dp">
+        android:paddingBottom="6dp">
 
         <!-- HOME -->
         <LinearLayout
@@ -65,8 +65,8 @@
 
             <ImageView
                 android:id="@+id/imgHome"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:src="@drawable/ic_home"
                 app:tint="@color/tab_icon_color" />
 
@@ -91,8 +91,8 @@
 
             <ImageView
                 android:id="@+id/imgFriend"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:src="@drawable/ic_group"
                 app:tint="@color/tab_icon_color" />
 
@@ -118,8 +118,8 @@
 
             <ImageView
                 android:id="@+id/imgChat"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:src="@drawable/ic_chat"
                 app:tint="@color/tab_icon_color" />
 
@@ -145,8 +145,8 @@
 
             <ImageView
                 android:id="@+id/imgLibrary"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:src="@drawable/ic_library"
                 app:tint="@color/tab_icon_color" />
 
@@ -172,8 +172,8 @@
 
             <ImageView
                 android:id="@+id/imgNotify"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:src="@drawable/ic_notify"
                 app:tint="@color/tab_icon_color" />
 
@@ -199,8 +199,8 @@
 
             <ImageView
                 android:id="@+id/imgProfile"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:src="@drawable/ic_profile"
                 app:tint="@color/tab_icon_color" />
 

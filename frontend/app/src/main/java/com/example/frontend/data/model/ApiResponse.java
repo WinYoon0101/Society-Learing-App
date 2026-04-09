@@ -12,4 +12,8 @@ public class ApiResponse<T> {
 
     @SerializedName("data")
     public T data;
+
+    public boolean isSuccess() { return success; }
+    public String getMessage() { return message; }
+    public T getData() { return data; }
 }

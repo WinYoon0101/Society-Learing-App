@@ -61,12 +61,20 @@ public class RegisterActivity extends AppCompatActivity {
             int day = calendar.get(Calendar.DAY_OF_MONTH);
 
             DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                    R.style.MyDatePickerStyle,
                     (view, selectedYear, selectedMonth, selectedDay) -> {
-                        // Định dạng ngày chuẩn: YYYY-MM-DD
-                        String date = String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay);
+
+                        //  Ngày/Tháng/Năm
+                        String date = String.format("%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear);
+
                         edtDateOfBirth.setText(date);
                     }, year, month, day);
+
             datePickerDialog.show();
+
+            // Ép màu nút lần nữa cho chắc
+            datePickerDialog.getButton(DatePickerDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(R.color.green_main));
+            datePickerDialog.getButton(DatePickerDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.green_main));
         });
 
         // 4. XỬ LÝ NÚT ĐĂNG KÝ
