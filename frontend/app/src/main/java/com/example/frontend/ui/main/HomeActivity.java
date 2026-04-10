@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -16,12 +17,17 @@ import androidx.fragment.app.Fragment;
 
 import com.example.frontend.R;
 import com.example.frontend.ui.auth.LoginActivity;
+import com.example.frontend.ui.calendar.CalendarActivity;
+import com.example.frontend.ui.docs.DocsActivity;
 import com.example.frontend.ui.feed.FeedFragment;
 import com.example.frontend.ui.friend.FriendFragment;
 import com.example.frontend.ui.chat.ChatFragment;
+import com.example.frontend.ui.group.GroupActivity;
 import com.example.frontend.ui.library.LibraryFragment;
+import com.example.frontend.ui.meeting.MeetingActivity;
 import com.example.frontend.ui.notify.NotifyFragment;
 import com.example.frontend.ui.profile.ProfileFragment;
+import com.example.frontend.ui.saved.SavedActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -101,6 +107,48 @@ public class HomeActivity extends AppCompatActivity {
                 Toast.makeText(this, "Mở tìm kiếm...", Toast.LENGTH_SHORT).show()
         );
 
+        // 5. Xử lý nút back để đóng Drawer nếu đang mở
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // Nếu Drawer đang mở thì đóng nó lại
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    // Nếu Drawer đã đóng, cho phép thoát app hoặc thực hiện lệnh back mặc định
+                    setEnabled(false); // Vô hiệu hóa callback này để gọi lệnh back mặc định
+                    getOnBackPressedDispatcher().onBackPressed();
+                    setEnabled(true); // Bật lại cho lần sau
+                }
+            }
+        });
+
+// 6. Xử lý sự kiện chọn mục trong NavigationView
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            Intent intent = null;
+
+            if (id == R.id.nav_saved) {
+                intent = new Intent(this, SavedActivity.class);
+            } else if (id == R.id.nav_docs) {
+                intent = new Intent(this, DocsActivity.class);
+            } else if (id == R.id.nav_calendar) {
+                intent = new Intent(this, CalendarActivity.class);
+            } else if (id == R.id.nav_group) {
+                intent = new Intent(this, GroupActivity.class);
+            } else if (id == R.id.nav_meeting) {
+                intent = new Intent(this, MeetingActivity.class);
+            }
+
+            if (intent != null) {
+                startActivity(intent);
+            }
+
+            // Luôn đóng Drawer sau khi chọn mục
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        });
+
 
     }
 
@@ -158,4 +206,7 @@ public class HomeActivity extends AppCompatActivity {
         imgNotify.setScaleX(1f); imgNotify.setScaleY(1f);
         imgProfile.setScaleX(1f); imgProfile.setScaleY(1f);
     }
+
+
+
 }
