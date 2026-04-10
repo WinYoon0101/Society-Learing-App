@@ -9,24 +9,38 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
 import com.example.frontend.R;
 import com.example.frontend.ui.auth.LoginActivity;
+import com.example.frontend.ui.calendar.CalendarActivity;
+import com.example.frontend.ui.docs.DocsActivity;
 import com.example.frontend.ui.feed.FeedFragment;
 import com.example.frontend.ui.friend.FriendFragment;
 import com.example.frontend.ui.chat.ChatFragment;
+import com.example.frontend.ui.group.GroupActivity;
 import com.example.frontend.ui.library.LibraryFragment;
+import com.example.frontend.ui.meeting.MeetingActivity;
 import com.example.frontend.ui.notify.NotifyFragment;
 import com.example.frontend.ui.profile.ProfileFragment;
+import com.example.frontend.ui.saved.SavedActivity;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.navigation.NavigationView;
 
 public class HomeActivity extends AppCompatActivity {
 
     private LinearLayout tabHome, tabFriend, tabChat, tabLibrary, tabNotify, tabProfile;
     private ImageView imgHome, imgFriend, imgChat, imgLibrary, imgNotify, imgProfile;
     private View lineHome, lineFriend, lineChat, lineLibrary, lineNotify, lineProfile;
-    private ImageView iconSearch, iconLogout;
+    private ImageView iconSearch;
+
+    private DrawerLayout drawerLayout;
+    private ImageView btnOpenMenu;
+    private NavigationView navigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +70,26 @@ public class HomeActivity extends AppCompatActivity {
         lineProfile = findViewById(R.id.lineProfile);
 
         iconSearch = findViewById(R.id.iconSearch);
-        iconLogout = findViewById(R.id.iconLogout);
+
+
+
+        // 2. Bind view mới cho Drawer
+        drawerLayout = findViewById(R.id.drawer_layout);
+        btnOpenMenu = findViewById(R.id.btnOpenMenu);
+        navigationView = findViewById(R.id.nav_view);
+
+        // 3. Sự kiện mở Drawer (Nhấn nút 3 gạch)
+        btnOpenMenu.setOnClickListener(v -> {
+            drawerLayout.openDrawer(GravityCompat.START);
+        });
+
+        // Xử lý nút Đăng xuất trong Drawer (Nằm dưới đáy)
+        // nằm trong NavigationView nên phải dùng navigationView.findViewById
+        MaterialButton btnNavLogout = navigationView.findViewById(R.id.btnNavLogout);
+        btnNavLogout.setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.START); // Đóng menu trước
+            performLogout(); // Gọi hàm đăng xuất
+        });
 
         // 2. Default tab
         selectTab(imgHome, lineHome, new FeedFragment());
@@ -74,18 +107,63 @@ public class HomeActivity extends AppCompatActivity {
                 Toast.makeText(this, "Mở tìm kiếm...", Toast.LENGTH_SHORT).show()
         );
 
-        // 5. Logout
-        iconLogout.setOnClickListener(v -> {
-            SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-            sharedPref.edit().clear().apply();
-
-            Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
-
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
+        // 5. Xử lý nút back để đóng Drawer nếu đang mở
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // Nếu Drawer đang mở thì đóng nó lại
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    // Nếu Drawer đã đóng, cho phép thoát app hoặc thực hiện lệnh back mặc định
+                    setEnabled(false); // Vô hiệu hóa callback này để gọi lệnh back mặc định
+                    getOnBackPressedDispatcher().onBackPressed();
+                    setEnabled(true); // Bật lại cho lần sau
+                }
+            }
         });
+
+// 6. Xử lý sự kiện chọn mục trong NavigationView
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            Intent intent = null;
+
+            if (id == R.id.nav_saved) {
+                intent = new Intent(this, SavedActivity.class);
+            } else if (id == R.id.nav_docs) {
+                intent = new Intent(this, DocsActivity.class);
+            } else if (id == R.id.nav_calendar) {
+                intent = new Intent(this, CalendarActivity.class);
+            } else if (id == R.id.nav_group) {
+                intent = new Intent(this, GroupActivity.class);
+            } else if (id == R.id.nav_meeting) {
+                intent = new Intent(this, MeetingActivity.class);
+            }
+
+            if (intent != null) {
+                startActivity(intent);
+            }
+
+            // Luôn đóng Drawer sau khi chọn mục
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        });
+
+
+    }
+
+
+    // Hàm thực hiện đăng xuất
+    private void performLogout() {
+        SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+        sharedPref.edit().clear().apply();
+
+        Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     // 👉 Chọn tab
@@ -128,4 +206,7 @@ public class HomeActivity extends AppCompatActivity {
         imgNotify.setScaleX(1f); imgNotify.setScaleY(1f);
         imgProfile.setScaleX(1f); imgProfile.setScaleY(1f);
     }
+
+
+
 }
