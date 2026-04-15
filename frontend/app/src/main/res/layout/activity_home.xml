@@ -203,65 +203,10 @@
             android:layout_height="1dp"
             android:background="#E0E0E0" />
 
-        <LinearLayout
-            android:id="@+id/btnOpenCreatePost"
+        <FrameLayout
+            android:id="@+id/fragment_container"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="15dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/imgMyAvatar"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_launcher_foreground"
-                app:shapeAppearanceOverlay="@style/CircleImage" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:background="#F0F2F5"
-                android:paddingVertical="10dp"
-                android:paddingHorizontal="16dp"
-                android:text="Huy ơi, bạn muốn chia sẻ kiến thức gì?"
-                android:textColor="#666666"
-                android:textSize="15sp" />
-        </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="5dp"
-            android:background="#F0F2F5" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvStories"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="12dp"
-            android:clipToPadding="false"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="5dp"
-            android:background="#D1D6DB" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvPosts"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:paddingBottom="20dp"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+            android:layout_height="match_parent" />
 
     </LinearLayout>
 
