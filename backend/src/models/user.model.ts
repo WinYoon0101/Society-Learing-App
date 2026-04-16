@@ -9,10 +9,12 @@ export interface IUser extends Document {
   dateOfBirth?: string;
   gender?: string;
   avatar?: string;
+  profileCover?: string;
   bio?: string;
   isVerified: boolean;
   isActive: boolean;
   refreshToken?: string;
+  savedDocument: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -52,6 +54,10 @@ const UserSchema = new Schema<IUser>(
       type: String,
       default: null,
     },
+    profileCover: {
+      type: String,
+      default: null,
+    },
     bio: {
       type: String,
       maxlength: [160, "Bio không được vượt quá 160 ký tự"],
@@ -69,6 +75,11 @@ const UserSchema = new Schema<IUser>(
       type: String,
       default: null,
       select: false,
+    },
+    savedDocument: {
+      type: [Schema.Types.ObjectId],
+      ref: "Document",
+      default: [],
     },
   },
   {
