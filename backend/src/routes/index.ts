@@ -3,6 +3,7 @@ import { Router } from "express";
 import authRoutes from "./auth.routes";
 import friendRoutes from "./friend.routes";
 import documentRoutes from "./document.routes";
+import mediaRoutes from "./media.routes";
 
 const router = Router();
 
@@ -14,5 +15,8 @@ router.use("/friends", friendRoutes);
 
 // Document routes
 router.use("/documents", documentRoutes);
+
+// Media routes
+router.use("/media", mediaRoutes);
 
 export default router;
