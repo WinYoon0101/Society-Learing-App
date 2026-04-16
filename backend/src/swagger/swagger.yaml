@@ -265,3 +265,114 @@ paths:
       responses:
         200:
           description: Đã huỷ kết bạn
+
+ # ================= DOCUMENT =================
+ # ================= DOCUMENT =================
+
+  /documents:
+    post:
+      tags: [Document]
+      summary: Tạo tài liệu mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              mediaId: "media_id"
+              title: "Tài liệu NodeJS"
+              description: "Tài liệu học backend"
+              fileType: "pdf"
+              subject: "Backend"
+              visibility: "public"
+              groupId: null
+      responses:
+        201:
+          description: Tạo thành công
+
+    get:
+      tags: [Document]
+      summary: Lấy danh sách tài liệu public
+      responses:
+        200:
+          description: Thành công
+
+
+  /documents/{id}:
+    get:
+      tags: [Document]
+      summary: Lấy chi tiết tài liệu
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Thành công
+
+    patch:
+      tags: [Document]
+      summary: Cập nhật tài liệu
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Thành công
+
+    delete:
+      tags: [Document]
+      summary: Xoá tài liệu
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Thành công
+
+
+  /documents/{id}/download:
+    post:
+      tags: [Document]
+      summary: Tăng lượt download
+      responses:
+        200:
+          description: Thành công
+
+
+  /documents/me:
+    get:
+      tags: [Document]
+      summary: Lấy tài liệu của chính mình
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Thành công
+
+
+  /documents/user/{userId}:
+    get:
+      tags: [Document]
+      summary: Lấy tài liệu public của user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Thành công
+
+
+  /documents/saved:
+    get:
+      tags: [Document]
+      summary: Lấy tài liệu đã lưu
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Thành công
