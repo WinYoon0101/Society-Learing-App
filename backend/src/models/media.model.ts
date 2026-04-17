@@ -45,7 +45,6 @@ const MediaSchema = new Schema<IMedia>(
     targetId: {
       type: Schema.Types.ObjectId,
       required: [true, "targetId là bắt buộc"],
-      // ref động tuỳ theo sourceType (post/story/message)
     },
   },
   {

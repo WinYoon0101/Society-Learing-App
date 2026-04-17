@@ -79,7 +79,7 @@ const DocumentSchema = new Schema<IDocument>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // ─── Indexes ──────────────────────────────────────────────────────────────────
