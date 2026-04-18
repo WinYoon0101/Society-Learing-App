@@ -96,14 +96,21 @@ export const getDocuments = async (
       query.subject = { $regex: subject, $options: "i" };
     }
 
+    // ĐỔI TỪ $text SANG $regex ĐỂ TÌM KIẾM NHANH (SEARCH AS YOU TYPE)
     if (search) {
-      query.$text = { $search: search as string };
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { subject: { $regex: search, $options: "i" } }
+      ];
     }
 
-    let sort: any = { createdAt: -1 };
+    // THÊM TRƯỜNG HỢP "oldest" VÀO LOGIC SORT
+    let sort: any = { createdAt: -1 }; // Mặc định mới nhất
     if (sortBy === "views") sort = { numberView: -1 };
     if (sortBy === "downloads") sort = { numberDownload: -1 };
     if (sortBy === "newest") sort = { createdAt: -1 };
+    if (sortBy === "oldest") sort = { createdAt: 1 }; // Thêm cái này để nút Sắp xếp hoạt động đầy đủ
 
     const [documents, total] = await Promise.all([
       DocumentModel.find(query)
@@ -239,7 +246,7 @@ export const updateDocument = async (
       }
 
       // Xóa Media cũ (Dọn rác trên Cloudinary và DB)
-      // Lưu ý: Ta nên gọi hàm deleteMediaLogic (viết riêng) hoặc thực hiện xóa tại đây
+  
       await cleanupOldMedia(document.mediaId.toString());
 
       updates.mediaId = newMediaId;
@@ -283,7 +290,7 @@ const cleanupOldMedia = async (mediaId: string) => {
       if (parts[0].startsWith("v")) parts.shift();
       const publicId = parts.join("/").replace(/\.[^.]+$/, "");
       
-      const resourceType = media.fileType === "image" ? "image" : media.fileType === "video" ? "video" : "raw";
+      const resourceType = media.fileType === "image" || media.url.endsWith(".pdf") ? "image" : "raw";
       await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
     }
 

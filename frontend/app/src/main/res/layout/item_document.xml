@@ -22,8 +22,7 @@
             android:id="@+id/iconCard"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            app:cardBackgroundColor="#E8F5E9"
-            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -33,9 +32,9 @@
                 android:layout_width="26dp"
                 android:layout_height="26dp"
                 android:layout_gravity="center"
+                android:importantForAccessibility="no"
                 android:src="@android:drawable/ic_menu_agenda"
-                app:tint="#0A7D21" />
-        </com.google.android.material.card.MaterialCardView>
+                app:tint="@null" /> </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:id="@+id/tvTitle"
