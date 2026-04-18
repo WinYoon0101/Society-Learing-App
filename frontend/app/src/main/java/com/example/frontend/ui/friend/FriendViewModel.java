@@ -52,4 +52,12 @@ public class FriendViewModel extends AndroidViewModel {
     public void fetchFriendSuggestions() {
         repository.getFriendSuggestions(suggestionsResult);
     }
+
+    public void sendFriendRequest(String userId) {
+        repository.sendFriendRequest(userId, actionResult);
+    }
+
+    public void declineRequest(String userId) {
+        repository.declineFriendRequest(userId, actionResult); // Dùng chung actionResult
+    }
 }
