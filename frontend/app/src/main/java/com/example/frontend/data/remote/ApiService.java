@@ -106,4 +106,8 @@ public interface ApiService {
     @PATCH("documents/{id}")
     Call<ApiResponse<Document>> updateDocument(@Path("id") String id, @Body Map<String, Object> updates);
 
+    // 8. Lấy chi tiết tài liệu theo ID
+    @GET("documents/{id}")
+    Call<ApiResponse<Document>> getDocumentById(@Path("id") String id);
+
 }
