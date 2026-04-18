@@ -2,11 +2,9 @@ package com.example.frontend.data.remote;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import com.example.frontend.utils.Constants;
-
 import java.io.IOException;
-
+import java.util.concurrent.TimeUnit; // Cần thêm cái này
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -17,31 +15,35 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ApiClient {
     private static Retrofit retrofit = null;
 
-    // Truyền Context vào để lấy Token
     public static ApiService getApiService(Context context) {
+        // Lưu ý: Nếu bạn đổi IP ở Constants, hãy tắt hẳn App rồi mở lại
+        // để nó chạy vào phần khởi tạo mới này nhé.
         if (retrofit == null) {
 
-            // Tạo bộ cài đặt OkHttp để "Bắt" (Intercept) mọi Request và nhét Token vào
-            OkHttpClient client = new OkHttpClient.Builder().addInterceptor(new Interceptor() {
-                @Override
-                public Response intercept(Chain chain) throws IOException {
-                    // 1. Lấy JWT_TOKEN từ SharedPreferences
-                    SharedPreferences sharedPref = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-                    String token = sharedPref.getString("JWT_TOKEN", ""); // Nếu không có token thì trả về chuỗi rỗng
+            // 1. Cấu hình OkHttp với thời gian chờ (Timeout) cực dài cho việc Upload
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(60, TimeUnit.SECONDS) // Đợi kết nối 60 giây
+                    .writeTimeout(60, TimeUnit.SECONDS)   // Đợi gửi file 60 giây
+                    .readTimeout(60, TimeUnit.SECONDS)    // Đợi server phản hồi 60 giây
+                    .addInterceptor(new Interceptor() {
+                        @Override
+                        public Response intercept(Chain chain) throws IOException {
+                            SharedPreferences sharedPref = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                            String token = sharedPref.getString("JWT_TOKEN", "");
 
-                    // 2. Chế tạo Request mới, gắn Token vào Header
-                    Request newRequest = chain.request().newBuilder()
-                            .addHeader("Authorization", "Bearer " + token) // Gắn chữ Bearer phía trước
-                            .build();
+                            Request newRequest = chain.request().newBuilder()
+                                    .addHeader("Authorization", "Bearer " + token)
+                                    .build();
 
-                    return chain.proceed(newRequest);
-                }
-            }).build();
+                            return chain.proceed(newRequest);
+                        }
+                    })
+                    .build();
 
-            // Khởi tạo Retrofit với cái client vừa tạo
+            // 2. Khởi tạo Retrofit
             retrofit = new Retrofit.Builder()
                     .baseUrl(Constants.BASE_URL)
-                    .client(client) // <-- Bắt buộc phải truyền OkHttpClient vào đây
+                    .client(client)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }

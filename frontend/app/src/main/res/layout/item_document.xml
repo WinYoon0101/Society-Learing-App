@@ -5,6 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
     app:cardBackgroundColor="#FFFFFF"
     app:cardCornerRadius="16dp"
     app:cardElevation="1dp"
@@ -19,7 +22,7 @@
             android:id="@+id/iconCard"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            app:cardBackgroundColor="#FCE4EC"
+            app:cardBackgroundColor="#E8F5E9"
             app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
             app:layout_constraintStart_toStartOf="parent"
@@ -31,7 +34,7 @@
                 android:layout_height="26dp"
                 android:layout_gravity="center"
                 android:src="@android:drawable/ic_menu_agenda"
-                app:tint="#D81B60" />
+                app:tint="#0A7D21" />
         </com.google.android.material.card.MaterialCardView>
 
         <TextView
