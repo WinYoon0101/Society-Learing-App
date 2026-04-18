@@ -105,7 +105,7 @@ const listQueryValidators = [
 
   query("sortBy")
     .optional()
-    .isIn(["newest", "views", "downloads"])
+    .isIn(["newest", "views", "downloads","oldest"])
     .withMessage("sortBy phải là newest, views hoặc downloads"),
 ];
 

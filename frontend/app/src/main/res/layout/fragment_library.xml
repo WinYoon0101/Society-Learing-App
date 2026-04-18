@@ -18,7 +18,7 @@
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_weight="1"
-            android:layout_marginEnd="12dp"
+
             app:cardBackgroundColor="#E8EFE0"
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp">
@@ -51,24 +51,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btnFilter"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Lọc tài liệu"
-            app:cardBackgroundColor="#E8EFE0"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp">
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_filter"
-                app:tint="#1F2924" />
-        </com.google.android.material.card.MaterialCardView>
+
     </LinearLayout>
 
     <HorizontalScrollView
@@ -82,16 +65,22 @@
         android:scrollbars="none">
 
         <LinearLayout
+            android:id="@+id/subjectContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            >
+
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/chipAll"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
                 app:cardBackgroundColor="#0A7D21"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="0dp">
                 <TextView
+                    android:id="@+id/tvAll"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
@@ -101,6 +90,78 @@
                     android:textSize="14sp"
                     android:textStyle="bold" />
             </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/chipIT"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                app:cardBackgroundColor="#E8EFE0"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:paddingHorizontal="20dp"
+                    android:text="CNTT/IT"
+                    android:textColor="#6E7E73"
+                    android:textSize="14sp" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/chipEconomy"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                app:cardBackgroundColor="#E8EFE0"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:paddingHorizontal="20dp"
+                    android:text="Kinh tế"
+                    android:textColor="#6E7E73"
+                    android:textSize="14sp" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/chipScience"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                app:cardBackgroundColor="#E8EFE0"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:paddingHorizontal="20dp"
+                    android:text="Khoa học"
+                    android:textColor="#6E7E73"
+                    android:textSize="14sp" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/chipLaw"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                app:cardBackgroundColor="#E8EFE0"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:paddingHorizontal="20dp"
+                    android:text="Luật"
+                    android:textColor="#6E7E73"
+                    android:textSize="14sp" />
+            </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
     </HorizontalScrollView>
 
@@ -123,6 +184,7 @@
             android:textStyle="bold" />
 
         <LinearLayout
+            android:id="@+id/btnSort"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
@@ -140,6 +202,7 @@
                 android:src="@android:drawable/ic_menu_sort_by_size"
                 app:tint="#6E7E73" />
             <TextView
+                android:id="@+id/tvSortLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"

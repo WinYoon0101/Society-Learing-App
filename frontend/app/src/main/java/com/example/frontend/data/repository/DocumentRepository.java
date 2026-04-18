@@ -122,17 +122,7 @@ public class DocumentRepository {
         });
     }
 
-    // 1. Hàm đếm lượt tải (Gọi mỗi khi user bấm nút Download)
-    public void countDownload(String docId) {
-        apiService.incrementDownload(docId).enqueue(new Callback<ApiResponse<Object>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
-                // Chỉ đếm ngầm, không cần báo UI nếu không cần thiết
-            }
-            @Override
-            public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {}
-        });
-    }
+
 
     // 2. Hàm cập nhật tài liệu (Sửa title, môn học hoặc đổi file mới)
     public void updateDocument(String docId, Map<String, Object> updates, MutableLiveData<Result<Document>> resultData) {
@@ -149,7 +139,7 @@ public class DocumentRepository {
             }
         });
     }
-
+// 3. Hàm tăng lượt tải (Gọi khi user nhấn nút Download)
     public void incrementDownloadCount(String docId) {
         // Gọi API incrementDownload đã khai báo trong ApiService
         apiService.incrementDownload(docId).enqueue(new Callback<ApiResponse<Object>>() {
@@ -165,6 +155,24 @@ public class DocumentRepository {
             public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                 // Thất bại: Lỗi mạng hoặc server
                 android.util.Log.e("REPO", "Lỗi tăng lượt tải: " + t.getMessage());
+            }
+        });
+    }
+
+    // 3. Hàm tăng lượt xem (Gọi khi user nhấn vào xem tài liệu)
+    public void incrementViewCount(String docId) {
+        // Backend của bạn tự tăng view khi gọi API lấy chi tiết tài liệu
+        apiService.getDocumentById(docId).enqueue(new Callback<ApiResponse<Document>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Document>> call, Response<ApiResponse<Document>> response) {
+                if (response.isSuccessful()) {
+                    android.util.Log.d("REPO", "Đã tăng 1 view cho: " + docId);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Document>> call, Throwable t) {
+                android.util.Log.e("REPO", "Lỗi tăng view: " + t.getMessage());
             }
         });
     }
