@@ -2,7 +2,9 @@ import { Router } from "express";
 
 import authRoutes from "./auth.routes";
 import friendRoutes from "./friend.routes";
-import chatRoutes from "./chat.routes";
+import documentRoutes from "./document.routes";
+import mediaRoutes from "./media.routes";
+import postRoutes from "./post.routes";
 
 const router = Router();
 
@@ -12,7 +14,12 @@ router.use("/auth", authRoutes);
 // Friend routes
 router.use("/friends", friendRoutes);
 
-// Chat routes
-router.use("/chat", chatRoutes);
+// Document routes
+router.use("/documents", documentRoutes);
+
+// Media routes
+router.use("/media", mediaRoutes);
+
+router.use('/posts', postRoutes);
 
 export default router;

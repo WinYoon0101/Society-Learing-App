@@ -1,4 +1,7 @@
-import { httpServer } from "./app";
+import app from "./app";
+import dotenv from "dotenv";
+dotenv.config();
+
 import connectDB from "./config/database";
 
 const PORT = Number(process.env.PORT) || 3000;

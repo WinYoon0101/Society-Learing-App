@@ -43,22 +43,19 @@ public class FriendFragment extends Fragment {
         requestAdapter = new FriendAdapter(false, new FriendAdapter.OnFriendActionListener() {
             @Override
             public void onAcceptClick(Friend friend) {
-                // Gọi API chấp nhận lời mời
                 viewModel.acceptRequest(friend.getId());
             }
 
             @Override
             public void onDeclineClick(Friend friend) {
-                // Tạm thời hiển thị Toast, bạn có thể gọi ViewModel để xóa nếu có API
-                Toast.makeText(getContext(), "Đã xóa lời mời của " + friend.getUsername(), Toast.LENGTH_SHORT).show();
+                viewModel.declineRequest(friend.getId());
+                Toast.makeText(getContext(), "Đang xóa lời mời...", Toast.LENGTH_SHORT).show();
             }
 
-            @Override
-            public void onAddFriendClick(Friend friend) {} // Bỏ qua
-
-            @Override
-            public void onRemoveSuggestClick(Friend friend) {} // Bỏ qua
+            @Override public void onAddFriendClick(Friend friend) {}
+            @Override public void onRemoveSuggestClick(Friend friend) {}
         });
+
         rvRequests.setAdapter(requestAdapter);
 
 
@@ -68,22 +65,34 @@ public class FriendFragment extends Fragment {
         RecyclerView rvSuggestions = view.findViewById(R.id.rvFriendSuggestions);
         suggestionAdapter = new FriendAdapter(true, new FriendAdapter.OnFriendActionListener() {
             @Override
-            public void onAcceptClick(Friend friend) {} // Bỏ qua
-
-            @Override
-            public void onDeclineClick(Friend friend) {} // Bỏ qua
-
-            @Override
             public void onAddFriendClick(Friend friend) {
-                // Gọi API gửi lời mời kết bạn (Bạn cần tạo hàm sendRequest trong ViewModel nếu chưa có)
-                Toast.makeText(getContext(), "Đã gửi lời mời đến " + friend.getUsername(), Toast.LENGTH_SHORT).show();
+                // 1. Cập nhật UI ngay lập tức
+                suggestionAdapter.updateItemStatus(friend.getId(), true);
+
+                // 2. Gọi API ngầm
+                viewModel.sendFriendRequest(friend.getId());
+                Toast.makeText(getContext(), "Đã gửi yêu cầu kết bạn", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onDeclineClick(Friend friend) {
+                // Nếu là list gợi ý và đang hiện "Hủy lời mời"
+                // 1. Cập nhật UI ngay lập tức quay về "Thêm bạn bè"
+                suggestionAdapter.updateItemStatus(friend.getId(), false);
+
+                // 2. Gọi API hủy (dùng chung hàm decline/xóa lời mời)
+                viewModel.declineRequest(friend.getId());
+                Toast.makeText(getContext(), "Đã hủy yêu cầu", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onRemoveSuggestClick(Friend friend) {
-                // Logic gỡ người này khỏi giao diện tạm thời
-                Toast.makeText(getContext(), "Đã gỡ " + friend.getUsername() + " khỏi gợi ý", Toast.LENGTH_SHORT).show();
+                // Gỡ khỏi danh sách gợi ý
+                Toast.makeText(getContext(), "Đã gỡ gợi ý", Toast.LENGTH_SHORT).show();
+                viewModel.fetchFriendSuggestions();
             }
+
+            @Override public void onAcceptClick(Friend friend) {}
         });
         rvSuggestions.setAdapter(suggestionAdapter);
 
@@ -140,17 +149,24 @@ public class FriendFragment extends Fragment {
         });
 
         // Lắng nghe kết quả bấm nút Chấp nhận
+        // Lắng nghe kết quả chung cho các hành động (Chấp nhận, Thêm bạn, Xóa)
         viewModel.getActionResult().observe(getViewLifecycleOwner(), result -> {
             if (result == null) return;
             switch (result.status) {
                 case SUCCESS:
-                    Toast.makeText(getContext(), "Chấp nhận thành công!", Toast.LENGTH_SHORT).show();
-                    // Gọi lại API để làm mới cả danh sách lời mời và gợi ý
+                    Toast.makeText(getContext(), "Thành công!", Toast.LENGTH_SHORT).show();
+
+                    // Cập nhật lại cả 2 danh sách để người đó biến mất khỏi chỗ cũ
+                    // hoặc hiện đúng số lượng mới
                     viewModel.fetchPendingRequests();
                     viewModel.fetchFriendSuggestions();
                     break;
+
                 case ERROR:
                     Toast.makeText(getContext(), result.message, Toast.LENGTH_SHORT).show();
+                    break;
+
+                case LOADING:
                     break;
             }
         });

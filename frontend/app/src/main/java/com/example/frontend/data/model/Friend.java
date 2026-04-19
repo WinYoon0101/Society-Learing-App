@@ -17,11 +17,16 @@ public class Friend {
     @SerializedName("mutualFriends")
     private int mutualFriends;
 
+    private boolean isPending;
+
 
 
     // ==========================================
     // Getter và Setter
     // ==========================================
+
+    public boolean isPending() { return isPending; }
+    public void setPending(boolean pending) { isPending = pending; }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
