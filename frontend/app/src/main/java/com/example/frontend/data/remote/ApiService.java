@@ -61,6 +61,12 @@ public interface ApiService {
 
     //TÀI LIỆU
 
+    @GET("documents/me/list")
+    Call<ApiResponse<DocumentListData>> getMyDocuments(
+            @Query("page") int page,
+            @Query("limit") int limit
+    );
+
     // 1. Lấy danh sách tài liệu công khai
     @GET("documents")
     Call<ApiResponse<DocumentListData>> getDocuments(

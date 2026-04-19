@@ -421,7 +421,8 @@ export const getMyDocuments = async (
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(l)
-        .populate("mediaId", "url fileType"),
+        .populate("mediaId", "url fileType")
+        .populate("uploaderId", "username avatar"),
       DocumentModel.countDocuments(query),
     ]);
 

@@ -1,5 +1,7 @@
 package com.example.frontend.data.model;
 
+import java.util.Objects;
+
 public class Document {
     private String _id;
     private String title;
@@ -12,6 +14,10 @@ public class Document {
     private String createdAt;
 
     public String get_id() {
+        return _id;
+    }
+
+    public String getId() {
         return _id;
     }
 
@@ -114,5 +120,25 @@ public class Document {
 
     public String getFileType() {
         return (mediaId != null) ? mediaId.getFileType() : "unknown";
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Document document = (Document) o;
+
+        // Sửa tên biến cho đúng với khai báo ở trên
+        return numberView == document.numberView &&
+                numberDownload == document.numberDownload &&
+                Objects.equals(_id, document._id) && // Dùng Objects.equals để tránh null
+                Objects.equals(title, document.title);
+    }
+
+    @Override
+    public int hashCode() {
+        // Sửa tên biến ở đây luôn
+        return Objects.hash(_id, title, numberView, numberDownload);
     }
 }
