@@ -5,6 +5,7 @@ import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.data.model.ProfileResponse;
 import com.example.frontend.data.model.Media;
 
 import java.util.List;
@@ -59,6 +60,13 @@ public interface ApiService {
     @DELETE("friends/remove/{id}")
     Call<ApiResponse<Object>> removeFriend(@Path("id") String userId);
 
+    //7. Xem profile
+    @GET("api/auth/me")
+    Call<ProfileResponse> getProfile();
+
+    //8. Update Profile
+    @PUT("api/user/update")
+    Call<ProfileResponse> updateProfile(@Body UpdateProfileRequest request);
     //TÀI LIỆU
 
     @GET("documents/me/list")
@@ -115,5 +123,4 @@ public interface ApiService {
     // 8. Lấy chi tiết tài liệu theo ID
     @GET("documents/{id}")
     Call<ApiResponse<Document>> getDocumentById(@Path("id") String id);
-
 }
