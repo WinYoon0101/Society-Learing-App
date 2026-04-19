@@ -26,6 +26,9 @@ public class FriendViewModel extends AndroidViewModel {
         return suggestionsResult;
     }
 
+    public void resetActionResult() {
+        actionResult.setValue(null);
+    }
     public FriendViewModel(@NonNull Application application) {
         super(application);
         // Truyền context vào Repository
@@ -58,6 +61,6 @@ public class FriendViewModel extends AndroidViewModel {
     }
 
     public void declineRequest(String userId) {
-        repository.declineFriendRequest(userId, actionResult); // Dùng chung actionResult
+        repository.declineFriendRequest(userId, actionResult);
     }
 }
