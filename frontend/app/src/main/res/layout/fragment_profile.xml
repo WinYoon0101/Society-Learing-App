@@ -1,6 +1,21 @@
-<?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent" android:background="#F4F7EE">
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center"
-        android:text="Tab PROFILE" android:textSize="20sp" android:textStyle="bold" android:textColor="#3D594B" />
-</FrameLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/imgAvatar"
+        android:layout_width="100dp"
+        android:layout_height="100dp" />
+
+    <TextView
+        android:id="@+id/tvUsername"
+        android:text="Username"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/tvEmail"
+        android:text="Email" />
+
+</LinearLayout>

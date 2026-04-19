@@ -3,6 +3,7 @@ package com.example.frontend.data.remote;
 import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.data.model.ProfileResponse;
 
 import java.util.List;
 
@@ -48,4 +49,12 @@ public interface ApiService {
     // 6. Huỷ kết bạn
     @DELETE("friends/remove/{id}")
     Call<ApiResponse<Object>> removeFriend(@Path("id") String userId);
+
+    //7. Xem profile
+    @GET("api/auth/me")
+    Call<ProfileResponse> getProfile();
+
+    //8. Update Profile
+    @PUT("api/user/update")
+    Call<ProfileResponse> updateProfile(@Body UpdateProfileRequest request);
 }
