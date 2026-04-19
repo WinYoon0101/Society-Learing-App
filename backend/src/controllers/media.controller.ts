@@ -91,36 +91,24 @@ export const uploadSingleFile = async (
     const file = req.file as any;
 
     if (!file) {
-      res.status(400).json({ success: false, message: "Chưa có file nào được upload." });
-      return;
+       res.status(400).json({ success: false, message: "Chưa có file nào được upload." });
+       return;
     }
 
-    if (!sourceType || !["post", "story", "message"].includes(sourceType)) {
-      res.status(400).json({
-        success: false,
-        message: "sourceType không hợp lệ. Phải là post, story hoặc message.",
-      });
-      return;
-    }
-
-    if (!targetId || !mongoose.Types.ObjectId.isValid(targetId as string)) {
-      res.status(400).json({ success: false, message: "targetId không hợp lệ." });
-      return;
-    }
+    // Logic targetId 
+    const finalTargetId = targetId && mongoose.Types.ObjectId.isValid(targetId) 
+                          ? new mongoose.Types.ObjectId(targetId as string)
+                          : new mongoose.Types.ObjectId(userId);
 
     const media = await Media.create({
       userId,
-      url: file.path,
+      url: file.path, // Link Cloudinary
       fileType: resolveFileType(file.mimetype),
-      sourceType: sourceType as MediaSourceType,
-      targetId: new mongoose.Types.ObjectId(targetId as string),
+      sourceType: sourceType || "post",
+      targetId: finalTargetId,
     });
 
-    res.status(201).json({
-      success: true,
-      message: "Upload thành công!",
-      data: media,
-    });
+    res.status(201).json({ success: true, message: "Upload thành công!", data: media });
   } catch (error: any) {
     console.error("uploadSingleFile error:", error);
     res.status(500).json({

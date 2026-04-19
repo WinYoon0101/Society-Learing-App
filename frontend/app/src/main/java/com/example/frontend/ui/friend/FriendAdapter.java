@@ -16,12 +16,24 @@ import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 
 public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendViewHolder> {
 
     private List<Friend> friendList = new ArrayList<>();
     private boolean isSuggestionList; // True = list Gợi ý, False = list Lời mời
     private OnFriendActionListener listener; // Bộ lắng nghe sự kiện click
+
+    public void updateItemStatus(String userId, boolean isPending) {
+        for (int i = 0; i < friendList.size(); i++) {
+            if (friendList.get(i).getId().equals(userId)) {
+                friendList.get(i).setPending(isPending);
+                notifyItemChanged(i);
+                break;
+            }
+        }
+    }
 
     // 1. TẠO INTERFACE ĐỂ TRUYỀN SỰ KIỆN CLICK VỀ FRAGMENT
     public interface OnFriendActionListener {
@@ -91,39 +103,58 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
         }
 
         public void bind(Friend friend) {
-            // 1. Gán Tên và Bạn chung
             tvName.setText(friend.getUsername());
             tvMutual.setText(friend.getMutualFriends() + " bạn chung");
 
-            // 2. Load Avatar bằng thư viện Glide
             Glide.with(itemView.getContext())
-                    .load(friend.getAvatar()) // URL ảnh từ API
-                    .placeholder(android.R.drawable.sym_def_app_icon) // Ảnh mặc định đang load
-                    .error(android.R.drawable.sym_def_app_icon)       // Ảnh mặc định nếu URL lỗi/null
+                    .load(friend.getAvatar())
+                    .placeholder(android.R.drawable.sym_def_app_icon)
+                    .error(android.R.drawable.sym_def_app_icon)
                     .centerCrop()
                     .into(imgAvatar);
 
-            // 3. Bắt sự kiện bấm Nút Xanh (Positive)
-            btnPositive.setOnClickListener(v -> {
-                if (listener != null) {
-                    if (isSuggestionList) {
-                        listener.onAddFriendClick(friend); // Gợi ý -> Thêm bạn
-                    } else {
-                        listener.onAcceptClick(friend);    // Lời mời -> Chấp nhận
-                    }
+            // --- LOGIC MỚI CHO NÚT BẤM ---
+            if (isSuggestionList) {
+                if (friend.isPending()) {
+                    // Trạng thái: Đã gửi lời mời
+                    btnPositive.setText("Hủy lời mời");
+                    btnPositive.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#E4E6DF"))); // Màu xám nhạt
+                    btnPositive.setTextColor(Color.parseColor("#1A1A1A"));
+                } else {
+                    // Trạng thái: Chưa gửi
+                    btnPositive.setText("Thêm bạn bè");
+                    btnPositive.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#A9C0AE"))); // Màu xanh
+                    btnPositive.setTextColor(Color.WHITE);
                 }
-            });
 
-            // 4. Bắt sự kiện bấm Nút Xám (Negative)
-            btnNegative.setOnClickListener(v -> {
-                if (listener != null) {
-                    if (isSuggestionList) {
-                        listener.onRemoveSuggestClick(friend); // Gợi ý -> Gỡ
-                    } else {
-                        listener.onDeclineClick(friend);       // Lời mời -> Từ chối
+                btnPositive.setOnClickListener(v -> {
+                    if (listener != null) {
+                        if (friend.isPending()) {
+                            listener.onDeclineClick(friend); // Nhấn vào Hủy lời mời
+                        } else {
+                            listener.onAddFriendClick(friend); // Nhấn vào Thêm bạn bè
+                        }
                     }
+                });
+            } else {
+                // Bên danh sách Lời mời kết bạn giữ nguyên logic cũ
+                btnPositive.setOnClickListener(v -> {
+                    if (listener != null) listener.onAcceptClick(friend);
+                });
+                btnNegative.setOnClickListener(v -> {
+                    if (listener != null) listener.onDeclineClick(friend);
+                });
+            }
+
+            // Nút Gỡ (Dành cho gợi ý)
+            btnNegative.setOnClickListener(v -> {
+                if (listener != null && isSuggestionList) {
+                    listener.onRemoveSuggestClick(friend);
                 }
             });
         }
+
+        // Cập nhật trạng thái một người trong danh sách mà không load lại cả list
+
     }
 }

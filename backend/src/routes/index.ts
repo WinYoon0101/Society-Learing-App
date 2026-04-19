@@ -5,6 +5,7 @@ import friendRoutes from "./friend.routes";
 import documentRoutes from "./document.routes";
 import mediaRoutes from "./media.routes";
 import userRoutes from "./user.routes";
+import postRoutes from "./post.routes";
 
 const router = Router();
 
@@ -22,4 +23,8 @@ router.use("/media", mediaRoutes);
 
 //User routes
 router.use("/user", userRoutes);
+
+router.use('/posts', postRoutes);
+
 export default router;
+

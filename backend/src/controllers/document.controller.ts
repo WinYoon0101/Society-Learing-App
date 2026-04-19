@@ -4,6 +4,7 @@ import DocumentModel from "../models/document.model";
 import Media from "../models/media.model";
 import User from "../models/user.model";
 import { AuthRequest } from "../middlewares/auth.middleware";
+import cloudinary from "../config/cloudinary";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -95,14 +96,21 @@ export const getDocuments = async (
       query.subject = { $regex: subject, $options: "i" };
     }
 
+    // ĐỔI TỪ $text SANG $regex ĐỂ TÌM KIẾM NHANH (SEARCH AS YOU TYPE)
     if (search) {
-      query.$text = { $search: search as string };
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { subject: { $regex: search, $options: "i" } }
+      ];
     }
 
-    let sort: any = { createdAt: -1 };
+    // THÊM TRƯỜNG HỢP "oldest" VÀO LOGIC SORT
+    let sort: any = { createdAt: -1 }; // Mặc định mới nhất
     if (sortBy === "views") sort = { numberView: -1 };
     if (sortBy === "downloads") sort = { numberDownload: -1 };
     if (sortBy === "newest") sort = { createdAt: -1 };
+    if (sortBy === "oldest") sort = { createdAt: 1 }; // Thêm cái này để nút Sắp xếp hoạt động đầy đủ
 
     const [documents, total] = await Promise.all([
       DocumentModel.find(query)
@@ -201,34 +209,52 @@ export const updateDocument = async (
   try {
     const id = req.params.id as string;
     const userId = req.user!.id;
+    const { mediaId: newMediaId } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ success: false, message: "ID không hợp lệ." });
       return;
     }
 
+    // 1. Tìm document hiện tại
     const document = await DocumentModel.findById(id);
     if (!document) {
       res.status(404).json({ success: false, message: "Tài liệu không tìm thấy." });
       return;
     }
 
+    // 2. Kiểm tra quyền sở hữu
     if (document.uploaderId.toString() !== userId) {
-      res.status(403).json({
-        success: false,
-        message: "Bạn không có quyền chỉnh sửa tài liệu này.",
-      });
+      res.status(403).json({ success: false, message: "Bạn không có quyền chỉnh sửa." });
       return;
     }
 
-    const allowedFields = ["title", "description", "subject", "visibility", "groupId"];
     const updates: any = {};
+    const allowedFields = ["title", "description", "subject", "visibility", "groupId"];
+    
     for (const field of allowedFields) {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
     }
 
+    // 3. Xử lý ĐỔI FILE (Nếu user cung cấp mediaId mới)
+    if (newMediaId && newMediaId !== document.mediaId.toString()) {
+      // Kiểm tra Media mới có tồn tại và thuộc về User không
+      const newMedia = await Media.findById(newMediaId);
+      if (!newMedia || newMedia.userId.toString() !== userId) {
+        res.status(400).json({ success: false, message: "Media mới không hợp lệ hoặc không thuộc về bạn." });
+        return;
+      }
+
+      // Xóa Media cũ (Dọn rác trên Cloudinary và DB)
+  
+      await cleanupOldMedia(document.mediaId.toString());
+
+      updates.mediaId = newMediaId;
+      // Cập nhật luôn fileType theo file mới
+      updates.fileType = newMedia.fileType;
+    }
+
+    // 4. Cập nhật Document
     const updated = await DocumentModel.findByIdAndUpdate(
       id,
       { $set: updates },
@@ -244,10 +270,34 @@ export const updateDocument = async (
     });
   } catch (error: any) {
     console.error("updateDocument error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Đã xảy ra lỗi, vui lòng thử lại sau.",
-    });
+    res.status(500).json({ success: false, message: "Lỗi hệ thống, thử lại sau." });
+  }
+};
+
+/**
+ * Helper: Dọn dẹp Media cũ khi bị thay thế hoặc xóa
+ */
+const cleanupOldMedia = async (mediaId: string) => {
+  try {
+    const media = await Media.findById(mediaId);
+    if (!media) return;
+
+    // Logic xóa Cloudinary (giống hàm deleteMedia của bạn)
+    const urlParts = media.url.split("/");
+    const uploadIndex = urlParts.indexOf("upload");
+    if (uploadIndex !== -1) {
+      const parts = urlParts.slice(uploadIndex + 1);
+      if (parts[0].startsWith("v")) parts.shift();
+      const publicId = parts.join("/").replace(/\.[^.]+$/, "");
+      
+      const resourceType = media.fileType === "image" || media.url.endsWith(".pdf") ? "image" : "raw";
+      await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+    }
+
+    // Xóa bản ghi Media trong DB
+    await Media.findByIdAndDelete(mediaId);
+  } catch (err) {
+    console.warn("Cleanup media failed:", err);
   }
 };
 
@@ -371,7 +421,8 @@ export const getMyDocuments = async (
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(l)
-        .populate("mediaId", "url fileType"),
+        .populate("mediaId", "url fileType")
+        .populate("uploaderId", "username avatar"),
       DocumentModel.countDocuments(query),
     ]);
 
