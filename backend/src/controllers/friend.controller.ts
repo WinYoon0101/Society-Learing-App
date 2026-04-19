@@ -52,7 +52,11 @@ export const sendFriendRequest = async (
         existingFriendship.recipient = userB as any;
         existingFriendship.status = "pending";
         await existingFriendship.save();
-        res.status(200).json({ success: true, message: "Đã gửi lại lời mời kết bạn." });
+        res.status(200).json({ 
+        success: true, 
+        message: "Đã gửi lại lời mời kết bạn.",
+        data: existingFriendship 
+    });
         return;
       }
     }
@@ -113,20 +117,24 @@ export const declineFriendRequest = async (req: AuthRequest, res: Response): Pro
     const me = req.user?.id;
     const otherUser = req.params.id;
 
-    // Tìm và xóa bản ghi pending giữa 2 người (không quan trọng ai gửi)
-    const request = await Friend.findOneAndDelete({
-      $or: [
-        { requester: me, recipient: otherUser, status: "pending" },
-        { requester: otherUser, recipient: me, status: "pending" }
-      ]
-    });
+    // FIX: Thay findOneAndDelete bằng findOneAndUpdate
+    const request = await Friend.findOneAndUpdate(
+      {
+        $or: [
+          { requester: me, recipient: otherUser, status: "pending" },
+          { requester: otherUser, recipient: me, status: "pending" }
+        ]
+      },
+      { status: "declined" }, // Chuyển sang từ chối thay vì xóa sạch
+      { new: true }
+    );
 
     if (!request) {
-      res.status(404).json({ success: false, message: "Không tìm thấy lời mời để xóa." });
+      res.status(404).json({ success: false, message: "Không tìm thấy lời mời để xử lý." });
       return;
     }
 
-    res.status(200).json({ success: true, message: "Đã xóa/hủy lời mời kết bạn." });
+    res.status(200).json({ success: true, message: "Đã từ chối/hủy lời mời kết bạn." });
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server", error });
   }
@@ -358,12 +366,17 @@ export const getFriendSuggestions = async (req: AuthRequest, res: Response): Pro
             ]
           },
           shouldExclude: {
-            $or: [
-              { $eq: [{ $arrayElemAt: ["$connection.status", 0] }, "accepted"] }, // Đã là bạn
-              { $and: [
-                { $eq: [{ $arrayElemAt: ["$connection.status", 0] }, "pending"] },
-                { $eq: [{ $arrayElemAt: ["$connection.requester", 0] }, "$_id"] } // Họ gửi cho mình
-              ]}
+          $or: [
+    { $eq: [{ $arrayElemAt: ["$connection.status", 0] }, "accepted"] },
+    // CHỈ LOẠI BỎ nếu trạng thái là 'declined' VÀ mình là người nhận
+    { $and: [
+      { $eq: [{ $arrayElemAt: ["$connection.status", 0] }, "declined"] },
+      { $eq: [{ $arrayElemAt: ["$connection.recipient", 0] }, userObjectId] }
+    ]},
+    { $and: [
+      { $eq: [{ $arrayElemAt: ["$connection.status", 0] }, "pending"] },
+      { $eq: [{ $arrayElemAt: ["$connection.requester", 0] }, "$_id"] }
+    ]}
             ]
           }
         }
