@@ -51,4 +51,7 @@ dependencies {
     implementation("com.airbnb.android:lottie:6.4.0")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
+
+    // Socket.io for real-time chat
+    implementation("io.socket:socket.io-client-java:2.0.1")
 }
