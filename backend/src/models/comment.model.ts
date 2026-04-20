@@ -6,7 +6,8 @@ export interface IComment extends Document {
     userId: mongoose.Types.ObjectId;   
     postId: mongoose.Types.ObjectId;   
     parentId?: mongoose.Types.ObjectId;
-    text: string;                     
+    text: string; 
+    replies?: any[];                    
     createdAt: Date;
     updatedAt: Date;
 }

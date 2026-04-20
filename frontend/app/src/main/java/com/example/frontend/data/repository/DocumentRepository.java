@@ -176,4 +176,24 @@ public class DocumentRepository {
             }
         });
     }
+// 6. Lấy tài liệu của chính user (dành cho trang "Tài liệu của tôi")
+    public void getMyDocuments(int page, int limit, MutableLiveData<Result<DocumentListData>> resultLiveData) {
+        resultLiveData.postValue(Result.loading(null));
+
+        apiService.getMyDocuments(page, limit).enqueue(new Callback<ApiResponse<DocumentListData>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<DocumentListData>> call, Response<ApiResponse<DocumentListData>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    resultLiveData.postValue(Result.success(response.body().getData()));
+                } else {
+                    resultLiveData.postValue(Result.error("Không thể tải tài liệu của bạn", null));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<DocumentListData>> call, Throwable t) {
+                resultLiveData.postValue(Result.error(t.getMessage(), null));
+            }
+        });
+    }
 }

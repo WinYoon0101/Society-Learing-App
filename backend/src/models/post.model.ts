@@ -7,14 +7,12 @@ export interface IPost extends Document{
     groupId: mongoose.Types.ObjectId;
     sharedPostId?: mongoose.Types.ObjectId;
     content: String;
-    mediaUrl: String[];
-    mediaType: String;
     privacy: String;
     countReaction: Number;
     countComment: Number;
     countShare: Number;
-    createAt: Date;
-    upDateAt: Date;
+    createdAt: Date;
+    upDatedAt: Date;
 }
 
 const PostSchema: Schema = new Schema<IPost>(
@@ -28,7 +26,7 @@ const PostSchema: Schema = new Schema<IPost>(
         groupId:{
             type: Schema.Types.ObjectId,
             ref: "Group",
-            default: "null"
+            default: null
         },
         sharedPostId: { type: Schema.Types.ObjectId, 
             ref: 'Post', 
@@ -38,13 +36,6 @@ const PostSchema: Schema = new Schema<IPost>(
             type: String,
             default: "",
         },
-        mediaType: {
-            type : String,
-            enum : ["image", "video", "document"],
-        },
-        mediaUrl:[{
-            type: String,
-        }],
         privacy:{
             type: String,
             default: "Public",
@@ -64,6 +55,12 @@ const PostSchema: Schema = new Schema<IPost>(
             timestamps: true,
     }
 )
+PostSchema.virtual('mediaFiles', {
+    ref: 'Media',            // Chạy sang bảng Media để tìm
+    localField: '_id',       // Dùng ID của bài Post này
+    foreignField: 'targetId' // Tìm những dòng nào trong bảng Media có targetId khớp
+});
+
     // 1. Tối ưu khi load "Trang cá nhân" (Tìm bài viết theo người đăng)
 PostSchema.index({ authorId: 1 });
 
