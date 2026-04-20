@@ -7,6 +7,7 @@ import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.LoginResponse;
 import com.example.frontend.data.model.ProfileResponse;
 import com.example.frontend.data.model.Media;
+import com.example.frontend.data.model.Post;
 
 import java.util.List;
 import java.util.Map;
@@ -123,4 +124,13 @@ public interface ApiService {
     // 8. Lấy chi tiết tài liệu theo ID
     @GET("documents/{id}")
     Call<ApiResponse<Document>> getDocumentById(@Path("id") String id);
+
+
+    @Multipart
+    @POST("posts")
+    Call<ApiResponse<Post>> createPost(
+            @Part("content") RequestBody content,
+            @Part MultipartBody.Part image
+    );
+
 }

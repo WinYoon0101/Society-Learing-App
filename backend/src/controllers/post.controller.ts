@@ -15,7 +15,7 @@ export const createPost = async (req: AuthRequest, res: Response) =>{
             authorId: authorId,
             groupId: groupId || null,
             content: content,
-            privacy: privacy || "public",
+            privacy: privacy || "Public",
         });
         // bắt db lưu lại và chờ lưu
         const savePost = await newPost.save();
