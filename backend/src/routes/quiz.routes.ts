@@ -1,8 +1,8 @@
 import express from "express";
-import { generateQuiz } from "../controllers/quiz.controller";
+import { generateAndSaveQuiz } from "../controllers/quiz.controller";
 
 const router = express.Router();
 
-router.post("/generate-quiz", generateQuiz);
+router.post("/generate-quiz", generateAndSaveQuiz);
 
 export default router;
