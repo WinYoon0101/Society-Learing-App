@@ -125,9 +125,12 @@ public interface ApiService {
     @GET("documents/{id}")
     Call<ApiResponse<Document>> getDocumentById(@Path("id") String id);
 
+    @GET("posts/feed")
+    Call<ApiResponse<List<Post>>> getAllPosts();
+
 
     @Multipart
-    @POST("posts")
+    @POST("posts/create")
     Call<ApiResponse<Post>> createPost(
             @Part("content") RequestBody content,
             @Part MultipartBody.Part image

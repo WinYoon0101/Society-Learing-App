@@ -148,6 +148,7 @@ const autoFilter = (
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "text/plain",
+    "application/octet-stream",
   ];
   if (ALLOWED_MIMES.includes(file.mimetype)) {
     cb(null, true);
