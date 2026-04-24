@@ -6,6 +6,7 @@ import documentRoutes from "./document.routes";
 import mediaRoutes from "./media.routes";
 import userRoutes from "./user.routes";
 import postRoutes from "./post.routes";
+import quizRoutes from "./quiz.routes";
 
 const router = Router();
 
@@ -25,6 +26,8 @@ router.use("/media", mediaRoutes);
 router.use("/user", userRoutes);
 
 router.use('/posts', postRoutes);
+
+router.use('/quiz', quizRoutes);
 
 export default router;
 

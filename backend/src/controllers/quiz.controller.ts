@@ -26,55 +26,52 @@ const schema: Schema = {
     },
 };
 
-const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
-    generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: schema,
-    },
+const model = genAI.getGenerativeModel({ 
+    model: "gemini-2.5-flash" 
 });
 
 export const generateAndSaveQuiz = async (req: Request, res: Response) => {
     try {
         const { text, numQuestions = 5, title = "Quiz mới" } = req.body;
-        const userId = (req as any).user?._id || "unknown";
+        const userId = (req as any).user?.id; 
 
-        if (!text) return res.status(400).json({ error: "Nội dung không được để trống" });
+if (!userId) {
+    return res.status(401).json({ error: "Không tìm thấy thông tin người dùng" });
+}
 
-        // 3. Prompt 
+        if (!text) return res.status(400).json({ error: "Nội dung trống" });
+
         const prompt = `Hãy tạo ${numQuestions} câu hỏi trắc nghiệm bằng tiếng Việt dựa trên nội dung sau: ${text}`;
 
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        const rawText = response.text();
+        // Gọi AI và ép kiểu trả về JSON ở đây
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: schema, // schema khai báo ở trên đầu file
+            },
+        });
 
-        let quizData = [];
-        try {
-            quizData = JSON.parse(rawText);
-        } catch (parseError) {
-            console.error("Lỗi parse JSON từ Gemini:", parseError);
-            quizData = fallback(text, numQuestions);
-        }
+        const rawText = result.response.text();
+        const quizData = JSON.parse(rawText);
 
-        // 4. Lưu vào Database
+        // Lưu DB như cũ...
         const newQuiz = new Quiz({
             title,
             userId,
             content: text,
             questions: quizData
         });
-
         await newQuiz.save();
 
-        res.status(201).json({
-            success: true,
-            source: "Gemini-1.5-Flash",
-            quiz: newQuiz
-        });
+        res.status(201).json({ success: true, data: newQuiz });
 
     } catch (err: any) {
-        console.error("Lỗi hệ thống:", err.message);
-        res.status(500).json({ error: "Máy chủ AI đang bận, vui lòng thử lại sau" });
+        console.error("LOI_BACKEND:", err);
+        res.status(500).json({ 
+            error: "Máy chủ AI đang bận", 
+            detail: err.message 
+        });
     }
 };
 
