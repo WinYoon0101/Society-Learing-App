@@ -1,49 +1,62 @@
-// controllers/quizController.ts
 import { Request, Response } from "express";
-import axios from "axios";
-import { extractJSON } from "../utils/parser";
+import { GoogleGenerativeAI, SchemaType, type Schema } from "@google/generative-ai";
 import Quiz from "../models/quiz.model";
 
-const HF_API = "https://api-inference.huggingface.co/models/google/flan-t5-base";
+// 1. Cấu hình Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-// Hàm bổ sung để làm sạch text tránh lỗi JSON
-function cleanText(text: string) {
-    return text.replace(/[\n\r\t]/g, " ").trim();
-}
+// 2. Định nghĩa cấu trúc dữ liệu trả về từ Gemini
+const schema: Schema = {
+    description: "Danh sách câu hỏi trắc nghiệm",
+    type: SchemaType.ARRAY,
+    items: {
+        type: SchemaType.OBJECT,
+        properties: {
+            question: { type: SchemaType.STRING, description: "Nội dung câu hỏi" },
+            A: { type: SchemaType.STRING },
+            B: { type: SchemaType.STRING },
+            C: { type: SchemaType.STRING },
+            D: { type: SchemaType.STRING },
+            correct: { 
+                type: SchemaType.STRING, 
+                description: "Chỉ chọn 1 trong 4 chữ cái: A, B, C, hoặc D" 
+            },
+        },
+        required: ["question", "A", "B", "C", "D", "correct"],
+    },
+};
+
+const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: schema,
+    },
+});
 
 export const generateAndSaveQuiz = async (req: Request, res: Response) => {
-    try {       
+    try {
         const { text, numQuestions = 5, title = "Quiz mới" } = req.body;
-        const userId = (req as any).user?._id || "unknown"; 
+        const userId = (req as any).user?._id || "unknown";
 
         if (!text) return res.status(400).json({ error: "Nội dung không được để trống" });
 
-        const prompt = `Task: Create a JSON quiz in Vietnamese.
-Content: ${cleanText(text)}
-Format: Array of objects [{ "question": "...", "A": "...", "B": "...", "C": "...", "D": "...", "correct": "A" }]
-Constraint: Return ONLY JSON. Generate ${numQuestions} questions.`;
+        // 3. Prompt 
+        const prompt = `Hãy tạo ${numQuestions} câu hỏi trắc nghiệm bằng tiếng Việt dựa trên nội dung sau: ${text}`;
 
-        const response = await axios.post(
-            HF_API,
-            { inputs: prompt },
-            {
-                headers: { Authorization: `Bearer ${process.env.HF_TOKEN}` },
-                timeout: 15000
-            }
-        );
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        const rawText = response.text();
 
         let quizData = [];
-        const raw = response.data?.[0]?.generated_text || "";
-        const parsed = extractJSON(raw);
-
-        // Kiểm tra nếu AI fail thì dùng fallback
-        if (!parsed || parsed.length === 0) {
+        try {
+            quizData = JSON.parse(rawText);
+        } catch (parseError) {
+            console.error("Lỗi parse JSON từ Gemini:", parseError);
             quizData = fallback(text, numQuestions);
-        } else {
-            quizData = parsed;
         }
 
-        // --- LƯU VÀO DATABASE ---
+        // 4. Lưu vào Database
         const newQuiz = new Quiz({
             title,
             userId,
@@ -55,25 +68,26 @@ Constraint: Return ONLY JSON. Generate ${numQuestions} questions.`;
 
         res.status(201).json({
             success: true,
-            source: parsed ? "AI" : "fallback",
+            source: "Gemini-1.5-Flash",
             quiz: newQuiz
         });
 
     } catch (err: any) {
-        console.error("Lỗi tạo quiz:", err.message);
-        res.status(500).json({ error: "Không thể tạo quiz lúc này" });
+        console.error("Lỗi hệ thống:", err.message);
+        res.status(500).json({ error: "Máy chủ AI đang bận, vui lòng thử lại sau" });
     }
 };
 
 // Hàm fallback 
 function fallback(text: string, num = 5) {
-    const sentences = text.split(/[.!?]/).filter(s => s.trim().length > 30);
+    const sentences = text.split(/[.!?]/).filter(s => s.trim().length > 20);
+    const choices = ["A", "B", "C", "D"];
     return sentences.slice(0, num).map(s => ({
-        question: `Nội dung nào sau đây liên quan đến: "${s.trim().substring(0, 50)}..."?`,
-        A: "Khái niệm chính trong bài",
-        B: "Dữ liệu thực nghiệm",
-        C: "Phương pháp nghiên cứu",
-        D: "Kết luận vấn đề",
-        correct: "A"
+        question: `Nội dung nào liên quan đến: "${s.trim().substring(0, 60)}..."?`,
+        A: "Ý chính của đoạn văn",
+        B: "Số liệu thống kê",
+        C: "Ví dụ minh họa",
+        D: "Kết luận",
+        correct: choices[Math.floor(Math.random() * 4)]
     }));
 }
