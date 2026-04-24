@@ -27,21 +27,25 @@ object ChatSocketManager {
     private var onTypingStop: ((String) -> Unit)? = null
     private var onError: ((String) -> Unit)? = null
 
-    fun initialize(context: Context, serverUrl: String) {
+    fun initialize(context: Context, serverUrl: String, token: String) {
         if (socket != null && socket!!.connected()) {
             Log.w(TAG, "Socket already connected")
             return
         }
 
         try {
-            val opts = IO.Options()
-            opts.reconnection = true
-            opts.reconnectionDelay = 1000
-            opts.reconnectionDelayMax = 5000
-            opts.reconnectionAttempts = 5
+            val opts = IO.Options().apply {
+                reconnection = true
+                reconnectionDelay = 1000
+                reconnectionDelayMax = 5000
+                reconnectionAttempts = 5
+                // ✅ Set header đúng chỗ — trong Options trước khi tạo socket
+                extraHeaders = mapOf(
+                    "Authorization" to listOf("Bearer $token")
+                )
+            }
 
             socket = IO.socket(serverUrl, opts)
-
             setupListeners()
 
             Log.d(TAG, "Socket initialized")
@@ -50,19 +54,14 @@ object ChatSocketManager {
         }
     }
 
-    fun connect(token: String) {
+    // connect() giờ đơn giản lại, không cần token nữa
+    fun connect() {
         if (socket == null) {
             Log.e(TAG, "Socket not initialized. Call initialize() first")
             return
         }
-
-        try {
-            socket?.io()?.options?.extraHeaders = mapOf("Authorization" to "Bearer $token")
-            socket?.connect()
-            Log.d(TAG, "Socket connecting...")
-        } catch (e: Exception) {
-            Log.e(TAG, "Connect error: ${e.message}")
-        }
+        socket?.connect()
+        Log.d(TAG, "Socket connecting...")
     }
 
     fun disconnect() {

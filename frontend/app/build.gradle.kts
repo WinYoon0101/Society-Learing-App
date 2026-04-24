@@ -53,5 +53,7 @@ dependencies {
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
 
     // Socket.io for real-time chat
-    implementation("io.socket:socket.io-client-java:2.0.1")
+    implementation("io.socket:socket.io-client:2.1.0") {
+        exclude(group = "org.json", module = "json")
+    }
 }
