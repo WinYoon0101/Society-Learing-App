@@ -8,6 +8,7 @@ import com.example.frontend.data.model.LoginResponse;
 import com.example.frontend.data.model.ProfileResponse;
 import com.example.frontend.data.model.Media;
 import com.example.frontend.data.model.Post;
+import com.example.frontend.data.model.Quiz;
 
 import java.util.List;
 import java.util.Map;
@@ -135,5 +136,8 @@ public interface ApiService {
             @Part("content") RequestBody content,
             @Part MultipartBody.Part image
     );
+// Quiz
+    @POST("quiz/generate-quiz") //
+    Call<ApiResponse<Quiz>> generateQuiz(@Body QuizRequest request);
 
 }
