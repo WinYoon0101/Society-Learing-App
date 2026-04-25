@@ -2,6 +2,7 @@ package com.example.frontend.ui.feed;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent; // Thêm thư viện Intent
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.model.Post;
+// Nhớ import đúng đường dẫn của PostDetailActivity trong project của bạn
+// import com.example.frontend.ui.postdetail.PostDetailActivity;
+
 import java.util.List;
 
 public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
@@ -23,19 +27,15 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         this.postList = postList;
     }
 
-    // --- ĐÂY LÀ HÀM MỚI ĐƯỢC THÊM VÀO CHO MVVM ---
     @SuppressLint("NotifyDataSetChanged")
     public void updateData(List<Post> newPostList) {
         this.postList = newPostList;
-        // Ra lệnh cho RecyclerView vẽ lại toàn bộ giao diện với dữ liệu mới
         notifyDataSetChanged();
     }
-    // ---------------------------------------------
 
     @NonNull
     @Override
     public PostViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Nạp cái khuôn giao diện item_home_posts.xml của bạn
         View view = LayoutInflater.from(context).inflate(R.layout.item_home_posts, parent, false);
         return new PostViewHolder(view);
     }
@@ -44,30 +44,52 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
         Post post = postList.get(position);
 
-        // Đổ dữ liệu chữ
+        // 1. Đổ dữ liệu chữ
         holder.tvContent.setText(post.getContent());
 
-        // Đổ dữ liệu User (Kiểm tra null để tránh văng app)
+        // 2. Đổ dữ liệu User
         if (post.getAuthorId() != null) {
             holder.tvUserName.setText(post.getAuthorId().getUsername());
-
-            // Load Avatar bằng Glide
             Glide.with(context)
                     .load(post.getAuthorId().getAvatar())
-                    .placeholder(R.drawable.ic_user) // Ảnh mặc định trong lúc chờ tải
+                    .placeholder(R.drawable.ic_user)
                     .into(holder.imgAvatar);
         } else {
             holder.tvUserName.setText("Người dùng ẩn danh");
         }
 
-        // Đổ dữ liệu ảnh (Nếu bài viết có ảnh thì hiện, không thì giấu đi)
+        // 3. Đổ dữ liệu ảnh
         if (post.getImage() != null && !post.getImage().isEmpty()) {
             holder.imgPost.setVisibility(View.VISIBLE);
             Glide.with(context)
                     .load(post.getImage())
                     .into(holder.imgPost);
         } else {
-            holder.imgPost.setVisibility(View.GONE); // Giấu khung ảnh đi nếu không có
+            holder.imgPost.setVisibility(View.GONE);
+        }
+
+        // =========================================================
+        // 4. CHUYỂN HƯỚNG SANG MÀN HÌNH CHI TIẾT KHI BẤM NÚT COMMENT
+        // =========================================================
+        // (Kiểm tra xem holder.btnComment có null không để tránh crash nếu XML thiếu ID này)
+        if (holder.btnComment != null) {
+            holder.btnComment.setOnClickListener(v -> {
+                // Khởi tạo Intent để chuyển trang
+                Intent intent = new Intent(context, PostDetailActivity.class);
+
+                // Gửi dữ liệu qua trang Detail (ID bài viết và Nội dung bài)
+                intent.putExtra("POST_ID", post.getId());
+                intent.putExtra("POST_CONTENT", post.getContent());
+
+                if (post.getAuthorId() != null) {
+                    intent.putExtra("AUTHOR_NAME", post.getAuthorId().getUsername());
+                    intent.putExtra("AUTHOR_AVATAR", post.getAuthorId().getAvatar());
+                }
+                intent.putExtra("POST_IMAGE", post.getImage());
+
+                // Bắt đầu chuyển trang
+                context.startActivity(intent);
+            });
         }
     }
 
@@ -80,6 +102,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     public static class PostViewHolder extends RecyclerView.ViewHolder {
         TextView tvUserName, tvContent;
         ImageView imgAvatar, imgPost;
+        View btnComment; // Khai báo chung là View để bao trọn cả ImageView hoặc LinearLayout
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -87,6 +110,11 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             tvContent = itemView.findViewById(R.id.tvContent);
             imgAvatar = itemView.findViewById(R.id.imgAvatar);
             imgPost = itemView.findViewById(R.id.imgPost);
+
+            // ÁNH XẠ NÚT COMMENT Ở ĐÂY
+            // ⚠️ LƯU Ý: Bạn hãy mở file item_home_posts.xml lên và đảm bảo rằng
+            // cái icon comment của bạn đang có thuộc tính android:id="@+id/btnComment" nhé!
+            btnComment = itemView.findViewById(R.id.btnComment);
         }
     }
 }

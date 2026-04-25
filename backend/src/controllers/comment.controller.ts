@@ -7,9 +7,9 @@ import Notification from "../models/notification.model";
 // API gửi binh luận
 export const createComment = async (req: AuthRequest, res: Response) => {
     try {
-        const postId = req.params.postId;
-        const { content, parentId } = req.body; 
-        const userId = req.user?.id; 
+      
+        const { postId, content, parentId } = req.body; 
+        const userId = req.user?.id;
 
         // 1. Kiểm tra bài viết tồn tại
         const post = await Post.findById(postId);
