@@ -21,7 +21,6 @@
             android:layout_centerVertical="true"
             android:padding="8dp"
             android:src="@android:drawable/ic_menu_revert"
-            app:tint="#283633"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true" />
