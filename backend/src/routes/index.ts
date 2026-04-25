@@ -6,6 +6,7 @@ import documentRoutes from "./document.routes";
 import mediaRoutes from "./media.routes";
 import userRoutes from "./user.routes";
 import postRoutes from "./post.routes";
+import quizRoutes from "./quiz.routes";
 
 // 1. THÊM DÒNG IMPORT NÀY
 import commentRoutes from "./comment.routes"; // (Tên file bên trong ./ có thể khác tùy bạn đặt nhé, vd: comment.routes)
@@ -31,5 +32,6 @@ router.use("/user", userRoutes);
 router.use('/posts', postRoutes);
 
 router.use("/comments", commentRoutes); 
+router.use('/quiz', quizRoutes);
 
 export default router;
