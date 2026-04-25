@@ -7,6 +7,9 @@ import mediaRoutes from "./media.routes";
 import userRoutes from "./user.routes";
 import postRoutes from "./post.routes";
 
+// 1. THÊM DÒNG IMPORT NÀY
+import commentRoutes from "./comment.routes"; // (Tên file bên trong ./ có thể khác tùy bạn đặt nhé, vd: comment.routes)
+
 const router = Router();
 
 // Auth routes
@@ -21,10 +24,12 @@ router.use("/documents", documentRoutes);
 // Media routes
 router.use("/media", mediaRoutes);
 
-//User routes
+// User routes
 router.use("/user", userRoutes);
 
+// Post routes
 router.use('/posts', postRoutes);
 
-export default router;
+router.use("/comments", commentRoutes); 
 
+export default router;
