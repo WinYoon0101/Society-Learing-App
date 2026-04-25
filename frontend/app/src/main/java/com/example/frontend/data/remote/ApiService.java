@@ -140,4 +140,7 @@ public interface ApiService {
     @POST("quiz/generate-quiz") //
     Call<ApiResponse<Quiz>> generateQuiz(@Body QuizRequest request);
 
+    @GET("quiz/my-quizzes")
+    Call<ApiResponse<List<Quiz>>> getMyQuizzes();
+
 }

@@ -29,6 +29,7 @@ import com.example.frontend.ui.meeting.MeetingActivity;
 import com.example.frontend.ui.notify.NotifyFragment;
 import com.example.frontend.ui.profile.ProfileFragment;
 import com.example.frontend.ui.quiz.QuizActivity;
+import com.example.frontend.ui.quiz.QuizListActivity;
 import com.example.frontend.ui.saved.SavedActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
@@ -114,7 +115,7 @@ public class HomeActivity extends AppCompatActivity {
             // 1. Đóng menu ngay lập tức
             drawerLayout.closeDrawer(GravityCompat.START);
 
-            // 2. Tạo Delay để tránh xung đột Animation trên máy OPPO
+            // 2. Tạo Delay để tránh xung đột Animation
             new Handler().postDelayed(() -> {
                 Intent intent = null;
                 if (id == R.id.nav_saved) intent = new Intent(this, SavedActivity.class);
@@ -122,12 +123,12 @@ public class HomeActivity extends AppCompatActivity {
                 else if (id == R.id.nav_calendar) intent = new Intent(this, CalendarActivity.class);
                 else if (id == R.id.nav_group) intent = new Intent(this, GroupActivity.class);
                 else if (id == R.id.nav_meeting) intent = new Intent(this, MeetingActivity.class);
-                else if (id == R.id.nav_quiz) intent = new Intent(this, QuizActivity.class);
+                else if (id == R.id.nav_quiz) intent = new Intent(this, QuizListActivity.class);
 
                 if (intent != null) {
                     startActivity(intent);
                 }
-            }, 250); // Delay 250ms là đủ để Drawer đóng êm xịt
+            }, 150); // Delay đủ để Drawer đóng
 
             return true;
         });
