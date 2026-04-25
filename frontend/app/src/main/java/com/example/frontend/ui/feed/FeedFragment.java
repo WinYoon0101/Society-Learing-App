@@ -37,7 +37,6 @@ public class FeedFragment extends Fragment {
         // Quan sát dữ liệu
         viewModel.getPosts().observe(getViewLifecycleOwner(), list -> {
             if (list != null) {
-                Toast.makeText(getContext(), "Đã tải: " + list.size() + " bài", Toast.LENGTH_SHORT).show();
                 adapter.updateData(list);
             } else {
                 Toast.makeText(getContext(), "Không có bài viết nào hoặc lỗi tải tin", Toast.LENGTH_SHORT).show();
@@ -51,9 +50,6 @@ public class FeedFragment extends Fragment {
                     .addToBackStack(null)
                     .commit();
         });
-
-
-
         return view;
     }
 
