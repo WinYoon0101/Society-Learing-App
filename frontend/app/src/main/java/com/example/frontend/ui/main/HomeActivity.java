@@ -28,7 +28,6 @@ import com.example.frontend.ui.library.LibraryFragment;
 import com.example.frontend.ui.meeting.MeetingActivity;
 import com.example.frontend.ui.notify.NotifyFragment;
 import com.example.frontend.ui.profile.ProfileFragment;
-import com.example.frontend.ui.quiz.QuizActivity;
 import com.example.frontend.ui.quiz.QuizListActivity;
 import com.example.frontend.ui.saved.SavedActivity;
 import com.google.android.material.button.MaterialButton;
@@ -99,8 +98,10 @@ public class HomeActivity extends AppCompatActivity {
     private void setupDrawer() {
         btnOpenMenu.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
 
-        View headerView = navigationView.getHeaderView(0);
-        MaterialButton btnNavLogout = (headerView != null) ? headerView.findViewById(R.id.btnNavLogout) : navigationView.findViewById(R.id.btnNavLogout);
+        // CHỖ SỬA QUAN TRỌNG:
+        // Vì btnNavLogout nằm trực tiếp trong NavigationView (trong FrameLayout cuối cùng),
+        // chứ không nằm trong file header (nav_header), nên ta tìm trực tiếp từ navigationView.
+        MaterialButton btnNavLogout = navigationView.findViewById(R.id.btnNavLogout);
 
         if (btnNavLogout != null) {
             btnNavLogout.setOnClickListener(v -> {
@@ -111,11 +112,8 @@ public class HomeActivity extends AppCompatActivity {
 
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
-
-            // 1. Đóng menu ngay lập tức
             drawerLayout.closeDrawer(GravityCompat.START);
 
-            // 2. Tạo Delay để tránh xung đột Animation
             new Handler().postDelayed(() -> {
                 Intent intent = null;
                 if (id == R.id.nav_saved) intent = new Intent(this, SavedActivity.class);
@@ -128,14 +126,16 @@ public class HomeActivity extends AppCompatActivity {
                 if (intent != null) {
                     startActivity(intent);
                 }
-            }, 150); // Delay đủ để Drawer đóng
+            }, 150);
 
             return true;
         });
     }
 
     private void setupBottomTabs() {
+        // Mặc định chọn tab Home khi mới vào
         selectTab(imgHome, lineHome, new FeedFragment());
+
         tabHome.setOnClickListener(v -> selectTab(imgHome, lineHome, new FeedFragment()));
         tabFriend.setOnClickListener(v -> selectTab(imgFriend, lineFriend, new FriendFragment()));
         tabChat.setOnClickListener(v -> selectTab(imgChat, lineChat, new ChatFragment()));
@@ -145,12 +145,20 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void performLogout() {
-        // Disconnect socket trước khi xóa token
-        com.example.frontend.data.socket.ChatSocketManager.INSTANCE.disconnect();
+        // Ngắt kết nối socket
+        try {
+            com.example.frontend.data.socket.ChatSocketManager.INSTANCE.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+        // Xóa dữ liệu SharedPreferences
         SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
         sharedPref.edit().clear().apply();
+
         Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+
+        // Chuyển về màn hình đăng nhập và xóa sạch stack các activity cũ
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
@@ -170,7 +178,8 @@ public class HomeActivity extends AppCompatActivity {
         View[] lines = {lineHome, lineFriend, lineChat, lineLibrary, lineNotify, lineProfile};
         for (int i = 0; i < imgs.length; i++) {
             imgs[i].setSelected(false);
-            imgs[i].setScaleX(1f); imgs[i].setScaleY(1f);
+            imgs[i].setScaleX(1f);
+            imgs[i].setScaleY(1f);
             lines[i].setVisibility(View.INVISIBLE);
         }
     }
