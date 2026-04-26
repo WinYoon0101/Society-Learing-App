@@ -66,7 +66,9 @@ object ChatSocketManager {
 
     fun disconnect() {
         socket?.disconnect()
-        Log.d(TAG, "Socket disconnected")
+        socket?.off() // Remove all listeners
+        socket = null  // Force null để lần sau initialize lại từ đầu
+        Log.d(TAG, "Socket disconnected and reset")
     }
 
     private fun setupListeners() {

@@ -34,7 +34,8 @@ public class User implements Serializable {
     }
 
     public String getId() {
-        return mongoId != null ? mongoId : authId;
+        String id = mongoId != null ? mongoId : authId;
+        return id != null ? id.trim() : null;
     }
 
     public String getUsername() { return username; }

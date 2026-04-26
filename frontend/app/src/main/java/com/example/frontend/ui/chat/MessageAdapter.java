@@ -44,11 +44,11 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public int getItemViewType(int position) {
         Message msg = messages.get(position);
         if (msg.getSender() != null && msg.getSender().getId() != null) {
-            String senderId = msg.getSender().getId();
-            String logMsg = "SenderId: " + senderId + " | CurrentId: " + currentUserId + " | Match: " + senderId.equals(currentUserId);
-            android.util.Log.d("MessageAdapter", logMsg);
+            String senderId = msg.getSender().getId().trim();
+            String myId = currentUserId != null ? currentUserId.trim() : "";
+            android.util.Log.d("MessageAdapter", "SenderId: [" + senderId + "] | CurrentId: [" + myId + "] | Match: " + senderId.equals(myId));
 
-            if (senderId.equals(currentUserId)) {
+            if (senderId.equals(myId)) {
                 return VIEW_TYPE_SENT;
             }
         }
