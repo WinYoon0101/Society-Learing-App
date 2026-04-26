@@ -84,12 +84,15 @@ public class LoginActivity extends AppCompatActivity {
                             String token = result.data.getAccessToken();
                             String username = result.data.getUser().getUsername();
                             String userId = result.data.getUser().getId(); // Lấy ID từ Object User server trả về
+                            String avatar = result.data.getUser().getAvatar();
 
                             // Lưu Token vào SharedPreferences
                             SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
                             SharedPreferences.Editor editor = sharedPref.edit();
                             editor.putString("JWT_TOKEN", token);
                             editor.putString("USER_ID", userId);
+                            editor.putString("USER_AVATAR", avatar);
+                            editor.putString("USERNAME", username);
                             editor.apply();
 
                             Toast.makeText(LoginActivity.this, "Đăng nhập thành công! Chào mừng " + username, Toast.LENGTH_SHORT).show();

@@ -1,6 +1,7 @@
 package com.example.frontend.data.model
 
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 import java.util.Date
 
 data class Message(
@@ -30,4 +31,4 @@ data class Message(
 
     @SerializedName("updatedAt")
     val updatedAt: Date? = null
-)
+) : Serializable

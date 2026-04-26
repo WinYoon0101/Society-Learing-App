@@ -123,10 +123,10 @@ export function initChatSocket(io: Server) {
 
           // Populate để gửi về client
           const populated = await Message.findById(message._id).populate([
-            { path: "sender", select: "username avatar" },
+            { path: "sender", select: "username avatar _id" },
             {
               path: "replyTo",
-              populate: { path: "sender", select: "username avatar" },
+              populate: { path: "sender", select: "username avatar _id" },
             },
           ]);
 

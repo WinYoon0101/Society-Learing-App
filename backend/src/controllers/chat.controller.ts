@@ -13,10 +13,10 @@ export const getConversations = async (
     const userId = req.user!.id;
 
     const conversations = await Conversation.find({ members: userId })
-      .populate("members", "username avatar isActive")
+      .populate("members", "username avatar isActive _id")
       .populate({
         path: "lastMessage",
-        populate: { path: "sender", select: "username avatar" },
+        populate: { path: "sender", select: "username avatar _id" },
       })
       .sort({ updatedAt: -1 });
 
@@ -92,10 +92,10 @@ export const getMessages = async (
     }
 
     const messages = await Message.find({ conversationId })
-      .populate("sender", "username avatar")
+      .populate("sender", "username avatar _id")
       .populate({
         path: "replyTo",
-        populate: { path: "sender", select: "username avatar" },
+        populate: { path: "sender", select: "username avatar _id" },
       })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
