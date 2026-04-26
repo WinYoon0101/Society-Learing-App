@@ -3,15 +3,20 @@ package com.example.frontend.data.remote;
 import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.data.model.UpdateProfile;
+import com.example.frontend.data.model.User;
 
 import java.util.List;
 
+import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 
 public interface ApiService {
@@ -48,4 +53,18 @@ public interface ApiService {
     // 6. Huỷ kết bạn
     @DELETE("friends/remove/{id}")
     Call<ApiResponse<Object>> removeFriend(@Path("id") String userId);
+
+    @GET("users/me")
+    Call<ApiResponse<User>> getMyProfile();
+
+    @PUT("users/update")
+    Call<ApiResponse<User>> updateProfile(@Body UpdateProfile request);
+
+    @Multipart
+    @POST("users/upload-avatar")
+    Call<ApiResponse<String>> uploadAvatar(@Part MultipartBody.Part file);
+
+    @Multipart
+    @POST("users/upload-cover")
+    Call<ApiResponse<String>> uploadCover(@Part MultipartBody.Part file);
 }
