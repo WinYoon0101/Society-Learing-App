@@ -19,6 +19,9 @@
         android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".ui.docs.EditDocActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.quiz.QuizResultActivity"
             android:exported="false" />
         <activity
