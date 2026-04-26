@@ -1,6 +1,7 @@
 package com.example.frontend.data.remote;
 
 import com.example.frontend.data.model.ApiResponse;
+import com.example.frontend.data.model.Conversation;
 import com.example.frontend.data.model.Comment;
 import com.example.frontend.data.model.CommentRequest;
 import com.example.frontend.data.model.Document;
@@ -9,6 +10,7 @@ import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.LoginResponse;
 import com.example.frontend.data.model.ProfileResponse;
 import com.example.frontend.data.model.Media;
+import com.example.frontend.data.model.Message;
 import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.Quiz;
 
@@ -129,6 +131,18 @@ public interface ApiService {
     @GET("documents/{id}")
     Call<ApiResponse<Document>> getDocumentById(@Path("id") String id);
 
+    // CHAT
+    @GET("chat/conversations")
+    Call<ApiResponse<List<Conversation>>> getConversations();
+
+    @POST("chat/conversations")
+    Call<ApiResponse<Conversation>> getOrCreateConversation(@Body Map<String, String> body);
+
+    @GET("chat/conversations/{conversationId}/messages")
+    Call<ApiResponse<List<Message>>> getMessages(@Path("conversationId") String conversationId);
+
+    @POST("chat/messages")
+    Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);
     @GET("posts/feed")
     Call<ApiResponse<List<Post>>> getAllPosts();
 

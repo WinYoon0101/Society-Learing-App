@@ -145,6 +145,9 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void performLogout() {
+        // Disconnect socket trước khi xóa token
+        com.example.frontend.data.socket.ChatSocketManager.INSTANCE.disconnect();
+
         SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
         sharedPref.edit().clear().apply();
         Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
