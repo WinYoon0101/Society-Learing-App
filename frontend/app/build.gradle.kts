@@ -51,4 +51,12 @@ dependencies {
     implementation("com.airbnb.android:lottie:6.4.0")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
+
+    // Socket.io for real-time chat
+    implementation("io.socket:socket.io-client:2.1.0") {
+        exclude(group = "org.json", module = "json")
+    }
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+
 }

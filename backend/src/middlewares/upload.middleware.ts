@@ -33,7 +33,7 @@ export const resolveFileType = (mimetype: string): MediaFileType => {
 const imageStorage = new CloudinaryStorage({
   cloudinary,
   params: (req: any, file: Express.Multer.File) => ({
-    folder: "vibely/images",
+    folder: "society/images",
     resource_type: "image",
     allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
     transformation: [{ quality: "auto", fetch_format: "auto" }],
@@ -47,7 +47,7 @@ const imageStorage = new CloudinaryStorage({
 const videoStorage = new CloudinaryStorage({
   cloudinary,
   params: (req: any, file: Express.Multer.File) => ({
-    folder: "vibely/videos",
+    folder: "society/videos",
     resource_type: "video",
     allowed_formats: ["mp4", "mov", "avi", "webm"],
     public_id: `vid_${Date.now()}`,
@@ -60,10 +60,10 @@ const videoStorage = new CloudinaryStorage({
 const documentStorage = new CloudinaryStorage({
   cloudinary,
   params: (req: any, file: Express.Multer.File) => ({
-    folder: "vibely/documents",
-    resource_type: "raw",
+    folder: "society/documents",
+    resource_type: "auto",
     allowed_formats: ["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "txt"],
-    public_id: `doc_${Date.now()}_${file.originalname.replace(/\s+/g, "_")}`,
+    public_id: `doc_${Date.now()}_${file.originalname.split('.')[0]}`,
   }),
 });
 
@@ -73,7 +73,7 @@ const documentStorage = new CloudinaryStorage({
 const autoStorage = new CloudinaryStorage({
   cloudinary,
   params: (req: any, file: Express.Multer.File) => ({
-    folder: "vibely/media",
+    folder: "society/media",
     resource_type: getResourceType(file.mimetype),
     public_id: `media_${Date.now()}`,
     transformation:
@@ -148,6 +148,7 @@ const autoFilter = (
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "text/plain",
+    "application/octet-stream",
   ];
   if (ALLOWED_MIMES.includes(file.mimetype)) {
     cb(null, true);
@@ -177,7 +178,7 @@ export const uploadDocument = multer({
   storage: documentStorage,
   fileFilter: documentFilter,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
-}).single("file");
+}).single("media");
 
 /** Upload bất kỳ loại file, field name: "media" (tối đa 5 file) */
 export const uploadMedia = multer({

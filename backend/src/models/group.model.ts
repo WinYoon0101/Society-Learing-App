@@ -18,8 +18,8 @@ export interface IGroup extends Document{
     creatorId: mongoose.Types.ObjectId;
     member: IGroupMember[];
     privacy: GroupPrivacy;
-    createAt: Date;
-    updateAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 const GroupMemberSchema = new Schema<IGroupMember>({
@@ -69,7 +69,7 @@ const GroupSchema = new Schema<IGroup>(
     member:[GroupMemberSchema],
     privacy:{
         type: String,
-        enum: ["private", "public"],
+        enum: ["Private", "Public"],
         require: true,
     },
 },

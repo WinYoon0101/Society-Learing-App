@@ -106,7 +106,7 @@ router.post(
   uploadSingleFile
 );
 
-/** Upload 1 tài liệu đơn, field: "file" */
+/** Upload 1 tài liệu đơn, field: "media" */
 router.post(
   "/upload/document",
   (req: Request, res: Response, next: NextFunction) => {

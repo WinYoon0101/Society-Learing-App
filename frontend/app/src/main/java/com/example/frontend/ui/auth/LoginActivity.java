@@ -83,10 +83,26 @@ public class LoginActivity extends AppCompatActivity {
 
                             String token = result.data.getAccessToken();
                             String username = result.data.getUser().getUsername();
+                            String userId = result.data.getUser().getId();
+                            String avatar = result.data.getUser().getAvatar();
+
+                            // Debug log để verify ID
+                            android.util.Log.d("LoginActivity", "userId saved: [" + userId + "]");
+                            android.util.Log.d("LoginActivity", "username: [" + username + "]");
+
+                            if (userId == null || userId.isEmpty()) {
+                                Toast.makeText(LoginActivity.this, "Lỗi: không lấy được userId", Toast.LENGTH_LONG).show();
+                                return;
+                            }
 
                             // Lưu Token vào SharedPreferences
                             SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-                            sharedPref.edit().putString("JWT_TOKEN", token).apply();
+                            SharedPreferences.Editor editor = sharedPref.edit();
+                            editor.putString("JWT_TOKEN", token);
+                            editor.putString("USER_ID", userId);
+                            editor.putString("USER_AVATAR", avatar);
+                            editor.putString("USERNAME", username);
+                            editor.apply();
 
                             Toast.makeText(LoginActivity.this, "Đăng nhập thành công! Chào mừng " + username, Toast.LENGTH_SHORT).show();
 
