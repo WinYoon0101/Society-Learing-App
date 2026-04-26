@@ -8,6 +8,8 @@ import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.data.model.UpdateProfile;
+import com.example.frontend.data.model.User;
 import com.example.frontend.data.model.ProfileResponse;
 import com.example.frontend.data.model.Media;
 import com.example.frontend.data.model.Message;
@@ -23,6 +25,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.Header;
 import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
@@ -67,13 +70,19 @@ public interface ApiService {
     @DELETE("friends/remove/{id}")
     Call<ApiResponse<Object>> removeFriend(@Path("id") String userId);
 
-    //7. Xem profile
-    @GET("api/auth/me")
-    Call<ProfileResponse> getProfile();
+    @GET("users/me")
+    Call<ApiResponse<User>> getMyProfile();
 
-    //8. Update Profile
-    @PUT("api/user/update")
-    Call<ProfileResponse> updateProfile(@Body UpdateProfileRequest request);
+    @PUT("users/update")
+    Call<ApiResponse<User>> updateProfile(@Body UpdateProfile request);
+
+    @Multipart
+    @POST("users/upload-avatar")
+    Call<ApiResponse<String>> uploadAvatar(@Part MultipartBody.Part file);
+
+    @Multipart
+    @POST("users/upload-cover")
+    Call<ApiResponse<String>> uploadCover(@Part MultipartBody.Part file);
     //TÀI LIỆU
 
     @GET("documents/me/list")
