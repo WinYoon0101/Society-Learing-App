@@ -38,8 +38,8 @@ const MediaSchema = new Schema<IMedia>(
       type: String,
       required: [true, "sourceType là bắt buộc"],
       enum: {
-        values: ["post", "story", "message"],
-        message: "sourceType phải là post, story hoặc message",
+        values: ["post", "story", "message","document"],
+        message: "sourceType phải là post, story, message hoặc document",
       },
     },
     targetId: {

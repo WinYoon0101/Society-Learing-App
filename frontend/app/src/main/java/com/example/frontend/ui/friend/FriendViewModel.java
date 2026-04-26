@@ -30,6 +30,9 @@ public class FriendViewModel extends AndroidViewModel {
         return createConversationResult;
     }
 
+    public void resetActionResult() {
+        actionResult.setValue(null);
+    }
     public FriendViewModel(@NonNull Application application) {
         super(application);
         repository = new FriendRepository(application.getApplicationContext());

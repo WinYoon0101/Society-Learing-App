@@ -2,12 +2,17 @@ package com.example.frontend.data.remote;
 
 import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Conversation;
+import com.example.frontend.data.model.Comment;
+import com.example.frontend.data.model.CommentRequest;
 import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.data.model.ProfileResponse;
 import com.example.frontend.data.model.Media;
 import com.example.frontend.data.model.Message;
+import com.example.frontend.data.model.Post;
+import com.example.frontend.data.model.Quiz;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +23,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
@@ -61,6 +67,13 @@ public interface ApiService {
     @DELETE("friends/remove/{id}")
     Call<ApiResponse<Object>> removeFriend(@Path("id") String userId);
 
+    //7. Xem profile
+    @GET("api/auth/me")
+    Call<ProfileResponse> getProfile();
+
+    //8. Update Profile
+    @PUT("api/user/update")
+    Call<ProfileResponse> updateProfile(@Body UpdateProfileRequest request);
     //TÀI LIỆU
 
     @GET("documents/me/list")
@@ -130,5 +143,39 @@ public interface ApiService {
 
     @POST("chat/messages")
     Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);
+    @GET("posts/feed")
+    Call<ApiResponse<List<Post>>> getAllPosts();
+
+
+    @Multipart
+    @POST("posts/create")
+    Call<ApiResponse<Post>> createPost(
+            @Part("content") RequestBody content,
+            @Part MultipartBody.Part image
+    );
+// Quiz
+    @POST("quiz/generate-quiz") //
+    Call<ApiResponse<Quiz>> generateQuiz(@Body QuizRequest request);
+
+    @GET("quiz/my-quizzes")
+    Call<ApiResponse<List<Quiz>>> getMyQuizzes();
+
+
+        // 1. Lấy danh sách (Nó sẽ trả về List các Comment gốc)
+        @GET("/api/comments/post/{postId}")
+        Call<ApiResponse<List<Comment>>> getComments(@Path("postId") String postId);
+
+        @POST("/api/comments")
+        Call<ApiResponse<Comment>> createComment(
+                @Header("Authorization") String token,
+                @Body CommentRequest body
+        );
+
+        // 3. Xóa bình luận
+        @DELETE("/api/comments/{commentId}")
+        Call<ApiResponse<Object>> deleteComment(
+                @Header("Authorization") String token,
+                @Path("commentId") String commentId
+        );
 
 }

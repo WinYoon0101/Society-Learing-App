@@ -15,7 +15,7 @@ export const createPost = async (req: AuthRequest, res: Response) =>{
             authorId: authorId,
             groupId: groupId || null,
             content: content,
-            privacy: privacy || "public",
+            privacy: privacy || "Public",
         });
         // bắt db lưu lại và chờ lưu
         const savePost = await newPost.save();
@@ -58,27 +58,31 @@ export const createPost = async (req: AuthRequest, res: Response) =>{
 
 //API Lấy bảng tin
 
-export const getFeed = async (req: AuthRequest, res: Response) =>{
-    try{
-    const feed = await Post.find({privacy:'public', groupId:null})
-    // lấy bài đăng mới nhất đưa lên đầu
-    .sort({createAt: -1})
-    .populate('authorId', 'username avatar') 
-    .populate('mediaFiles')
-    .limit(20)
+export const getFeed = async (req: AuthRequest, res: Response) => {
+    try {
+        // 1. Lấy danh sách bài viết
+        const posts = await Post.find()
+            .sort({ createdAt: -1 })
+            .populate('authorId', 'username avatar')
+            .lean(); // Dùng .lean() để có thể chỉnh sửa kết quả trả về
 
-    // tra danh sach bai viet
-    res.status(200).json({
-        success: true,
-        data: getFeed,
-    });
-} catch(error){
-    res.status(500).json({
-        success: false,
-        message: "Loi khong the load bang tin"
-    })
-}
-}
+        // 2. Với mỗi bài viết, đi tìm Media tương ứng
+        const postsWithMedia = await Promise.all(posts.map(async (post) => {
+            const media = await Media.findOne({ targetId: post._id, fileType: 'image' });
+            return {
+                ...post,
+                image: media ? media.url : "" // Gán URL ảnh vào trường "image" để khớp với Android
+            };
+        }));
+
+        res.status(200).json({
+            success: true,
+            data: postsWithMedia // Trả về danh sách đã có link ảnh
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi lấy feed" });
+    }
+};
 
 // API xoa bai
 export const deletePost = async (req: AuthRequest, res: Response) => {

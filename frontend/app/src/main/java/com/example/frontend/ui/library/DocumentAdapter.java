@@ -57,7 +57,7 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
 
         String url = doc.getFileUrl().toLowerCase();
 
-        // --- BƯỚC 1: RESET NỀN (CỰC KỲ QUAN TRỌNG) ---
+        // --- BƯỚC 1: RESET NỀN  ---
         holder.ivFileType.setColorFilter(null);
         holder.iconCard.setCardBackgroundColor(Color.WHITE);
 
