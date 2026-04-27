@@ -44,9 +44,9 @@ public class ProfileFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        // bind view
         imgAvatar = view.findViewById(R.id.imgAvatar);
         tvName = view.findViewById(R.id.tvUserName);
         tvBio = view.findViewById(R.id.tvBio);
@@ -57,7 +57,6 @@ public class ProfileFragment extends Fragment {
 
         loadProfile();
 
-        // click đổi avatar
         imgAvatar.setOnClickListener(v -> openGallery());
         btnEdit.setOnClickListener(v -> openGallery());
 
@@ -70,8 +69,8 @@ public class ProfileFragment extends Fragment {
                 User user = result.data;
 
                 tvName.setText(user.getUsername());
-                tvBio.setText("Hello " + user.getUsername()); // tạm
-                tvStats.setText("0 friends • 0 groups"); // tạm luôn
+                tvBio.setText("Hello " + user.getUsername());
+                tvStats.setText("0 friends • 0 groups");
 
                 Glide.with(this)
                         .load(user.getAvatar())
@@ -87,16 +86,14 @@ public class ProfileFragment extends Fragment {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == PICK_IMAGE && resultCode == Activity.RESULT_OK && data != null) {
             Uri uri = data.getData();
 
-            // preview trước
             imgAvatar.setImageURI(uri);
 
-            // upload lên server
             File file = new File(uri.getPath());
 
             repository.uploadAvatar(file).observe(getViewLifecycleOwner(), result -> {
@@ -105,59 +102,5 @@ public class ProfileFragment extends Fragment {
                 }
             });
         }
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        tvUsername = view.findViewById(R.id.tvUsername);
-        tvEmail = view.findViewById(R.id.tvEmail);
-        imgAvatar = view.findViewById(R.id.imgAvatar);
-
-        loadProfile();
-    }
-
-    private void loadProfile() {
-        ApiService api = ApiClient.getApiService(getContext());
-
-        api.getProfile().enqueue(new Callback<ProfileResponse>() {
-            @Override
-            public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-
-                    User user = response.body().getData().getUser();
-
-                    tvUsername.setText(user.getUsername());
-                    tvEmail.setText(user.getEmail());
-
-                    Glide.with(requireContext())
-                            .load(user.getAvatar())
-                            .into(imgAvatar);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ProfileResponse> call, Throwable t) {
-                t.printStackTrace();
-            }
-        });
-
-        UpdateProfileRequest req = new UpdateProfileRequest(
-                tvUsername.getText().toString(),
-                "bio mới"
-        );
-
-        api.updateProfile(req).enqueue(new Callback<ProfileResponse>() {
-            @Override
-            public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
-                if (response.isSuccessful()) {
-                    // update UI
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ProfileResponse> call, Throwable t) {}
-        });
     }
 }
