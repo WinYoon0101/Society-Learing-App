@@ -57,6 +57,8 @@ dependencies {
         exclude(group = "org.json", module = "json")
     }
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("de.hdodenhof:circleimageview:3.1.0")
 
 
 }
