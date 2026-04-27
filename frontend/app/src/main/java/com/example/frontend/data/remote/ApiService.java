@@ -11,12 +11,14 @@ import com.example.frontend.data.model.ProfileResponse;
 import com.example.frontend.data.model.Media;
 import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.Quiz;
+import com.example.frontend.data.model.ReactionRequest;
 
 import java.util.List;
 import java.util.Map;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -163,5 +165,7 @@ public interface ApiService {
                 @Header("Authorization") String token,
                 @Path("commentId") String commentId
         );
+    @POST("api/reactions/toggle")
+    Call<ResponseBody> toggleReaction(@Body ReactionRequest request);
 
 }
