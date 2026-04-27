@@ -1,14 +1,18 @@
 package com.example.frontend.data.remote;
 
 import com.example.frontend.data.model.ApiResponse;
+import com.example.frontend.data.model.Conversation;
 import com.example.frontend.data.model.Comment;
 import com.example.frontend.data.model.CommentRequest;
 import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.data.model.UpdateProfile;
+import com.example.frontend.data.model.User;
 import com.example.frontend.data.model.ProfileResponse;
 import com.example.frontend.data.model.Media;
+import com.example.frontend.data.model.Message;
 import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.Quiz;
 import com.example.frontend.data.model.ReactionRequest;
@@ -23,6 +27,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.Header;
 import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
@@ -67,13 +72,19 @@ public interface ApiService {
     @DELETE("friends/remove/{id}")
     Call<ApiResponse<Object>> removeFriend(@Path("id") String userId);
 
-    //7. Xem profile
-    @GET("api/auth/me")
-    Call<ProfileResponse> getProfile();
+    @GET("users/me")
+    Call<ApiResponse<User>> getMyProfile();
 
-    //8. Update Profile
-    @PUT("api/user/update")
-    Call<ProfileResponse> updateProfile(@Body UpdateProfileRequest request);
+    @PUT("users/update")
+    Call<ApiResponse<User>> updateProfile(@Body UpdateProfile request);
+
+    @Multipart
+    @POST("users/upload-avatar")
+    Call<ApiResponse<String>> uploadAvatar(@Part MultipartBody.Part file);
+
+    @Multipart
+    @POST("users/upload-cover")
+    Call<ApiResponse<String>> uploadCover(@Part MultipartBody.Part file);
     //TÀI LIỆU
 
     @GET("documents/me/list")
@@ -131,6 +142,18 @@ public interface ApiService {
     @GET("documents/{id}")
     Call<ApiResponse<Document>> getDocumentById(@Path("id") String id);
 
+    // CHAT
+    @GET("chat/conversations")
+    Call<ApiResponse<List<Conversation>>> getConversations();
+
+    @POST("chat/conversations")
+    Call<ApiResponse<Conversation>> getOrCreateConversation(@Body Map<String, String> body);
+
+    @GET("chat/conversations/{conversationId}/messages")
+    Call<ApiResponse<List<Message>>> getMessages(@Path("conversationId") String conversationId);
+
+    @POST("chat/messages")
+    Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);
     @GET("posts/feed")
     Call<ApiResponse<List<Post>>> getAllPosts();
 

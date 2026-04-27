@@ -1,8 +1,9 @@
 package com.example.frontend.data.model;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class Document {
+public class Document implements Serializable {
     private String _id;
     private String title;
     private String description;
