@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4F7EE">
+    android:background="#FFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -139,7 +139,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="20dp"
         android:src="@drawable/ic_chat"
-        app:backgroundTint="#4A7C59"
+        app:backgroundTint="#10B981"
         app:tint="#FFFFFF"
         android:contentDescription="Chat mới" />
 
