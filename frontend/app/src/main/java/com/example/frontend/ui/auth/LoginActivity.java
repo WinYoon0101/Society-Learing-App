@@ -4,11 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.frontend.R;
@@ -24,23 +24,25 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputEditText edtEmail, edtPassword;
     private MaterialButton btnLogin;
 
-    private TextView tvSignUpLink;
+    private TextView tvSignUpLink, tvForgotPassword;
+    private CheckBox cbRemember;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // 1. Ánh xạ View từ file XML
         edtEmail = findViewById(R.id.edtEmail);
         edtPassword = findViewById(R.id.edtPassword);
         btnLogin = findViewById(R.id.btnLogin);
         tvSignUpLink = findViewById(R.id.tvSignUpLink);
+        tvForgotPassword = findViewById(R.id.tvForgotPassword);
+        cbRemember = findViewById(R.id.cbRemember);
 
-        // 2. Khởi tạo ViewModel
         viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
-        // 3. Bắt sự kiện Click
+        observeViewModel(); // ✅ FIX
+
         btnLogin.setOnClickListener(v -> {
             String email = edtEmail.getText().toString().trim();
             String password = edtPassword.getText().toString().trim();
@@ -50,65 +52,58 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
-            // Gọi ViewModel xử lý logic gọi mạng
             viewModel.login(email, password);
-            observeViewModel();
         });
 
-        // Bắt sự kiện bấm chữ "Sign Up" để qua màn hình Đăng ký
-        tvSignUpLink.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
-            startActivity(intent);
-        });
+        tvSignUpLink.setOnClickListener(v ->
+                startActivity(new Intent(this, RegisterActivity.class)));
+
+        tvForgotPassword.setOnClickListener(v ->
+                startActivity(new Intent(this, ForgotPasswordActivity.class)));
     }
 
-    // 4. Lắng nghe và xử lý kết quả
     private void observeViewModel() {
-        viewModel.getLoginResult().observe(this, new Observer<Result<LoginResponse>>() {
-            @Override
-            public void onChanged(Result<LoginResponse> result) {
-                if (result == null) return;
+        viewModel.getLoginResult().observe(this, result -> {
+            if (result == null) return;
 
-                switch (result.status) {
-                    case LOADING:
-                        btnLogin.setEnabled(false);
-                        btnLogin.setText("Đang xử lý...");
-                        break;
+            switch (result.status) {
+                case LOADING:
+                    btnLogin.setEnabled(false);
+                    btnLogin.setText("Đang xử lý...");
+                    break;
 
-                    case SUCCESS:
-                        btnLogin.setEnabled(true);
-                        btnLogin.setText("Đăng nhập");
+                case SUCCESS:
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText("Đăng nhập");
 
-                        if (result.data != null && result.data.getUser() != null) {
+                    if (result.data != null && result.data.getUser() != null) {
 
-                            String token = result.data.getAccessToken();
-                            String username = result.data.getUser().getUsername();
-                            String userId = result.data.getUser().getId(); // Lấy ID từ Object User server trả về
+                        String token = result.data.getAccessToken();
+                        String userId = result.data.getUser().getId();
 
-                            // Lưu Token vào SharedPreferences
-                            SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-                            SharedPreferences.Editor editor = sharedPref.edit();
+                        SharedPreferences pref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = pref.edit();
+
+                        if (cbRemember.isChecked()) {
                             editor.putString("JWT_TOKEN", token);
                             editor.putString("USER_ID", userId);
-                            editor.apply();
-
-                            Toast.makeText(LoginActivity.this, "Đăng nhập thành công! Chào mừng " + username, Toast.LENGTH_SHORT).show();
-
-                            // ------------------ CHUYỂN SANG TRANG HOME ------------------
-                            Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-                            // Xóa lịch sử màn hình Login để không Back lại được
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(intent);
-                            finish();
+                            editor.putBoolean("IS_LOGGED_IN", true);
+                        } else {
+                            editor.clear();
                         }
-                        break;
 
-                    case ERROR:
-                        btnLogin.setEnabled(true);
-                        btnLogin.setText("Login");
-                        Toast.makeText(LoginActivity.this, result.message, Toast.LENGTH_LONG).show();
-                        break;
-                }
+                        editor.apply();
+
+                        startActivity(new Intent(this, HomeActivity.class));
+                        finish();
+                    }
+                    break;
+
+                case ERROR:
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText("Đăng nhập");
+                    Toast.makeText(this, result.message, Toast.LENGTH_LONG).show();
+                    break;
             }
         });
     }
