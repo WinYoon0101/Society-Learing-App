@@ -68,6 +68,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvContent" />
+
         <View
             android:id="@+id/line"
             android:layout_width="match_parent"
@@ -95,12 +96,12 @@
                 android:paddingVertical="10dp"
                 android:paddingEnd="16dp"
                 android:background="?attr/selectableItemBackground">
+
                 <ImageView
                     android:id="@+id/imgLike"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/ic_like"
-                    app:tint="#666666" />
+                    android:src="@drawable/ic_like" />
                 <TextView
                     android:id="@+id/tvLikeCount"
                     android:layout_width="wrap_content"

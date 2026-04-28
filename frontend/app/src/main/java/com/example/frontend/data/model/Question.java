@@ -1,6 +1,8 @@
 package com.example.frontend.data.model;
 
-public class Question {
+import java.io.Serializable;
+
+public class Question implements Serializable {
     public String question;
     public String A;
     public String B;

@@ -131,10 +131,19 @@ public class RegisterActivity extends AppCompatActivity {
 
                             String token = result.data.getAccessToken();
                             String username = result.data.getUser().getUsername();
+                            String userId = result.data.getUser().getId();
+                            String avatar = result.data.getUser().getAvatar();
 
-                            // ✅ Lưu token
+                            android.util.Log.d("RegisterActivity", "userId saved: [" + userId + "]");
+
+                            // Lưu đầy đủ giống LoginActivity
                             SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-                            sharedPref.edit().putString("JWT_TOKEN", token).apply();
+                            SharedPreferences.Editor editor = sharedPref.edit();
+                            editor.putString("JWT_TOKEN", token);
+                            editor.putString("USER_ID", userId);
+                            editor.putString("USER_AVATAR", avatar);
+                            editor.putString("USERNAME", username);
+                            editor.apply();
 
                             Toast.makeText(RegisterActivity.this,
                                     "Đăng ký thành công! Chào mừng " + username,
