@@ -106,8 +106,6 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         // Bấm "Phản hồi"
         holder.btnReply.setOnClickListener(v -> {
             if (replyClickListener != null) {
-                // Ưu tiên reply vào comment gốc để tránh cây quá sâu,
-                // nhưng nếu muốn sâu tận cùng thì cứ truyền comment.getId()
                 String targetId = (comment.getParentId() != null) ? comment.getParentId() : comment.getId();
                 replyClickListener.onReplyClick(targetId, userName);
             }
