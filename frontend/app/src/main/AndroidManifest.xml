@@ -19,6 +19,9 @@
         android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".ui.pomodoro.PomodoroSummaryActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.pomodoro.PomodoroActivity"
             android:exported="false" />
         <activity
