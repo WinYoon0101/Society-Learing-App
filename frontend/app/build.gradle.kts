@@ -58,5 +58,18 @@ dependencies {
     }
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
+// TensorFlow Lite
+    implementation("org.tensorflow:tensorflow-lite:2.16.1")
+
+
+    // ML Kit Face Detection
+    implementation("com.google.mlkit:face-detection:16.1.6")
+
+    val camerax_version = "1.3.0"
+    implementation("androidx.camera:camera-core:$camerax_version")
+    implementation("androidx.camera:camera-camera2:$camerax_version")
+    implementation("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation("androidx.camera:camera-view:$camerax_version")
+
 
 }
