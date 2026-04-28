@@ -255,4 +255,21 @@ public class PomodoroActivity extends AppCompatActivity {
             startCamera();
         }
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Kiểm tra xem có đúng là mã yêu cầu 101 mà mình đã đặt ở checkPermissions không
+        if (requestCode == 101) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Người dùng đã nhấn "Cho phép" -> Mở camera ngay
+                startCamera();
+            } else {
+                // Người dùng nhấn "Từ chối"
+                Toast.makeText(this, "Bạn cần cấp quyền Camera để dùng tính năng AI", Toast.LENGTH_LONG).show();
+                txtAIMessage.setText("AI không thể hoạt động do thiếu quyền Camera 🛑");
+            }
+        }
+    }
 }
