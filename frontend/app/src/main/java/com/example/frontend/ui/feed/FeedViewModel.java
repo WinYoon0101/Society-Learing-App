@@ -19,6 +19,8 @@ import retrofit2.Response;
 public class FeedViewModel extends ViewModel {
     private final MutableLiveData<List<Post>> posts = new MutableLiveData<>();
     private final MutableLiveData<String> error = new MutableLiveData<>();
+
+    // Đây là cái Biến (Object) được tạo ra từ Khuôn PostRepository
     private PostRepository repository;
 
     public LiveData<List<Post>> getPosts() { return posts; }
@@ -40,6 +42,22 @@ public class FeedViewModel extends ViewModel {
             @Override
             public void onFailure(Call<ApiResponse<List<Post>>> call, Throwable t) {
                 error.setValue(t.getMessage());
+            }
+        });
+    }
+
+    // =========================================
+    // HÀM XỬ LÝ GỬI REACTION LÊN SERVER
+    // =========================================
+    public void toggleReaction(String targetId, String targetType, String type) {
+        repository.toggleReaction(targetId, targetType, type, new retrofit2.Callback<okhttp3.ResponseBody>() {
+            @Override
+            public void onResponse(retrofit2.Call<okhttp3.ResponseBody> call, retrofit2.Response<okhttp3.ResponseBody> response) {
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<okhttp3.ResponseBody> call, Throwable t) {
+
             }
         });
     }

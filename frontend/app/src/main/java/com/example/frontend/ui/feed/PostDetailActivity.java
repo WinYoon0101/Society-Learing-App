@@ -32,7 +32,7 @@ public class PostDetailActivity extends AppCompatActivity {
     // Các thành phần giao diện
     private EditText edtComment;
     private ImageView btnSendComment, imgPost, imgAvatar, btnBack;
-    private TextView tvAuthorName, tvContent;
+    private TextView tvAuthorName, tvContent, tvCommentCount;
     private RecyclerView rvComments;
 
     // Dữ liệu quản lý trạng thái
@@ -76,6 +76,8 @@ public class PostDetailActivity extends AppCompatActivity {
         tvContent = findViewById(R.id.tvContent);
         imgAvatar = findViewById(R.id.imgAvatar);
         imgPost = findViewById(R.id.imgPost);
+        tvCommentCount = findViewById(R.id.tvCommentCount);
+
 
         // Nút quay lại màn hình chính
         btnBack.setOnClickListener(v -> finish());
@@ -154,6 +156,13 @@ public class PostDetailActivity extends AppCompatActivity {
         // Khi có thông báo lỗi hoặc thành công từ Server
         viewModel.getMessageLiveData().observe(this, msg -> {
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        });
+
+        // Lắng nghe sự thay đổi của số lượng bình luận
+        viewModel.getCommentCountLiveData().observe(this, count -> {
+            if (tvCommentCount != null) {
+                tvCommentCount.setText(String.valueOf(count));
+            }
         });
 
         // Khi đăng bình luận thành công -> Reset ô nhập liệu

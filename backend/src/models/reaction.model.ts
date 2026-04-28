@@ -31,7 +31,7 @@ const ReactionSchema: Schema = new Schema({
 
     type: { 
         type: String, 
-        enum: ['Like', 'Love', 'Haha', 'Wow'], 
+        enum: ['Like', 'Love', 'Haha', 'Wow', 'Angry', 'Sad'], 
         required: true 
     }
 

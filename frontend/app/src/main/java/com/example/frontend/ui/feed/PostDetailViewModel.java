@@ -24,9 +24,12 @@ public class PostDetailViewModel extends AndroidViewModel {
 
     // --- CÁC LIVEDATA ĐỂ ACTIVITY "THEO DÕI" (OBSERVE) ---
     private MutableLiveData<List<Comment>> commentsLiveData = new MutableLiveData<>();
-    private MutableLiveData<String> messageLiveData = new MutableLiveData<>(); // Dùng cho Toast (Lỗi/Thành công)
-    private MutableLiveData<Boolean> actionSuccessLiveData = new MutableLiveData<>(); // Báo hiệu Đăng/Xóa thành công
-    private MutableLiveData<Boolean> isLoading = new MutableLiveData<>(); // Bật/tắt vòng xoay loading
+    private MutableLiveData<String> messageLiveData = new MutableLiveData<>();
+    private MutableLiveData<Boolean> actionSuccessLiveData = new MutableLiveData<>();
+    private MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
+
+    // THÊM DÒNG NÀY: LiveData để theo dõi số lượng bình luận
+    private MutableLiveData<Integer> commentCountLiveData = new MutableLiveData<>();
 
     public PostDetailViewModel(@NonNull Application application) {
         super(application);
@@ -38,6 +41,9 @@ public class PostDetailViewModel extends AndroidViewModel {
     public LiveData<String> getMessageLiveData() { return messageLiveData; }
     public LiveData<Boolean> getActionSuccessLiveData() { return actionSuccessLiveData; }
     public LiveData<Boolean> getIsLoading() { return isLoading; }
+
+    // THÊM DÒNG NÀY: Getter cho số lượng bình luận
+    public LiveData<Integer> getCommentCountLiveData() { return commentCountLiveData; }
 
     // ==========================================
     // LOGIC 1: LẤY VÀ ÉP DẸP DANH SÁCH BÌNH LUẬN
@@ -57,6 +63,9 @@ public class PostDetailViewModel extends AndroidViewModel {
 
                     // Đẩy danh sách đã xử lý lên LiveData
                     commentsLiveData.setValue(flatList);
+
+                    // THÊM DÒNG NÀY: Cập nhật tổng số bình luận sau khi đã trải phẳng
+                    commentCountLiveData.setValue(flatList.size());
                 } else {
                     messageLiveData.setValue("Không thể tải bình luận");
                 }
