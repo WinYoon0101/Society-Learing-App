@@ -25,7 +25,7 @@ const ReactionSchema: Schema = new Schema({
 
     targetType: { 
         type: String, 
-        enum: ['Posts', 'Comment', 'Stories'], 
+        enum: ['Post', 'Comment', 'Stories'], 
         required: true 
     },
 
