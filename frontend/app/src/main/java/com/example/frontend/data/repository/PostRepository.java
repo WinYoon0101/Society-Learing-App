@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Post;
+import com.example.frontend.data.model.ReactionItem;
 import com.example.frontend.data.model.ReactionRequest; // Import model ReactionRequest
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
@@ -34,8 +35,12 @@ public class PostRepository {
     }
 
     // Reaction
-    public void toggleReaction(String targetId, String targetType, String type, Callback<ResponseBody> callback) {
+    // Reaction
+    public void toggleReaction(String targetId, String targetType, String type, Callback<ApiResponse<Object>> callback) {
         ReactionRequest request = new ReactionRequest(targetId, targetType, type);
         apiService.toggleReaction(request).enqueue(callback);
+    }
+    public void getReactionsOfPost(String targetId, retrofit2.Callback<ApiResponse<List<ReactionItem>>> callback) {
+        apiService.getReactionsOfPost(targetId).enqueue(callback);
     }
 }

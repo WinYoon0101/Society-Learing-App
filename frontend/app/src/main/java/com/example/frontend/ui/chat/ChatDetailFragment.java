@@ -134,7 +134,7 @@ public class ChatDetailFragment extends Fragment {
 
         // Luôn reinitialize nếu chưa connect (socket bị null sau logout)
         if (!ChatSocketManager.INSTANCE.isConnected()) {
-            ChatSocketManager.INSTANCE.initialize(requireContext(), Constants.SOCKET_URL, token);
+            //ChatSocketManager.INSTANCE.initialize(requireContext(), Constants.SOCKET_URL, token);
             ChatSocketManager.INSTANCE.connect();
             android.util.Log.d("ChatDetail", "Socket initialized with new token");
         }
