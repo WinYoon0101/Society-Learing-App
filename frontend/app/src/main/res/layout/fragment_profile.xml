@@ -1,180 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4F7EE">
-
-    <LinearLayout
-        android:id="@+id/tabHome"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?attr/selectableItemBackground"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/tabFriend">
-
-        <ImageView
-            android:id="@+id/imgHome"
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:src="@drawable/ic_home"
-            app:tint="@color/tab_icon_color" />
-
-        <View
-            android:id="@+id/lineHome"
-            android:layout_width="28dp"
-            android:layout_height="3dp"
-            android:layout_marginTop="6dp"
-            android:background="#0B8A00" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/tabFriend"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?attr/selectableItemBackground"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toEndOf="@id/tabHome"
-        app:layout_constraintEnd_toStartOf="@id/tabChat">
-
-        <ImageView
-            android:id="@+id/imgFriend"
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:src="@drawable/ic_group"
-            app:tint="@color/tab_icon_color" />
-
-        <View
-            android:id="@+id/lineFriend"
-            android:layout_width="28dp"
-            android:layout_height="3dp"
-            android:layout_marginTop="6dp"
-            android:background="#0B8A00"
-            android:visibility="invisible" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/tabChat"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?attr/selectableItemBackground"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toEndOf="@id/tabFriend"
-        app:layout_constraintEnd_toStartOf="@id/tabLibrary">
-
-        <ImageView
-            android:id="@+id/imgChat"
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:src="@drawable/ic_chat"
-            app:tint="@color/tab_icon_color" />
-
-        <View
-            android:id="@+id/lineChat"
-            android:layout_width="28dp"
-            android:layout_height="3dp"
-            android:layout_marginTop="6dp"
-            android:background="#0B8A00"
-            android:visibility="invisible" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/tabLibrary"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?attr/selectableItemBackground"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toEndOf="@id/tabChat"
-        app:layout_constraintEnd_toStartOf="@id/tabNotify">
-
-        <ImageView
-            android:id="@+id/imgLibrary"
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:src="@drawable/ic_library"
-            app:tint="@color/tab_icon_color" />
-
-        <View
-            android:id="@+id/lineLibrary"
-            android:layout_width="28dp"
-            android:layout_height="3dp"
-            android:layout_marginTop="6dp"
-            android:background="#0B8A00"
-            android:visibility="invisible" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/tabNotify"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?attr/selectableItemBackground"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toEndOf="@id/tabLibrary"
-        app:layout_constraintEnd_toStartOf="@id/tabProfile">
-
-        <ImageView
-            android:id="@+id/imgNotify"
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:src="@drawable/ic_notify"
-            app:tint="@color/tab_icon_color" />
-
-        <View
-            android:id="@+id/lineNotify"
-            android:layout_width="28dp"
-            android:layout_height="3dp"
-            android:layout_marginTop="6dp"
-            android:background="#0B8A00"
-            android:visibility="invisible" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/tabProfile"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?attr/selectableItemBackground"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toEndOf="@id/tabNotify"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <ImageView
-            android:id="@+id/imgProfile"
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:src="@drawable/ic_profile"
-            app:tint="@color/tab_icon_color" />
-
-        <View
-            android:id="@+id/lineProfile"
-            android:layout_width="28dp"
-            android:layout_height="3dp"
-            android:layout_marginTop="6dp"
-            android:background="#0B8A00"
-            android:visibility="invisible" />
-    </LinearLayout>
+    android:fillViewport="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/profileHeader"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/tabProfile"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/imgCover"
@@ -405,7 +239,6 @@
                     android:layout_marginStart="12dp"/>
             </LinearLayout>
 
-            <!-- Button -->
             <Button
                 android:id="@+id/btnEditDetails"
                 android:layout_width="match_parent"
@@ -420,5 +253,5 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
 

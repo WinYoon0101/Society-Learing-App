@@ -25,6 +25,15 @@ public class User implements Serializable {
     @SerializedName("isActive")
     private boolean isActive;
 
+    @SerializedName("cover")
+    private String cover;
+
+    @SerializedName("bio")
+    private String bio;
+
+    @SerializedName("profile")
+    private UserProfile profile;
+
     public User() {}
 
     public User(String id, String username, String avatar) {
@@ -42,4 +51,9 @@ public class User implements Serializable {
     public String getEmail() { return email; }
     public String getAvatar() { return avatar; }
     public boolean isActive() { return isActive; }
+    public String getBio() {return bio;}
+    public String getCover() {return cover;}
+    public UserProfile getProfile() {
+        return profile != null ? profile : new UserProfile();
+    }
 }
