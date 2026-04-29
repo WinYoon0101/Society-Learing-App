@@ -2,6 +2,8 @@ package com.example.frontend.data.model;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 public class Post {
     @SerializedName("_id")
     private String id;
@@ -15,6 +17,9 @@ public class Post {
     private int countReaction;
     private String myReaction; // Chứa giá trị: "Like", "Love", "Haha", "Wow", "Sad", "Angry" hoặc null
 
+    private List<String> topReactions; // Chứa danh sách như ["Love", "Haha", "Like"]
+    public List<String> getTopReactions() { return topReactions; }
+    public void setTopReactions(List<String> topReactions) { this.topReactions = topReactions; }
 
     public String getId() {
         return id;

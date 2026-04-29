@@ -69,13 +69,54 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvContent" />
 
+        <LinearLayout
+            android:id="@+id/layoutTopReactions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="12dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/imgPost">
+
+            <FrameLayout
+                android:id="@+id/containerReactionIcons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imgReact2"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="14dp"
+                    android:src="@drawable/ic_haha"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/imgReact1"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_love" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvReactionCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="0"
+                android:textSize="14sp"
+                android:textColor="#666666" />
+        </LinearLayout>
+
         <View
             android:id="@+id/line"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:background="#EAEAEA"
-            app:layout_constraintTop_toBottomOf="@id/imgPost" />
+            app:layout_constraintTop_toBottomOf="@id/layoutTopReactions" />
 
         <LinearLayout
             android:id="@+id/layoutActions"
@@ -107,7 +148,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
-                    android:text="0"
+                    android:text="Thích"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -153,7 +194,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
-                    android:text="0"
+                    android:text="Chia sẻ"
                     android:textStyle="bold" />
             </LinearLayout>
 

@@ -1,6 +1,7 @@
 package com.example.frontend.ui.feed;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +25,7 @@ public class FeedFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_feed, container, false);
 
-        // 1. Kết nối ViewModel (Nên gọi trước để adapter có thể dùng được ngay)
+        // 1. Kết nối ViewModel
         viewModel = new ViewModelProvider(this).get(FeedViewModel.class);
         viewModel.init(getContext());
 
@@ -33,16 +34,16 @@ public class FeedFragment extends Fragment {
         rcv.setLayoutManager(new LinearLayoutManager(getContext()));
 
         // =======================================================
-        // ĐÃ SỬA: Khởi tạo Adapter kèm Interface Lắng nghe Reaction
+        // Khởi tạo Adapter kèm Interface Lắng nghe Reaction
         // =======================================================
         adapter = new PostAdapter(getContext(), new ArrayList<>(), (targetId, type) -> {
-            // Khi Adapter báo có người vừa thả cảm xúc, ta nhờ ViewModel đẩy lên Backend
-            // (Theo logic Backend của bạn: Nếu truyền đúng type cũ lên, nó sẽ tự Unlike.
-            // Do đó nếu type ở local bị null (do user hủy Like), ta vẫn gửi chữ "Like" lên để Backend xóa)
+            // Fix lỗi truyền Null cho Backend khi người dùng ấn Hủy Like
             String reactionToSend = (type == null) ? "Like" : type;
 
             if (viewModel != null) {
-                viewModel.toggleReaction(targetId, "Posts", reactionToSend);
+                // CHÚ Ý: Truyền đúng chữ "Post" (không có s) để Backend Node.js nhận diện đúng
+                Log.d("DEBUG_REACT", "👉 Đang gửi API thả tim lên Server: " + reactionToSend);
+                viewModel.toggleReaction(targetId, "Post", reactionToSend);
             }
         });
 
@@ -64,16 +65,15 @@ public class FeedFragment extends Fragment {
                     .addToBackStack(null)
                     .commit();
         });
+
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Hàm này tự động chạy mỗi khi màn hình Feed hiển thị lại trước mặt người dùng
         if (viewModel != null) {
-            // Ra lệnh cho ViewModel đi lấy danh sách mới ngay lập tức
-            viewModel.loadPosts();
+            viewModel.loadPosts(); // Load lại data mới nhất khi quay lại màn hình
         }
     }
 }

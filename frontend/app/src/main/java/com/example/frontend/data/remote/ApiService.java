@@ -8,6 +8,7 @@ import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.data.model.ReactionItem;
 import com.example.frontend.data.model.UpdateProfile;
 import com.example.frontend.data.model.User;
 import com.example.frontend.data.model.ProfileResponse;
@@ -38,7 +39,8 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
-    @POST("auth/login") // Endpoint đăng nhập
+    @POST("auth/login")
+        // Endpoint đăng nhập
     Call<ApiResponse<LoginResponse>> login(@Body LoginRequest request);
 
     @POST("auth/register")
@@ -106,7 +108,8 @@ public interface ApiService {
 
     //Tải file lên Cloudinary thông qua Route Media để lấy mediaId rồi mới tạo Document
     @Multipart
-    @POST("media/upload/document") // Đổi từ /single thành /document cho giống backend
+    @POST("media/upload/document")
+    // Đổi từ /single thành /document cho giống backend
     Call<ApiResponse<Media>> uploadSingleFile(
             @Part MultipartBody.Part file, // Giữ nguyên "media" ở đây nếu code Activity gửi "media"
             @Part("sourceType") RequestBody sourceType,
@@ -131,10 +134,12 @@ public interface ApiService {
     // 5. Xóa tài liệu
     @DELETE("documents/{id}")
     Call<ApiResponse<Void>> deleteDocument(@Path("id") String id);
-// 6. Tăng lượt tải về
+
+    // 6. Tăng lượt tải về
     @POST("documents/{id}/download")
     Call<ApiResponse<Object>> incrementDownload(@Path("id") String id);
-        // 7. Cập nhật tài liệu (PATCH)
+
+    // 7. Cập nhật tài liệu (PATCH)
     @PATCH("documents/{id}")
     Call<ApiResponse<Document>> updateDocument(@Path("id") String id, @Body Map<String, Object> updates);
 
@@ -154,6 +159,7 @@ public interface ApiService {
 
     @POST("chat/messages")
     Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);
+
     @GET("posts/feed")
     Call<ApiResponse<List<Post>>> getAllPosts();
 
@@ -164,31 +170,39 @@ public interface ApiService {
             @Part("content") RequestBody content,
             @Part MultipartBody.Part image
     );
-// Quiz
-    @POST("quiz/generate-quiz") //
+
+    // Quiz
+    @POST("quiz/generate-quiz")
+    //
     Call<ApiResponse<Quiz>> generateQuiz(@Body QuizRequest request);
 
     @GET("quiz/my-quizzes")
     Call<ApiResponse<List<Quiz>>> getMyQuizzes();
 
 
-        // 1. Lấy danh sách (Nó sẽ trả về List các Comment gốc)
-        @GET("/api/comments/post/{postId}")
-        Call<ApiResponse<List<Comment>>> getComments(@Path("postId") String postId);
+    // 1. Lấy danh sách (Nó sẽ trả về List các Comment gốc)
+    @GET("/api/comments/post/{postId}")
+    Call<ApiResponse<List<Comment>>> getComments(@Path("postId") String postId);
 
-        @POST("/api/comments")
-        Call<ApiResponse<Comment>> createComment(
-                @Header("Authorization") String token,
-                @Body CommentRequest body
-        );
+    @POST("/api/comments")
+    Call<ApiResponse<Comment>> createComment(
+            @Header("Authorization") String token,
+            @Body CommentRequest body
+    );
 
-        // 3. Xóa bình luận
-        @DELETE("/api/comments/{commentId}")
-        Call<ApiResponse<Object>> deleteComment(
-                @Header("Authorization") String token,
-                @Path("commentId") String commentId
-        );
-    @POST("api/reactions/toggle")
-    Call<ResponseBody> toggleReaction(@Body ReactionRequest request);
+    // 3. Xóa bình luận
+    @DELETE("/api/comments/{commentId}")
+    Call<ApiResponse<Object>> deleteComment(
+            @Header("Authorization") String token,
+            @Path("commentId") String commentId
+    );
 
+    // Gọi API lấy danh sách thả cảm xúc (Nếu bạn có khai báo)
+    @GET("reactions/{targetId}")
+    Call<ApiResponse<List<ReactionItem>>> getReactionsOfPost(@Path("targetId") String targetId);
+
+    // Gọi API thả/thu hồi cảm xúc (Sửa ResponseBody thành ApiResponse<Object> luôn nhé)
+    @POST("reactions/toggle")
+    Call<ApiResponse<Object>> toggleReaction(@Body ReactionRequest request);
 }
+
