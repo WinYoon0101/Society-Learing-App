@@ -35,7 +35,8 @@ const imageStorage = new CloudinaryStorage({
   params: (req: any, file: Express.Multer.File) => ({
     folder: "society/images",
     resource_type: "image",
-    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
+    // ĐÃ THÊM heif, heic VÀO ĐÂY
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif", "heif", "heic"],
     transformation: [{ quality: "auto", fetch_format: "auto" }],
     public_id: `img_${Date.now()}`,
   }),
@@ -93,7 +94,8 @@ const imageFilter = (
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
   } else {
-    cb(new Error("Chỉ chấp nhận file ảnh (jpg, jpeg, png, webp, gif)."));
+    // Cập nhật câu báo lỗi để hiện heif, heic
+    cb(new Error("Chỉ chấp nhận file ảnh (jpg, jpeg, png, webp, gif, heif, heic)."));
   }
 };
 
@@ -138,7 +140,8 @@ const autoFilter = (
 ) => {
   // Chấp nhận image + video + document
   const ALLOWED_MIMES = [
-    "image/jpeg", "image/png", "image/webp", "image/gif",
+    "image/jpeg", "image/png", "image/webp", "image/gif", 
+    "image/heif", "image/heic", // ĐÃ THÊM 2 ĐỊNH DẠNG NÀY
     "video/mp4", "video/quicktime", "video/x-msvideo", "video/webm",
     "application/pdf",
     "application/msword",
@@ -150,6 +153,7 @@ const autoFilter = (
     "text/plain",
     "application/octet-stream",
   ];
+  console.log("Định dạng file:", file.mimetype, " | Tên file:", file.originalname);
   if (ALLOWED_MIMES.includes(file.mimetype)) {
     cb(null, true);
   } else {

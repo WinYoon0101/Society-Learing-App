@@ -1,6 +1,7 @@
 package com.example.frontend.ui.feed;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -17,48 +18,59 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class FeedViewModel extends ViewModel {
-    private final MutableLiveData<List<Post>> posts = new MutableLiveData<>();
-    private final MutableLiveData<String> error = new MutableLiveData<>();
-
-    // Đây là cái Biến (Object) được tạo ra từ Khuôn PostRepository
     private PostRepository repository;
-
-    public LiveData<List<Post>> getPosts() { return posts; }
-    public LiveData<String> getError() { return error; }
+    private final MutableLiveData<List<Post>> postsLiveData = new MutableLiveData<>();
 
     public void init(Context context) {
-        if (repository == null) repository = new PostRepository(context);
-        loadPosts();
+        if (repository == null) {
+            repository = new PostRepository(context);
+        }
+    }
+
+    public LiveData<List<Post>> getPosts() {
+        return postsLiveData;
     }
 
     public void loadPosts() {
-        repository.fetchAllPosts(new Callback<ApiResponse<List<Post>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Post>>> call, Response<ApiResponse<List<Post>>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    posts.setValue(response.body().getData());
+        if (repository != null) {
+            repository.fetchAllPosts(new Callback<ApiResponse<List<Post>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<Post>>> call, Response<ApiResponse<List<Post>>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        postsLiveData.setValue(response.body().getData());
+                    } else {
+                        postsLiveData.setValue(null);
+                    }
                 }
-            }
-            @Override
-            public void onFailure(Call<ApiResponse<List<Post>>> call, Throwable t) {
-                error.setValue(t.getMessage());
-            }
-        });
+
+                @Override
+                public void onFailure(Call<ApiResponse<List<Post>>> call, Throwable t) {
+                    postsLiveData.setValue(null);
+                }
+            });
+        }
     }
 
-    // =========================================
-    // HÀM XỬ LÝ GỬI REACTION LÊN SERVER
-    // =========================================
+    // ==========================================================
+    // HÀM MỚI BỔ SUNG: XỬ LÝ GỌI API THẢ CẢM XÚC LÊN SERVER
+    // ==========================================================
     public void toggleReaction(String targetId, String targetType, String type) {
-        repository.toggleReaction(targetId, targetType, type, new retrofit2.Callback<okhttp3.ResponseBody>() {
-            @Override
-            public void onResponse(retrofit2.Call<okhttp3.ResponseBody> call, retrofit2.Response<okhttp3.ResponseBody> response) {
-            }
+        if (repository != null) {
+            repository.toggleReaction(targetId, targetType, type, new Callback<ApiResponse<Object>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                    if (response.isSuccessful()) {
+                        Log.d("DEBUG_REACT", "✅ Gửi Cảm xúc lên Server THÀNH CÔNG!");
+                    } else {
+                        Log.e("DEBUG_REACT", "❌ Server báo lỗi khi thả Cảm xúc: " + response.code());
+                    }
+                }
 
-            @Override
-            public void onFailure(retrofit2.Call<okhttp3.ResponseBody> call, Throwable t) {
-
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                    Log.e("DEBUG_REACT", "❌ Lỗi mạng, không thể kết nối tới Server: " + t.getMessage());
+                }
+            });
+        }
     }
 }

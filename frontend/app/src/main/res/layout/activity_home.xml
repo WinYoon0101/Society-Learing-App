@@ -40,7 +40,7 @@
                 android:layout_toEndOf="@id/btnOpenMenu"
                 android:layout_marginStart="4dp"
                 android:layout_centerVertical="true"
-                android:src="@drawable/ic_text_logo"
+                android:src="@drawable/text_logo"
                 android:scaleType="centerInside" />
 
             <ImageView
@@ -102,7 +102,7 @@
                     android:layout_width="28dp"
                     android:layout_height="3dp"
                     android:layout_marginTop="6dp"
-                    android:background="#0B8A00"
+                    android:background="#10B981"
                     android:visibility="invisible" />
             </LinearLayout>
 
@@ -125,7 +125,7 @@
                     android:layout_width="28dp"
                     android:layout_height="3dp"
                     android:layout_marginTop="6dp"
-                    android:background="#0B8A00"
+                    android:background="#10B981"
                     android:visibility="invisible" />
             </LinearLayout>
 
@@ -148,7 +148,7 @@
                     android:layout_width="28dp"
                     android:layout_height="3dp"
                     android:layout_marginTop="6dp"
-                    android:background="#0B8A00"
+                    android:background="#10B981"
                     android:visibility="invisible" />
             </LinearLayout>
 
@@ -171,7 +171,7 @@
                     android:layout_width="28dp"
                     android:layout_height="3dp"
                     android:layout_marginTop="6dp"
-                    android:background="#0B8A00"
+                    android:background="#10B981"
                     android:visibility="invisible" />
             </LinearLayout>
 
@@ -194,7 +194,7 @@
                     android:layout_width="28dp"
                     android:layout_height="3dp"
                     android:layout_marginTop="6dp"
-                    android:background="#0B8A00"
+                    android:background="#10B981"
                     android:visibility="invisible" />
             </LinearLayout>
         </LinearLayout>
