@@ -216,5 +216,9 @@ public interface ApiService {
     // Gọi API thả/thu hồi cảm xúc (Sửa ResponseBody thành ApiResponse<Object> luôn nhé)
     @POST("reactions/toggle")
     Call<ApiResponse<Object>> toggleReaction(@Body ReactionRequest request);
+
+    //Lấy bài viết cá nhân
+    @GET("posts/me")
+    Call<ApiResponse<List<Post>>> getMyPosts();
 }
 

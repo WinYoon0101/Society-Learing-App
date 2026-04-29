@@ -82,21 +82,18 @@ public class UserRepository {
         MutableLiveData<Result<String>> result = new MutableLiveData<>();
 
         RequestBody requestFile =
-                RequestBody.create(MediaType.parse("image/*"), file);
+                RequestBody.create(file, MediaType.parse("image/*"));
 
         MultipartBody.Part body =
                 MultipartBody.Part.createFormData("file", file.getName(), requestFile);
 
         apiService.uploadAvatar(body).enqueue(new Callback<ApiResponse<String>>() {
-
             @Override
-            public void onResponse(Call<ApiResponse<String>> call,
-                                   Response<ApiResponse<String>> response) {
-
-                if (response.isSuccessful() && response.body() != null) {
-                    result.setValue(Result.success(response.body().data));
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                if (response.isSuccessful()) {
+                    result.setValue(Result.success("ok"));
                 } else {
-                    result.setValue(Result.error("Upload fail", null));
+                    result.setValue(Result.error("fail", null));
                 }
             }
 
