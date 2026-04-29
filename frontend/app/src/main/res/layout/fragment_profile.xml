@@ -15,7 +15,7 @@
             android:layout_width="0dp"
             android:layout_height="200dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/cover_sample"
+            android:src="@drawable/bg_cover_default"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
@@ -40,7 +40,7 @@
             android:layout_width="110dp"
             android:layout_height="110dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/cover_sample"
+            android:src="@drawable/ic_profile"
             android:background="@drawable/bg_cirle"
             android:clipToOutline="true"
 
@@ -54,7 +54,6 @@
             android:id="@+id/tvUserName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Minh Nguyen"
             android:textSize="20sp"
             android:textStyle="bold"
 
@@ -68,7 +67,8 @@
             android:id="@+id/tvBio"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Hello world"
+            android:text=""
+            android:visibility="gone"
             android:textSize="14sp"
             android:textColor="#666"
             android:gravity="center"
@@ -85,7 +85,7 @@
             android:id="@+id/tvStats"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="482 friends • 12 groups"
+            android:text=""
             android:textSize="13sp"
             android:textColor="#888"
             android:gravity="center"
@@ -129,126 +129,80 @@
             android:layout_marginEnd="16dp"/>
 
         <LinearLayout
-            android:id="@+id/layoutIntro"
-            android:layout_width="0dp"
+        android:id="@+id/layoutIntro"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/bg_card"
+
+        app:layout_constraintTop_toBottomOf="@id/btnAddStory"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@drawable/bg_card"
+            android:text="Intro"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp"/>
 
-            app:layout_constraintTop_toBottomOf="@id/btnAddStory"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_margin="16dp">
+        <!-- LOCATION -->
+        <TextView
+            android:id="@+id/tvLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_home"
+            android:drawablePadding="12dp"
+            android:textColor="#444"
+            android:visibility="gone"
+            android:layout_marginBottom="10dp"/>
 
-            <!-- Title -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Intro"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#000"
-                android:layout_marginBottom="12dp"/>
+        <!-- HOMETOWN -->
+        <TextView
+            android:id="@+id/tvHometown"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_location"
+            android:drawablePadding="12dp"
+            android:textColor="#444"
+            android:visibility="gone"
+            android:layout_marginBottom="10dp"/>
 
-            <!-- Item -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="10dp">
+        <!-- BIRTHDAY -->
+        <TextView
+            android:id="@+id/tvBirthday"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_calendar"
+            android:drawablePadding="12dp"
+            android:textColor="#444"
+            android:visibility="gone"
+            android:layout_marginBottom="10dp"/>
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_home"
-                    xmlns:app="http://schemas.android.com/apk/res-auto"/>
+        <!-- GENDER -->
+        <TextView
+            android:id="@+id/tvGender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_heart"
+            android:drawablePadding="12dp"
+            android:textColor="#444"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Lives in Hanoi, Vietnam"
-                    android:textSize="14sp"
-                    android:textColor="#444"
-                    android:layout_marginStart="12dp"/>
-            </LinearLayout>
+        <Button
+            android:id="@+id/btnEditDetails"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="Edit Details"
+            android:textAllCaps="false"
+            android:textColor="#000"
+            android:backgroundTint="#E0E0E0"/>
 
-            <!-- Item -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="10dp">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_location"
-                    xmlns:app="http://schemas.android.com/apk/res-auto"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="From Da Nang"
-                    android:textSize="14sp"
-                    android:textColor="#444"
-                    android:layout_marginStart="12dp"/>
-            </LinearLayout>
-
-            <!-- Item -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="10dp">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_calendar"
-                    xmlns:app="http://schemas.android.com/apk/res-auto"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Joined March 2021"
-                    android:textSize="14sp"
-                    android:textColor="#444"
-                    android:layout_marginStart="12dp"/>
-            </LinearLayout>
-
-            <!-- Item -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_heart"
-                    xmlns:app="http://schemas.android.com/apk/res-auto"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Interested in Urban Ecology, Coffee"
-                    android:textSize="14sp"
-                    android:textColor="#444"
-                    android:layout_marginStart="12dp"/>
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/btnEditDetails"
-                android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:text="Edit Details"
-                android:textAllCaps="false"
-                android:textColor="#000"
-                android:backgroundTint="#E0E0E0"/>
-
-        </LinearLayout>
+    </LinearLayout>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

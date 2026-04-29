@@ -31,8 +31,26 @@ public class User implements Serializable {
     @SerializedName("bio")
     private String bio;
 
-    @SerializedName("profile")
-    private UserProfile profile;
+    @SerializedName("hometown")
+    private String hometown;
+
+    @SerializedName("location")
+    private String location;
+
+    @SerializedName("birthday")
+    private String birthday;
+
+    @SerializedName("createdAt")
+    private String joinedDate;
+
+    @SerializedName("friendCount")
+    private int friendCount;
+
+    @SerializedName("groupCount")
+    private int groupCount;
+
+    @SerializedName("gender")
+    private String gender;
 
     public User() {}
 
@@ -53,7 +71,11 @@ public class User implements Serializable {
     public boolean isActive() { return isActive; }
     public String getBio() {return bio;}
     public String getCover() {return cover;}
-    public UserProfile getProfile() {
-        return profile != null ? profile : new UserProfile();
-    }
+    public String getHometown() { return hometown; }
+    public String getLocation() { return location; }
+    public String getBirthday() { return birthday; }
+    public String getJoinedDate() { return joinedDate; }
+    public int getFriendCount() { return friendCount; }
+    public int getGroupCount() { return groupCount; }
+    public String getGender() {return gender; }
 }
