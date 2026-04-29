@@ -23,6 +23,7 @@ import androidx.core.content.ContextCompat;
 
 import com.example.frontend.R;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.common.InputImage;
@@ -36,14 +37,14 @@ import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
-@androidx.camera.core.ExperimentalGetImage
+@androidx.annotation.OptIn(markerClass = androidx.camera.core.ExperimentalGetImage.class)
 public class PomodoroActivity extends AppCompatActivity {
 
     // UI Components
     private TextView txtTimeCountdown, txtAIMessage;
     private CircularProgressIndicator timerProgress;
     private PreviewView aiPreviewView;
-    private MaterialButton btnStartPause, btnReset;
+    private MaterialButton btnStartPause, btnReset, btnSettings, btnBack;
 
     // AI Components
     private FaceDetector faceDetector;
@@ -64,13 +65,7 @@ public class PomodoroActivity extends AppCompatActivity {
         initUI();
         initAI();
         checkPermissions();
-
-        btnStartPause.setOnClickListener(v -> {
-            if (timerRunning) pauseTimer();
-            else startTimer();
-        });
-
-        btnReset.setOnClickListener(v -> resetTimer());
+        setupListeners();
     }
 
     private void initUI() {
@@ -80,25 +75,80 @@ public class PomodoroActivity extends AppCompatActivity {
         aiPreviewView = findViewById(R.id.aiPreviewView);
         btnStartPause = findViewById(R.id.btnStartPause);
         btnReset = findViewById(R.id.btnReset);
+        btnSettings = findViewById(R.id.btnSettings);
+        btnBack = findViewById(R.id.btnBack);
 
         txtAIMessage.setText("Sẵn sàng tập trung chưa? Nhấn Bắt đầu nhé!");
     }
 
+    private void setupListeners() {
+        // Nút Start/Pause
+        btnStartPause.setOnClickListener(v -> {
+            if (timerRunning) pauseTimer();
+            else startTimer();
+        });
+
+        // Nút Reset
+        btnReset.setOnClickListener(v -> resetTimer());
+
+        // Nút Quay lại
+        btnBack.setOnClickListener(v -> finish());
+
+        // Nút Cài đặt (Hàm Menu chính)
+        btnSettings.setOnClickListener(v -> showSettingsMenu());
+    }
+
+    // --- LOGIC MENU SETTINGS ---
+    private void showSettingsMenu() {
+        String[] options = {"Kết thúc phiên học ngay", "Chọn nhạc tập trung", "Thông tin AI"};
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Cài đặt phiên học")
+                .setItems(options, (dialog, which) -> {
+                    switch (which) {
+                        case 0: confirmFinishEarly(); break;
+                        case 1: showMusicSelection(); break;
+                        case 2:
+                            Toast.makeText(this, "AI đang theo dõi biểu cảm để hỗ trợ bạn!", Toast.LENGTH_SHORT).show();
+                            break;
+                    }
+                })
+                .show();
+    }
+
+    private void confirmFinishEarly() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Kết thúc sớm?")
+                .setMessage("Bạn có muốn dừng phiên học này để xem kết quả thống kê không?")
+                .setPositiveButton("Đồng ý", (dialog, which) -> showSummary())
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void showMusicSelection() {
+        String[] music = {"Tắt nhạc", "Lo-fi Chill", "Tiếng mưa rơi", "Sóng biển"};
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Nhạc nền tập trung")
+                .setItems(music, (dialog, which) -> {
+                    Toast.makeText(this, "Đã chọn: " + music[which], Toast.LENGTH_SHORT).show();
+                    // Dương có thể thêm logic MediaPlayer ở đây để phát nhạc thật
+                })
+                .show();
+    }
+
+    // --- LOGIC AI & CAMERA ---
     private void initAI() {
-        // Cấu hình ML Kit Face Detector
         FaceDetectorOptions options = new FaceDetectorOptions.Builder()
                 .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
                 .build();
         faceDetector = FaceDetection.getClient(options);
 
-        // Khởi tạo TFLite Emotion Detector
         try {
             emotionDetector = new EmotionDetector(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // Khởi tạo bảng thống kê
         emotionStats.put("HAPPY", 0);
         emotionStats.put("NEUTRAL", 0);
         emotionStats.put("SAD", 0);
@@ -121,7 +171,6 @@ public class PomodoroActivity extends AppCompatActivity {
 
                 analysis.setAnalyzer(Executors.newSingleThreadExecutor(), imageProxy -> {
                     long currentTime = System.currentTimeMillis();
-                    // Chỉ quét AI mỗi 2 giây để tránh nóng máy
                     if (timerRunning && (currentTime - lastAIProcessTime > 2000)) {
                         processImageProxy(imageProxy);
                         lastAIProcessTime = currentTime;
@@ -137,7 +186,6 @@ public class PomodoroActivity extends AppCompatActivity {
         }, ContextCompat.getMainExecutor(this));
     }
 
-
     private void processImageProxy(androidx.camera.core.ImageProxy imageProxy) {
         if (imageProxy.getImage() == null) { imageProxy.close(); return; }
 
@@ -147,7 +195,6 @@ public class PomodoroActivity extends AppCompatActivity {
                 Bitmap bitmap = aiPreviewView.getBitmap();
                 if (bitmap != null) {
                     Rect rect = faces.get(0).getBoundingBox();
-                    // Cắt ảnh khuôn mặt (Padding 15%)
                     Bitmap face = cropFace(bitmap, rect, imageProxy);
                     if (face != null) {
                         String emotion = emotionDetector.predict(face);
@@ -162,41 +209,29 @@ public class PomodoroActivity extends AppCompatActivity {
         try {
             float scaleX = (float) original.getWidth() / (float) proxy.getHeight();
             float scaleY = (float) original.getHeight() / (float) proxy.getWidth();
-
             int padding = (int) (rect.width() * 0.15);
             int x = Math.max(0, (int) (rect.left * scaleX) - padding);
             int y = Math.max(0, (int) (rect.top * scaleY) - padding);
             int w = Math.min((int) (rect.width() * scaleX) + (padding * 2), original.getWidth() - x);
             int h = Math.min((int) (rect.height() * scaleY) + (padding * 2), original.getHeight() - y);
-
             return Bitmap.createBitmap(original, x, y, w, h);
         } catch (Exception e) { return null; }
     }
 
     private void handleSmartLogic(String emotion) {
-        // Ghi lại thống kê
         emotionStats.put(emotion, emotionStats.getOrDefault(emotion, 0) + 1);
-
         runOnUiThread(() -> {
             switch (emotion) {
-                case "NEUTRAL":
-                    txtAIMessage.setText("Bạn đang tập trung rất tốt. Tiếp tục phát huy nhé! 🔥");
-                    break;
-                case "HAPPY":
-                    txtAIMessage.setText("Tâm trạng hứng khởi sẽ giúp bạn học hiệu quả hơn! 😊");
-                    break;
+                case "NEUTRAL": txtAIMessage.setText("Bạn tập trung tốt quá. Cố lên nhé! 🔥"); break;
+                case "HAPPY": txtAIMessage.setText("Tâm trạng tốt sẽ học nhanh hơn đó! 😊"); break;
                 case "ANGER":
-                case "SAD":
-                    txtAIMessage.setText("Có vẻ bạn đang căng thẳng. Thả lỏng vai và hít sâu nhé! 🌿");
-                    break;
-                case "SURPRISED":
-                    txtAIMessage.setText("Có gì làm bạn xao nhãng vậy? Quay lại bài học thôi nào! 👀");
-                    break;
+                case "SAD": txtAIMessage.setText("Có vẻ bạn đang stress. Hít sâu nào... 🌿"); break;
+                case "SURPRISED": txtAIMessage.setText("Đừng để xao nhãng, tập trung lại nhé! 👀"); break;
             }
         });
     }
 
-    // --- Timer Logic ---
+    // --- TIMER LOGIC ---
     private void startTimer() {
         countDownTimer = new CountDownTimer(timeLeftInMillis, 1000) {
             @Override
@@ -205,7 +240,6 @@ public class PomodoroActivity extends AppCompatActivity {
                 updateCountDownText();
                 timerProgress.setProgress((int) (millisUntilFinished * 100 / 1500000));
             }
-
             @Override
             public void onFinish() {
                 timerRunning = false;
@@ -213,25 +247,22 @@ public class PomodoroActivity extends AppCompatActivity {
                 showSummary();
             }
         }.start();
-
         timerRunning = true;
         btnStartPause.setIconResource(R.drawable.ic_pause);
     }
 
     private void pauseTimer() {
-        countDownTimer.cancel();
+        if (countDownTimer != null) countDownTimer.cancel();
         timerRunning = false;
         btnStartPause.setIconResource(R.drawable.ic_play);
     }
 
     private void resetTimer() {
-        if (countDownTimer != null) countDownTimer.cancel();
+        pauseTimer();
         timeLeftInMillis = 1500000;
         updateCountDownText();
         timerProgress.setProgress(100);
-        timerRunning = false;
-        btnStartPause.setIconResource(R.drawable.ic_play);
-        txtAIMessage.setText("Đã reset. Sẵn sàng tập trung lại chưa?");
+        txtAIMessage.setText("Đã reset. Bắt đầu lại nào!");
     }
 
     private void updateCountDownText() {
@@ -241,7 +272,7 @@ public class PomodoroActivity extends AppCompatActivity {
     }
 
     private void showSummary() {
-        // Chuyển dữ liệu sang trang thống kê
+        if (countDownTimer != null) countDownTimer.cancel();
         Intent intent = new Intent(this, PomodoroSummaryActivity.class);
         intent.putExtra("STATS", emotionStats);
         startActivity(intent);
@@ -259,17 +290,8 @@ public class PomodoroActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        // Kiểm tra xem có đúng là mã yêu cầu 101 mà mình đã đặt ở checkPermissions không
-        if (requestCode == 101) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Người dùng đã nhấn "Cho phép" -> Mở camera ngay
-                startCamera();
-            } else {
-                // Người dùng nhấn "Từ chối"
-                Toast.makeText(this, "Bạn cần cấp quyền Camera để dùng tính năng AI", Toast.LENGTH_LONG).show();
-                txtAIMessage.setText("AI không thể hoạt động do thiếu quyền Camera 🛑");
-            }
+        if (requestCode == 101 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startCamera();
         }
     }
 }

@@ -48,6 +48,12 @@ public interface ApiService {
     @POST("auth/send-otp")
     Call<ApiResponse> sendOtp(@Body EmailRequest request);
 
+    @POST("auth/google-login")
+    Call<ApiResponse<LoginResponse>> googleLogin(@Body GoogleLoginRequest request);
+
+    @POST("auth/send-otp")
+    Call<ApiResponse> sendOtp(@Body EmailRequest request);
+
     @POST("auth/verify-otp")
     Call<ApiResponse> verifyOtp(@Body OtpRequest request);
 

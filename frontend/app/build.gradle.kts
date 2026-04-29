@@ -60,8 +60,8 @@ dependencies {
     implementation("io.socket:socket.io-client:2.1.0") {
         exclude(group = "org.json", module = "json")
     }
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
-    // Image view
     implementation("de.hdodenhof:circleimageview:3.1.0")
 
     // TensorFlow Lite

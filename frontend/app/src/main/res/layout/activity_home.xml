@@ -40,7 +40,7 @@
                 android:layout_toEndOf="@id/btnOpenMenu"
                 android:layout_marginStart="4dp"
                 android:layout_centerVertical="true"
-                android:src="@drawable/text_logo"
+                android:src="@drawable/ic_text_logo"
                 android:scaleType="centerInside" />
 
             <ImageView

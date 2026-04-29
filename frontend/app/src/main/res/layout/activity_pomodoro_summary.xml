@@ -140,6 +140,25 @@
                     app:indicatorColor="#F87171"
                     app:trackColor="#FEF2F2"
                     android:progress="15"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Xao nhãng"
+                    android:textSize="12sp"
+                    android:textColor="#64748B"
+                    android:layout_marginTop="16dp"/>
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progressSurprised"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:trackThickness="8dp"
+                    app:trackCornerRadius="4dp"
+                    app:indicatorColor="#FACC15"
+                    app:trackColor="#FEFCE8"
+                    android:progress="0"/>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
