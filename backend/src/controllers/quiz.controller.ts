@@ -88,3 +88,19 @@ function fallback(text: string, num = 5) {
         correct: choices[Math.floor(Math.random() * 4)]
     }));
 }
+
+export const getUserQuizzes = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user?.id; // Lấy ID từ middleware authenticate
+
+        // Tìm tất cả quiz của user này, sắp xếp mới nhất lên đầu
+        const quizzes = await Quiz.find({ userId }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            data: quizzes
+        });
+    } catch (err: any) {
+        res.status(500).json({ error: "Lỗi khi lấy danh sách Quiz", detail: err.message });
+    }
+};

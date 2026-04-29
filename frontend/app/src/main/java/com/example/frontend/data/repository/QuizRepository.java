@@ -8,6 +8,8 @@ import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.data.remote.QuizRequest;
 
+import java.util.List;
+
 import retrofit2.Callback;
 
 public class QuizRepository {
@@ -20,5 +22,9 @@ public class QuizRepository {
     public void generateAIQuiz(String text, int num, String title, Callback<ApiResponse<Quiz>> callback) {
         QuizRequest request = new QuizRequest(text, num, title);
         apiService.generateQuiz(request).enqueue(callback);
+    }
+
+    public void getMyQuizzes(Callback<ApiResponse<List<Quiz>>> callback) {
+        apiService.getMyQuizzes().enqueue(callback);
     }
 }

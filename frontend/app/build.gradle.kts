@@ -4,13 +4,11 @@ plugins {
 
 android {
     namespace = "com.example.frontend"
-    // SỬA LỖI DÒNG 7: Thay đổi cú pháp compileSdk đơn giản hơn
     compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.frontend"
         minSdk = 24
-        // SỬA LỖI: targetSdk nên để 34 hoặc 35 để ổn định
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -27,6 +25,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -34,7 +33,7 @@ android {
 }
 
 dependencies {
-    // Thư viện cơ bản
+    // Core
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -45,19 +44,42 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
-    // Lifecycle
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.5.1")
+    // Lifecycle (giữ bản mới hơn)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
 
-    // UI & Animation
-    implementation("com.google.android.material:material:1.9.0")
-    implementation("com.airbnb.android:lottie:6.1.0")
+    // UI & Animation (giữ bản mới)
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("com.airbnb.android:lottie:6.4.0")
 
-    // Glide (Đã xóa bản cũ 4.15.1, giữ lại bản mới nhất 4.16.0)
+    // Glide (chỉ giữ 1 bản)
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
-    // Thêm dòng này để sử dụng Google Auth (gms)
+
+    // Socket
+    implementation("io.socket:socket.io-client:2.1.0") {
+        exclude(group = "org.json", module = "json")
+    }
+
+    // Image view
+    implementation("de.hdodenhof:circleimageview:3.1.0")
+
+    // TensorFlow Lite
+    implementation("org.tensorflow:tensorflow-lite:2.16.1")
+
+    // ML Kit
+    implementation("com.google.mlkit:face-detection:16.1.6")
+
+    // CameraX
+    val camerax_version = "1.3.0"
+    implementation("androidx.camera:camera-core:$camerax_version")
+    implementation("androidx.camera:camera-camera2:$camerax_version")
+    implementation("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation("androidx.camera:camera-view:$camerax_version")
+
+    // Google Auth
     implementation("com.google.android.gms:play-services-auth:21.0.0")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

@@ -80,7 +80,7 @@ public class LibraryFragment extends Fragment {
                 }
 
                 // 2. Nhuộm màu xanh cho cái được chọn
-                chips[index].setCardBackgroundColor(android.graphics.Color.parseColor("#0A7D21"));
+                chips[index].setCardBackgroundColor(android.graphics.Color.parseColor("#10B981"));
                 TextView activeTv = (TextView) chips[index].getChildAt(0);
                 activeTv.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
                 activeTv.setTypeface(null, android.graphics.Typeface.BOLD);

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F0FDF4"
+    tools:context="com.example.frontend.ui.pomodoro.PomodoroActivity">
+
+    <TextView
+        android:id="@+id/txtHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.15"
+        android:text="FOCUS SESSION"
+        android:textColor="#064E3B"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_top_toTopOf="parent" />
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/timerProgress"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_marginTop="40dp"
+        app:indicatorSize="300dp"
+        app:trackThickness="14dp"
+        app:indicatorColor="#10B981"
+        app:trackColor="#DCFCE7"
+        app:trackCornerRadius="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_top_toBottomOf="@id/txtHeader"
+        android:progress="100" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintBottom_toBottomOf="@id/timerProgress"
+        app:layout_constraintEnd_toEndOf="@id/timerProgress"
+        app:layout_constraintStart_toStartOf="@id/timerProgress"
+        app:layout_top_toTopOf="@id/timerProgress">
+
+        <TextView
+            android:id="@+id/txtTimeCountdown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="25:00"
+            android:fontFamily="monospace"
+            android:textColor="#064E3B"
+            android:textSize="68sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SMART TRACKING ACTIVE"
+            android:letterSpacing="0.1"
+            android:textColor="#059669"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/aiInsightCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="16dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="#FFFFFF"
+        app:strokeWidth="1dp"
+        app:strokeColor="#D1FAE5"
+        app:layout_constraintBottom_toBottomOf="@id/cardCameraAI"
+        app:layout_constraintEnd_toStartOf="@id/cardCameraAI"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/cardCameraAI">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trợ lý AI"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:textColor="#10B981"/>
+            <TextView
+                android:id="@+id/txtAIMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ready to focus? Tap Start!"
+                android:textColor="#1E293B"
+                android:textSize="14sp"
+                android:layout_marginTop="6dp"/>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardCameraAI"
+        android:layout_width="100dp"
+        android:layout_height="130dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="48dp"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="8dp"
+        app:strokeWidth="2dp"
+        app:strokeColor="#10B981"
+        app:layout_constraintBottom_toTopOf="@id/layoutControls"
+        app:layout_constraintEnd_toEndOf="parent">
+        <androidx.camera.view.PreviewView
+            android:id="@+id/aiPreviewView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:id="@+id/layoutControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="40dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnReset"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            android:padding="0dp"
+            android:backgroundTint="#DCFCE7"
+            app:icon="@drawable/ic_refresh"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconTint="#10B981"
+            android:contentDescription="Reset Timer"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnStartPause"
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            android:padding="0dp"
+            android:backgroundTint="#10B981"
+            android:elevation="6dp"
+            app:icon="@drawable/ic_play"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="36dp"
+            app:iconTint="@color/white"
+            android:contentDescription="Start or Pause Timer"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSettings"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            android:padding="0dp"
+            android:backgroundTint="#DCFCE7"
+            app:icon="@drawable/ic_settings"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconTint="#10B981"
+            android:contentDescription="Settings"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

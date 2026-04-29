@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F4F7EE">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp"
+        android:background="#FFFFFF"
+        android:elevation="4dp">
+
+        <ImageButton
+            android:id="@+id/btnChatDetailBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_arrow_down"
+            android:rotation="90"
+            android:contentDescription="Back" />
+
+        <TextView
+            android:id="@+id/tvChatName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:text="Chat Name"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#3D594B" />
+
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_filter"
+            android:contentDescription="Options" />
+    </LinearLayout>
+
+    <!-- Messages RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvMessages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingVertical="12dp"
+        android:clipToPadding="false"
+        tools:listitem="@layout/item_message_sent" />
+
+    <!-- Message input -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:background="#FFFFFF">
+
+        <EditText
+            android:id="@+id/etMessage"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:paddingHorizontal="16dp"
+            android:hint="Tin nhắn..."
+            android:background="@drawable/bg_message_input"
+            android:textSize="14sp"
+            android:maxLines="3"
+            android:textColor="#333333"
+            android:textColorHint="#CCCCCC"
+            android:fontFamily="sans-serif"
+            android:importantForAutofill="no" />
+
+        <ImageButton
+            android:id="@+id/btnSend"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_chat"
+            android:scaleType="centerInside"
+            android:tint="#4A7C59"
+            android:contentDescription="Send" />
+    </LinearLayout>
+
+</LinearLayout>

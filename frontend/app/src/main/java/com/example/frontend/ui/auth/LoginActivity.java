@@ -1,6 +1,6 @@
-// java
 package com.example.frontend.ui.auth;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -8,6 +8,7 @@ import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -16,7 +17,6 @@ import com.example.frontend.R;
 import com.example.frontend.data.model.LoginResponse;
 import com.example.frontend.ui.main.HomeActivity;
 import com.example.frontend.utils.Result;
-import android.widget.LinearLayout;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -35,23 +35,33 @@ import java.io.IOException;
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
+
     private LoginViewModel viewModel;
+    private ApiService api;
 
     private TextInputEditText edtEmail, edtPassword;
     private MaterialButton btnLogin;
     private LinearLayout btnGoogle;
-
-    private TextView tvSignUpLink, tvForgotPassword;
     private CheckBox cbRemember;
 
+    private TextView tvSignUpLink, tvForgotPassword;
+
     private GoogleSignInClient googleSignInClient;
-    private ApiService api;
 
     private static final int RC_GOOGLE = 1001;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // ===== AUTO LOGIN =====
+        SharedPreferences pref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        boolean isLoggedIn = pref.getBoolean("IS_LOGGED_IN", false);
+        if (isLoggedIn) {
+            goToHome();
+            return;
+        }
+
         setContentView(R.layout.activity_login);
 
         // ===== INIT VIEW =====
@@ -59,10 +69,10 @@ public class LoginActivity extends AppCompatActivity {
         edtPassword = findViewById(R.id.edtPassword);
         btnLogin = findViewById(R.id.btnLogin);
         btnGoogle = findViewById(R.id.btnGoogle);
+        cbRemember = findViewById(R.id.cbRemember);
 
         tvSignUpLink = findViewById(R.id.tvSignUpLink);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
-        cbRemember = findViewById(R.id.cbRemember);
 
         // ===== VIEWMODEL =====
         viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
@@ -93,25 +103,23 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(new Intent(this, ForgotPasswordActivity.class)));
 
         // ===== GOOGLE LOGIN CONFIG =====
-        // Use the web client ID (default_web_client_id from google-services.json)
         String webClientId = getString(R.string.default_web_client_id);
         Log.d(TAG, "Using webClientId: " + webClientId);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
-                .requestIdToken("854441719795-gqat6aom5ot0u0eqdh6q7v4tu9t6etke.apps.googleusercontent.com")
+                .requestIdToken(webClientId) // FIX: không hardcode
                 .build();
 
         googleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        // ===== GOOGLE BUTTON =====
         btnGoogle.setOnClickListener(v -> {
             Intent signInIntent = googleSignInClient.getSignInIntent();
             startActivityForResult(signInIntent, RC_GOOGLE);
         });
     }
 
-    // ===== HANDLE RESULT GOOGLE =====
+    // ===== HANDLE GOOGLE RESULT =====
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -137,20 +145,14 @@ public class LoginActivity extends AppCompatActivity {
                 sendGoogleTokenToServer(idToken);
 
             } catch (ApiException e) {
-                // More specific logging for ApiException
-                int statusCode = e.getStatusCode();
-                Log.e(TAG, "Google sign-in failed: statusCode=" + statusCode, e);
-                Toast.makeText(this, "Google login failed: code=" + statusCode, Toast.LENGTH_LONG).show();
-            } catch (Exception e) {
-                Log.e(TAG, "Unexpected sign-in error", e);
-                Toast.makeText(this, "Google login failed", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Google sign-in failed: code=" + e.getStatusCode(), e);
+                Toast.makeText(this, "Google login failed: " + e.getStatusCode(), Toast.LENGTH_LONG).show();
             }
         }
     }
 
     // ===== CALL API GOOGLE =====
     private void sendGoogleTokenToServer(String idToken) {
-
         api.googleLogin(new GoogleLoginRequest(idToken))
                 .enqueue(new retrofit2.Callback<com.example.frontend.data.model.ApiResponse<LoginResponse>>() {
 
@@ -168,26 +170,16 @@ public class LoginActivity extends AppCompatActivity {
                             }
 
                             saveLogin(data);
-
                             Toast.makeText(LoginActivity.this, "Login Google thành công", Toast.LENGTH_SHORT).show();
-
                             goToHome();
 
                         } else {
-                            String errBody = "";
-                            try {
-                                if (response.errorBody() != null) errBody = response.errorBody().string();
-                            } catch (IOException io) {
-                                Log.e(TAG, "Error reading errorBody", io);
-                            }
-                            Log.e(TAG, "Google login failed. code=" + response.code() + " body=" + errBody);
-                            Toast.makeText(LoginActivity.this, "Google login thất bại: server error", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(LoginActivity.this, "Google login thất bại", Toast.LENGTH_SHORT).show();
                         }
                     }
 
                     @Override
                     public void onFailure(retrofit2.Call<com.example.frontend.data.model.ApiResponse<LoginResponse>> call, Throwable t) {
-                        Log.e(TAG, "Network error on googleLogin", t);
                         Toast.makeText(LoginActivity.this, "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -211,8 +203,20 @@ public class LoginActivity extends AppCompatActivity {
 
                     if (result.data != null && result.data.getUser() != null) {
 
-                        saveLogin(result.data);
+                        String username = result.data.getUser().getUsername();
+                        String userId = result.data.getUser().getId();
 
+                        // Debug
+                        Log.d(TAG, "userId: " + userId);
+                        Log.d(TAG, "username: " + username);
+
+                        if (userId == null || userId.isEmpty()) {
+                            Toast.makeText(this, "Lỗi: không lấy được userId", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        saveLogin(result.data);
+                        Toast.makeText(this, "Đăng nhập thành công! Xin chào " + username, Toast.LENGTH_SHORT).show();
                         goToHome();
                     }
                     break;
@@ -228,22 +232,29 @@ public class LoginActivity extends AppCompatActivity {
 
     // ===== SAVE LOGIN =====
     private void saveLogin(LoginResponse data) {
-        String token = data.getAccessToken();
-        String userId = data.getUser().getId();
 
-        SharedPreferences pref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        Log.d(TAG, "userId: " + data.getUser().getId());
+        Log.d(TAG, "username: " + data.getUser().getUsername());
+
+        SharedPreferences pref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
 
-        editor.putString("JWT_TOKEN", token);
-        editor.putString("USER_ID", userId);
-        editor.putBoolean("IS_LOGGED_IN", true);
+        editor.putString("JWT_TOKEN", data.getAccessToken());
+        editor.putString("USER_ID", data.getUser().getId());
+        editor.putString("USERNAME", data.getUser().getUsername());
+        editor.putString("USER_AVATAR", data.getUser().getAvatar());
+
+        // Remember login
+        editor.putBoolean("IS_LOGGED_IN", cbRemember != null && cbRemember.isChecked());
 
         editor.apply();
     }
 
     // ===== NAVIGATE =====
     private void goToHome() {
-        startActivity(new Intent(this, HomeActivity.class));
+        Intent intent = new Intent(this, HomeActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         finish();
     }
 }

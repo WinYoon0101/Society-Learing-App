@@ -1,5 +1,4 @@
 import { Response } from "express";
-import mongoose from "mongoose";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import User from "../models/user.model";
 
