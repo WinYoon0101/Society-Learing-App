@@ -56,7 +56,8 @@ dependencies {
     // Glide (Đã xóa bản cũ 4.15.1, giữ lại bản mới nhất 4.16.0)
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
-
+    // Thêm dòng này để sử dụng Google Auth (gms)
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
