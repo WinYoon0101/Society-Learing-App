@@ -13,6 +13,7 @@ export interface IUser extends Document {
   bio?: string;
   isVerified: boolean;
   isActive: boolean;
+  provider: string;
   refreshToken?: string;
   savedDocument: mongoose.Types.ObjectId[];
   createdAt: Date;
@@ -40,7 +41,7 @@ const UserSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: [true, "Mật khẩu là bắt buộc"],
+      required: false, // Cho phép password có thể null (dành cho đăng ký bằng OAuth)
       minlength: [6, "Mật khẩu phải có ít nhất 6 ký tự"],
       select: false, // Không trả về password trong query
     },
@@ -73,6 +74,10 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: true,
     },
+    provider: { 
+    type: String, 
+    default: "local",
+  },
     refreshToken: {
       type: String,
       default: null,
@@ -100,6 +105,10 @@ const UserSchema = new Schema<IUser>(
 
 // Hash password trước khi save
 UserSchema.pre<IUser>("save", async function () {
+  //Google login → không có password → bỏ qua
+  if (!this.password) return;
+
+  //Không đổi password → bỏ qua
   if (!this.isModified("password")) return;
 
   const salt = await bcrypt.genSalt(12);

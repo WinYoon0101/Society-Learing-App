@@ -46,6 +46,18 @@ public interface ApiService {
     @POST("auth/register")
     Call<ApiResponse<LoginResponse>> register(@Body RegisterRequest request);
 
+    @POST("auth/google-login")
+    Call<ApiResponse<LoginResponse>> googleLogin(@Body GoogleLoginRequest request);
+
+    @POST("auth/send-otp")
+    Call<ApiResponse> sendOtp(@Body EmailRequest request);
+
+    @POST("auth/verify-otp")
+    Call<ApiResponse> verifyOtp(@Body OtpRequest request);
+
+    @POST("auth/reset-password")
+    Call<ApiResponse> resetPassword(@Body ResetPasswordRequest request);
+
     // Lấy danh sách gợi ý kết bạn
     @GET("friends/suggestions")
     Call<ApiResponse<List<Friend>>> getFriendSuggestions();

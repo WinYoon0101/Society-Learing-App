@@ -27,6 +27,7 @@ import com.example.frontend.ui.group.GroupActivity;
 import com.example.frontend.ui.library.LibraryFragment;
 import com.example.frontend.ui.meeting.MeetingActivity;
 import com.example.frontend.ui.notify.NotifyFragment;
+import com.example.frontend.ui.pomodoro.PomodoroActivity;
 import com.example.frontend.ui.profile.ProfileFragment;
 import com.example.frontend.ui.quiz.QuizListActivity;
 import com.example.frontend.ui.saved.SavedActivity;
@@ -122,6 +123,7 @@ public class HomeActivity extends AppCompatActivity {
                 else if (id == R.id.nav_group) intent = new Intent(this, GroupActivity.class);
                 else if (id == R.id.nav_meeting) intent = new Intent(this, MeetingActivity.class);
                 else if (id == R.id.nav_quiz) intent = new Intent(this, QuizListActivity.class);
+                else if (id == R.id.nav_pomodoro) intent = new Intent(this, PomodoroActivity.class);
 
                 if (intent != null) {
                     startActivity(intent);
