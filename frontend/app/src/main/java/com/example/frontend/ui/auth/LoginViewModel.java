@@ -12,23 +12,22 @@ import com.example.frontend.data.repository.AuthRepository;
 import com.example.frontend.utils.Result;
 
 public class LoginViewModel extends AndroidViewModel {
+
     private AuthRepository authRepository;
-    private LiveData<Result<LoginResponse>> loginResult;
+    private MutableLiveData<Result<LoginResponse>> loginResult = new MutableLiveData<>();
 
     public LoginViewModel(@NonNull Application application) {
         super(application);
-        // Truyền context vào AuthRepository
-        authRepository = new AuthRepository(application.getApplicationContext());
+        authRepository = new AuthRepository(application);
     }
 
     public LiveData<Result<LoginResponse>> getLoginResult() {
-        if (loginResult == null) {
-            loginResult = new MutableLiveData<>();
-        }
         return loginResult;
     }
 
     public void login(String email, String password) {
-        loginResult = authRepository.login(email, password);
+        authRepository.login(email, password).observeForever(result -> {
+            loginResult.setValue(result);
+        });
     }
 }
