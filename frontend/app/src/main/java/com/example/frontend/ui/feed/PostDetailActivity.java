@@ -1,4 +1,4 @@
-package com.example.frontend.ui.feed; // Bạn nhớ chỉnh lại package cho đúng thư mục của mình
+package com.example.frontend.ui.feed;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,22 +36,27 @@ public class PostDetailActivity extends AppCompatActivity {
     private TextView tvAuthorName, tvContent, tvCommentCount;
     private RecyclerView rvComments;
 
+    // View liên quan đến Reaction
+    private LinearLayout layoutTopReactions, btnLikeContainer;
+    private TextView tvReactionCount, tvLikeLabel;
+    private ImageView imgReact1, imgReact2, imgLikeIcon;
+
     // Dữ liệu quản lý trạng thái
     private String currentPostId;
-    private String replyingToId = null; // null là cmt gốc, có giá trị là đang reply
+    private String replyingToId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post_detail);
 
-        // 1. Khởi tạo ViewModel (Bộ não)
+        // 1. Khởi tạo ViewModel (Bộ脑)
         viewModel = new ViewModelProvider(this).get(PostDetailViewModel.class);
 
         // 2. Ánh xạ View và Setup sự kiện
         initViews();
 
-        // 3. Tiếp nhận "Hành lý" gửi từ PostAdapter sang
+        // 3. Tiếp nhận "Hành lý" gửi từ PostAdapter sang (Đã bao gồm Cảm xúc)
         receiveDataFromIntent();
 
         // 4. Cài đặt danh sách bình luận
@@ -75,20 +81,42 @@ public class PostDetailActivity extends AppCompatActivity {
         tvAuthorName = findViewById(R.id.tvAuthorName);
         tvContent = findViewById(R.id.tvContent);
         imgAvatar = findViewById(R.id.imgAvatar);
-        imgPost = findViewById(R.id.imgPost);
+        imgPost = findViewById(R.id.rvPostImages);
         tvCommentCount = findViewById(R.id.tvCommentCount);
 
+        // Ánh xạ các View của Reaction
+        layoutTopReactions = findViewById(R.id.layoutTopReactions);
+        tvReactionCount = findViewById(R.id.tvReactionCount);
+        imgReact1 = findViewById(R.id.imgReact1);
+        imgReact2 = findViewById(R.id.imgReact2);
+
+        btnLikeContainer = findViewById(R.id.btnLike);
+        imgLikeIcon = findViewById(R.id.imgLike);
+        tvLikeLabel = findViewById(R.id.tvLikeCount);
 
         // Nút quay lại màn hình chính
         btnBack.setOnClickListener(v -> finish());
+
+        // Mở BottomSheet khi nhấn vào số lượng reaction trong màn hình chi tiết
+        if (layoutTopReactions != null) {
+            layoutTopReactions.setOnClickListener(v -> {
+                ReactionListBottomSheet bottomSheet = ReactionListBottomSheet.newInstance(currentPostId);
+                bottomSheet.show(getSupportFragmentManager(), "ReactionBottomSheet");
+            });
+        }
+
+        // Cảnh báo nhẹ khi người dùng cố gắng đổi cảm xúc trong trang chi tiết
+        if (btnLikeContainer != null) {
+            btnLikeContainer.setOnClickListener(v -> {
+                Toast.makeText(this, "Hãy trở ra màn hình chính để thay đổi cảm xúc nhé!", Toast.LENGTH_SHORT).show();
+            });
+        }
 
         // Xử lý nút Gửi bình luận
         btnSendComment.setOnClickListener(v -> {
             String text = edtComment.getText().toString().trim();
             if (!text.isEmpty()) {
                 String token = "Bearer " + getSavedToken();
-                android.util.Log.d("KIEM_TRA_ID", "ID bài viết gửi đi là: [" + currentPostId + "]");
-                // ViewModel sẽ lo việc gọi API
                 viewModel.postComment(token, currentPostId, text, replyingToId);
             }
         });
@@ -103,21 +131,61 @@ public class PostDetailActivity extends AppCompatActivity {
         String authorAvatar = getIntent().getStringExtra("AUTHOR_AVATAR");
         String postImage = getIntent().getStringExtra("POST_IMAGE");
 
-        // 1. Đổ Chữ
-        tvContent.setText(content);
-        if (authorName != null) tvAuthorName.setText(authorName);
+        // Nhận dữ liệu Reaction & Comment
+        int commentCount = getIntent().getIntExtra("COMMENT_COUNT", 0);
+        int reactionCount = getIntent().getIntExtra("REACTION_COUNT", 0);
+        String myReaction = getIntent().getStringExtra("MY_REACTION");
+        ArrayList<String> topReactions = getIntent().getStringArrayListExtra("TOP_REACTIONS");
 
-        // 2. Đổ Avatar
-        if (authorAvatar != null) {
+        // 1. Đổ Chữ và Ảnh cơ bản
+        if (tvContent != null) tvContent.setText(content);
+        if (authorName != null && tvAuthorName != null) tvAuthorName.setText(authorName);
+        if (authorAvatar != null && imgAvatar != null) {
             Glide.with(this).load(authorAvatar).placeholder(R.drawable.ic_user).into(imgAvatar);
         }
-
-        // 3. Đổ Ảnh bài viết (Có thì hiện, không thì giấu)
-        if (postImage != null && !postImage.isEmpty()) {
+        if (postImage != null && !postImage.isEmpty() && imgPost != null) {
             imgPost.setVisibility(View.VISIBLE);
             Glide.with(this).load(postImage).into(imgPost);
-        } else {
+        } else if (imgPost != null) {
             imgPost.setVisibility(View.GONE);
+        }
+
+        // 2. Đổ số lượng Comment
+        if (tvCommentCount != null) {
+            tvCommentCount.setText(String.valueOf(commentCount));
+        }
+
+        // 3. Đổ Nút Like (Trạng thái màu sắc)
+        if (imgLikeIcon != null && tvLikeLabel != null) {
+            imgLikeIcon.setImageResource(getIconForReaction(myReaction));
+            if (myReaction != null) {
+                tvLikeLabel.setText(myReaction);
+            } else {
+                tvLikeLabel.setText("Thích");
+            }
+        }
+
+        // 4. Đổ Top Reaction (Hiển thị các icon nhỏ xíu)
+        if (layoutTopReactions != null) {
+            if (reactionCount > 0) {
+                layoutTopReactions.setVisibility(View.VISIBLE);
+                tvReactionCount.setText(String.valueOf(reactionCount));
+
+                imgReact1.setVisibility(View.GONE);
+                imgReact2.setVisibility(View.GONE);
+
+                if (topReactions != null && !topReactions.isEmpty()) {
+                    imgReact1.setVisibility(View.VISIBLE);
+                    imgReact1.setImageResource(getIconForReaction(topReactions.get(0)));
+
+                    if (topReactions.size() > 1) {
+                        imgReact2.setVisibility(View.VISIBLE);
+                        imgReact2.setImageResource(getIconForReaction(topReactions.get(1)));
+                    }
+                }
+            } else {
+                layoutTopReactions.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -146,14 +214,13 @@ public class PostDetailActivity extends AppCompatActivity {
     }
 
     private void observeViewModel() {
-        // Khi danh sách bình luận thay đổi (sau khi load hoặc thêm/xóa)
+        // Khi danh sách bình luận thay đổi
         viewModel.getCommentsLiveData().observe(this, comments -> {
             currentCommentList.clear();
             currentCommentList.addAll(comments);
             commentAdapter.notifyDataSetChanged();
         });
 
-        // Khi có thông báo lỗi hoặc thành công từ Server
         viewModel.getMessageLiveData().observe(this, msg -> {
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
         });
@@ -165,7 +232,7 @@ public class PostDetailActivity extends AppCompatActivity {
             }
         });
 
-        // Khi đăng bình luận thành công -> Reset ô nhập liệu
+        // Khi đăng bình luận thành công
         viewModel.getActionSuccessLiveData().observe(this, isSuccess -> {
             if (isSuccess) {
                 edtComment.setText("");
@@ -176,7 +243,21 @@ public class PostDetailActivity extends AppCompatActivity {
         });
     }
 
-    // --- Các hàm hỗ trợ ---
+    // --- Hàm hỗ trợ chuyển đổi chữ thành Icon ---
+    private int getIconForReaction(String type) {
+        if (type == null) return R.drawable.ic_like;
+        switch (type) {
+            case "Like": return R.drawable.ic_like_color;
+            case "Love": return R.drawable.ic_love;
+            case "Haha": return R.drawable.ic_haha;
+            case "Wow":  return R.drawable.ic_wow;
+            case "Sad":  return R.drawable.ic_sad;
+            case "Angry":return R.drawable.ic_angry;
+            default: return R.drawable.ic_like;
+        }
+    }
+
+    // --- Các hàm hỗ trợ khác ---
     private String getSavedToken() {
         return getSharedPreferences("MyAppPrefs", MODE_PRIVATE).getString("JWT_TOKEN", "");
     }
