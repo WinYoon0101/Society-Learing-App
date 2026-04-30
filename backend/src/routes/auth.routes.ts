@@ -88,7 +88,6 @@ router.post(
 
 router.post("/logout", authenticate, logout);
 
-
 router.get("/me", authenticate, getMe);
 
 router.post("/send-otp", sendOtp);
