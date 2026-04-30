@@ -51,10 +51,6 @@ public class ProfileFragment extends Fragment {
     private UserRepository repository;
 
     private ImageView imgCover;
-    private RecyclerView rvPosts;
-    private ProfilePostAdapter adapter;
-    private PostRepository postRepository;
-    private TextView tvEmptyPost;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -67,13 +63,10 @@ public class ProfileFragment extends Fragment {
         tvStats = view.findViewById(R.id.tvStats);
         btnEdit = view.findViewById(R.id.btnEdit);
         imgCover = view.findViewById(R.id.imgCover);
-        rvPosts.setLayoutManager(new LinearLayoutManager(getContext()));
-        rvPosts.setNestedScrollingEnabled(false);
 
         repository = new UserRepository(requireContext());
 
         loadProfile();
-        loadMyPosts();
 
         imgAvatar.setOnClickListener(v -> openGallery());
         btnEdit.setOnClickListener(v -> showEditOptions());
@@ -130,14 +123,6 @@ public class ProfileFragment extends Fragment {
                 } else {
                     imgCover.setImageResource(R.drawable.bg_cover_default);
                 }
-
-                //FEED
-//                Fragment feedFragment = new ProfileFeedFragment(true);
-
-//                getChildFragmentManager()
-//                        .beginTransaction()
-//                        .replace(R.id.feedContainer, feedFragment)
-//                        .commit();
             }
         });
     }
@@ -176,32 +161,5 @@ public class ProfileFragment extends Fragment {
                 .show();
     }
 
-    private void loadMyPosts() {
-        postRepository.getMyPosts(new Callback<ApiResponse<List<Post>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Post>>> call, Response<ApiResponse<List<Post>>> response) {
 
-                if (response.isSuccessful() && response.body() != null) {
-
-                    List<Post> posts = response.body().data;
-
-                    if (posts == null || posts.isEmpty()) {
-                        rvPosts.setVisibility(View.GONE);
-                        tvEmptyPost.setVisibility(View.VISIBLE);
-                    } else {
-                        rvPosts.setVisibility(View.VISIBLE);
-                        tvEmptyPost.setVisibility(View.GONE);
-
-                        adapter = new ProfilePostAdapter(getContext(), posts);
-                        rvPosts.setAdapter(adapter);
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<List<Post>>> call, Throwable t) {
-
-            }
-        });
-    }
 }
