@@ -132,12 +132,12 @@ public class ProfileFragment extends Fragment {
                 }
 
                 //FEED
-                Fragment feedFragment = new ProfileFeedFragment(true);
+//                Fragment feedFragment = new ProfileFeedFragment(true);
 
-                getChildFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.feedContainer, feedFragment)
-                        .commit();
+//                getChildFragmentManager()
+//                        .beginTransaction()
+//                        .replace(R.id.feedContainer, feedFragment)
+//                        .commit();
             }
         });
     }
