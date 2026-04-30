@@ -157,7 +157,7 @@
             android:drawableStart="@drawable/ic_home"
             android:drawablePadding="12dp"
             android:textColor="#444"
-            android:visibility="gone"
+            android:visibility="visible"
             android:layout_marginBottom="10dp"/>
 
         <!-- HOMETOWN -->
@@ -168,7 +168,7 @@
             android:drawableStart="@drawable/ic_location"
             android:drawablePadding="12dp"
             android:textColor="#444"
-            android:visibility="gone"
+            android:visibility="visible"
             android:layout_marginBottom="10dp"/>
 
         <!-- BIRTHDAY -->
@@ -179,7 +179,7 @@
             android:drawableStart="@drawable/ic_calendar"
             android:drawablePadding="12dp"
             android:textColor="#444"
-            android:visibility="gone"
+            android:visibility="visible"
             android:layout_marginBottom="10dp"/>
 
         <!-- GENDER -->
@@ -190,7 +190,7 @@
             android:drawableStart="@drawable/ic_heart"
             android:drawablePadding="12dp"
             android:textColor="#444"
-            android:visibility="gone"
+            android:visibility="visible"
             android:layout_marginBottom="16dp"/>
 
         <Button
@@ -202,7 +202,15 @@
             android:textColor="#000"
             android:backgroundTint="#E0E0E0"/>
 
+
     </LinearLayout>
+        <FrameLayout
+            android:id="@+id/feedContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/layoutIntro"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

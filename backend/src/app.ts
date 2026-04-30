@@ -25,6 +25,7 @@ swaggerDocs(app);
 
 // Khởi tạo WebSocket chat
 initChatSocket(io);
+app.use("/uploads", express.static("uploads"));
 
 export { httpServer };
 export default app;
