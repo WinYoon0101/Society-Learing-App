@@ -6,11 +6,11 @@ import {
   refreshToken,
   logout,
   getMe,
+  googleLogin,
 } from "../controllers/auth.controller";
 import { authenticate } from "../middlewares/auth.middleware";
 import { handleValidationErrors } from "../middlewares/validate.middleware";
-import { sendOtp, verifyOtp, resetPassword } from "../controllers/otp.controller";
-import { googleLogin } from "../controllers/auth.controller";
+import { resetPassword, sendOtp, verifyOtp } from "../controllers/otp.controller";
 
 const router = Router();
 
@@ -94,4 +94,5 @@ router.post("/send-otp", sendOtp);
 router.post("/verify-otp", verifyOtp);
 router.post("/reset-password", resetPassword);
 router.post("/google-login", googleLogin);
+
 export default router;

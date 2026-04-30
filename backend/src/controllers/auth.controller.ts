@@ -69,9 +69,7 @@ export const googleLogin = async (req: Request, res: Response) => {
         email: email.toLowerCase(),
         username: name,
         avatar: picture,
-        password: null,
         isVerified: true,
-        provider: "google",
       });
     }
 
@@ -96,7 +94,7 @@ export const googleLogin = async (req: Request, res: Response) => {
     console.error("Google login error:", error);
     return res.status(500).json({
         success: false,
-        message: error.message || "Google login failed", // Trả về lỗi thật để debug
+        message: error instanceof Error ? error.message : "Google login failed", // Trả về lỗi thật để debug
     });
   }
 };

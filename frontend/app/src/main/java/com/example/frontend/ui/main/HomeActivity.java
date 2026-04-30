@@ -154,13 +154,19 @@ public class HomeActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        // Xóa dữ liệu SharedPreferences
-        SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-        sharedPref.edit().clear().apply();
+        // SharedPreferences
+        SharedPreferences pref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+
+        // chỉ xóa session
+        editor.remove("JWT_TOKEN");
+        editor.remove("USER_ID");
+        editor.putBoolean("IS_LOGGED_IN", false);
+
+        editor.apply();
 
         Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
 
-        // Chuyển về màn hình đăng nhập và xóa sạch stack các activity cũ
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
