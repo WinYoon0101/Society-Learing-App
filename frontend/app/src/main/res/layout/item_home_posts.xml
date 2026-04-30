@@ -58,12 +58,12 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/imgAvatar" />
 
-        <ImageView
-            android:id="@+id/imgPost"
+        <!-- ĐÃ ĐỔI SANG RECYCLERVIEW ĐỂ ẢNH TỰ CO GIÃN VỪA KHÍT -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvPostImages"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:adjustViewBounds="true"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -78,7 +78,7 @@
             android:layout_marginTop="12dp"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/imgPost">
+            app:layout_constraintTop_toBottomOf="@id/rvPostImages">
 
             <FrameLayout
                 android:id="@+id/containerReactionIcons"
