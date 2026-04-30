@@ -13,7 +13,6 @@ export interface IUser extends Document {
   bio?: string;
   isVerified: boolean;
   isActive: boolean;
-  provider: string;
   refreshToken?: string;
   savedDocument: mongoose.Types.ObjectId[];
   createdAt: Date;
@@ -72,10 +71,6 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: true,
     },
-    provider: { 
-    type: String, 
-    default: "local",
-  },
     refreshToken: {
       type: String,
       default: null,

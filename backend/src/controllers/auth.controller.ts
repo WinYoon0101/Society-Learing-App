@@ -7,11 +7,11 @@ import {
   JWT_REFRESH_SECRET,
   JWT_EXPIRES_IN,
   JWT_REFRESH_EXPIRES_IN,
+  GOOGLE_CLIENT_ID,
 } from "../config/env";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
 // ===== GOOGLE CLIENT =====
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // ===== TOKEN =====
@@ -69,7 +69,7 @@ export const googleLogin = async (req: Request, res: Response) => {
         email: email.toLowerCase(),
         username: name,
         avatar: picture,
-        password: undefined,
+        password: null,
         isVerified: true,
         provider: "google",
       });
@@ -95,8 +95,8 @@ export const googleLogin = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Google login error:", error);
     return res.status(500).json({
-      success: false,
-      message: "Google login failed",
+        success: false,
+        message: error.message || "Google login failed", // Trả về lỗi thật để debug
     });
   }
 };
