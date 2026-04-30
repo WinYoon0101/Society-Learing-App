@@ -6,21 +6,18 @@ export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
-  dateOfBirth?: Date;
+  dateOfBirth?: string;
   gender?: string;
   avatar?: string;
-  cover?: string;
+  profileCover?: string;
   bio?: string;
   isVerified: boolean;
   isActive: boolean;
-  provider: string;
   refreshToken?: string;
   savedDocument: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
-  hometown: string;
-  location: string;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -57,7 +54,7 @@ const UserSchema = new Schema<IUser>(
       type: String,
       default: null,
     },
-    cover: {
+    profileCover: {
       type: String,
       default: null,
     },
@@ -74,10 +71,6 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: true,
     },
-    provider: { 
-    type: String, 
-    default: "local",
-  },
     refreshToken: {
       type: String,
       default: null,
@@ -88,19 +81,10 @@ const UserSchema = new Schema<IUser>(
       ref: "Document",
       default: [],
     },
-    hometown: {
-      type: String,
-      default: null,
-    },
-
-    location: {
-      type: String,
-      default: null,
-    },
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 // Hash password trước khi save
@@ -117,7 +101,7 @@ UserSchema.pre<IUser>("save", async function () {
 
 // Method so sánh password
 UserSchema.methods.comparePassword = async function (
-  candidatePassword: string,
+  candidatePassword: string
 ): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
