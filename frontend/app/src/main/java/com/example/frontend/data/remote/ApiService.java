@@ -1,9 +1,11 @@
 package com.example.frontend.data.remote;
 
 import com.example.frontend.data.model.ApiResponse;
+import com.example.frontend.data.model.AvatarResponse;
 import com.example.frontend.data.model.Conversation;
 import com.example.frontend.data.model.Comment;
 import com.example.frontend.data.model.CommentRequest;
+import com.example.frontend.data.model.CoverResponse;
 import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
@@ -86,19 +88,19 @@ public interface ApiService {
     @DELETE("friends/remove/{id}")
     Call<ApiResponse<Object>> removeFriend(@Path("id") String userId);
 
-    @GET("users/me")
+    @GET("user/profile")
     Call<ApiResponse<User>> getMyProfile();
 
-    @PUT("users/update")
+    @PUT("user/update")
     Call<ApiResponse<User>> updateProfile(@Body UpdateProfile request);
 
     @Multipart
-    @POST("users/upload-avatar")
-    Call<ApiResponse<String>> uploadAvatar(@Part MultipartBody.Part file);
+    @PUT("user/avatar")
+    Call<ApiResponse<AvatarResponse>> uploadAvatar(@Part MultipartBody.Part file);
 
     @Multipart
-    @POST("users/upload-cover")
-    Call<ApiResponse<String>> uploadCover(@Part MultipartBody.Part file);
+    @PUT("user/cover")
+    Call<ApiResponse<CoverResponse>> uploadCover(@Part MultipartBody.Part file);
     //TÀI LIỆU
 
     @GET("documents/me/list")

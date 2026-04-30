@@ -218,6 +218,7 @@ export const getMyProfile = async (
         hometown: user.hometown,
         location: user.location,
         dateOfBirth: user.dateOfBirth,
+        gender: user.gender,
         friendCount,
         groupCount,
       },

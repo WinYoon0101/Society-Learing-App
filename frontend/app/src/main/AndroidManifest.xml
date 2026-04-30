@@ -82,6 +82,7 @@
             android:name=".ui.feed.PostDetailActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ui.profile.EditProfileActivity" />
     </application>
 
 </manifest>

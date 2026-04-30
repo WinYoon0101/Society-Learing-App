@@ -7,7 +7,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   dateOfBirth?: string;
-  gender?: string;
+  gender?: String;
   avatar?: string;
   profileCover?: string;
   bio?: string;
@@ -51,7 +51,8 @@ const UserSchema = new Schema<IUser>(
     },
     gender: {
       type: String,
-      default: null,
+      enum: ["Nam", "Nữ"],
+      default: "Nam",
     },
     avatar: {
       type: String,
