@@ -2,6 +2,7 @@ import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../config/cloudinary";
 import { MediaFileType } from "../models/media.model";
+import path from "path";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -223,6 +224,13 @@ export const uploadImages = multer({
   fileFilter: imageFilter,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 }).array("images", 10);
+
+/** Upload 1 ảnh duy nhất dành cho avatar/cover, field name: "file" */
+export const uploadFile = multer({
+  storage: imageStorage,
+  fileFilter: imageFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+}).single("file");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

@@ -42,19 +42,24 @@ export const updateAvatar = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const { avatar } = req.body;
 
-    if (!avatar) {
+    // Nhận file upload từ multer (field name: "file")
+    // multer-storage-cloudinary tự động upload lên Cloudinary và gắn URL vào req.file.path
+    const file = req.file as Express.Multer.File & { path?: string };
+
+    if (!file || !file.path) {
       res.status(400).json({
         success: false,
-        message: "Avatar URL là bắt buộc.",
+        message: "Vui lòng upload file ảnh.",
       });
       return;
     }
 
+    const avatarUrl = file.path; // Cloudinary URL
+
     const user = await User.findByIdAndUpdate(
       userId,
-      { avatar },
+      { avatar: avatarUrl },
       { new: true },
     );
 
@@ -144,17 +149,21 @@ export const updateCover = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const { cover } = req.body;
 
-    if (!cover) {
+    // Nhận file upload từ multer (field name: "file")
+    const file = req.file as Express.Multer.File & { path?: string };
+
+    if (!file || !file.path) {
       res.status(400).json({
         success: false,
-        message: "Cover URL là bắt buộc.",
+        message: "Vui lòng upload file ảnh.",
       });
       return;
     }
 
-    const user = await User.findByIdAndUpdate(userId, { cover }, { new: true });
+    const coverUrl = file.path; // Cloudinary URL
+
+    const user = await User.findByIdAndUpdate(userId, { cover: coverUrl }, { new: true });
 
     if (!user) {
       res.status(404).json({
