@@ -13,6 +13,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.PagerSnapHelper; // Thêm import này cho mượt
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -20,6 +21,7 @@ import com.example.frontend.R;
 import com.example.frontend.data.model.Comment;
 import com.example.frontend.ui.feed.CommentAdapter;
 import com.example.frontend.ui.feed.PostDetailViewModel;
+// Nhớ đảm bảo có import PostImageAdapter nếu nó nằm khác package
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +34,12 @@ public class PostDetailActivity extends AppCompatActivity {
 
     // Các thành phần giao diện
     private EditText edtComment;
-    private ImageView btnSendComment, imgPost, imgAvatar, btnBack;
+    private ImageView btnSendComment, imgAvatar, btnBack; // ĐÃ XÓA imgPost ở đây
     private TextView tvAuthorName, tvContent, tvCommentCount;
     private RecyclerView rvComments;
+
+    // ĐÃ THÊM: RecyclerView để chứa nhiều ảnh
+    private RecyclerView rvPostImagesFeed;
 
     // View liên quan đến Reaction
     private LinearLayout layoutTopReactions, btnLikeContainer;
@@ -50,7 +55,7 @@ public class PostDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post_detail);
 
-        // 1. Khởi tạo ViewModel (Bộ脑)
+        // 1. Khởi tạo ViewModel (Bộ não)
         viewModel = new ViewModelProvider(this).get(PostDetailViewModel.class);
 
         // 2. Ánh xạ View và Setup sự kiện
@@ -81,8 +86,16 @@ public class PostDetailActivity extends AppCompatActivity {
         tvAuthorName = findViewById(R.id.tvAuthorName);
         tvContent = findViewById(R.id.tvContent);
         imgAvatar = findViewById(R.id.imgAvatar);
-        imgPost = findViewById(R.id.rvPostImages);
         tvCommentCount = findViewById(R.id.tvCommentCount);
+
+        // ĐÃ SỬA: Ánh xạ chuẩn thành RecyclerView cho nhiều ảnh
+        rvPostImagesFeed = findViewById(R.id.rvPostImages);
+        if (rvPostImagesFeed != null) {
+            rvPostImagesFeed.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+            rvPostImagesFeed.setOnFlingListener(null);
+            PagerSnapHelper snapHelper = new PagerSnapHelper();
+            snapHelper.attachToRecyclerView(rvPostImagesFeed);
+        }
 
         // Ánh xạ các View của Reaction
         layoutTopReactions = findViewById(R.id.layoutTopReactions);
@@ -129,7 +142,9 @@ public class PostDetailActivity extends AppCompatActivity {
         String content = getIntent().getStringExtra("POST_CONTENT");
         String authorName = getIntent().getStringExtra("AUTHOR_NAME");
         String authorAvatar = getIntent().getStringExtra("AUTHOR_AVATAR");
-        String postImage = getIntent().getStringExtra("POST_IMAGE");
+
+        // ĐÃ SỬA: Hứng MẢNG ẢNH thay vì 1 string đơn lẻ
+        ArrayList<String> postImages = getIntent().getStringArrayListExtra("POST_IMAGES");
 
         // Nhận dữ liệu Reaction & Comment
         int commentCount = getIntent().getIntExtra("COMMENT_COUNT", 0);
@@ -143,11 +158,14 @@ public class PostDetailActivity extends AppCompatActivity {
         if (authorAvatar != null && imgAvatar != null) {
             Glide.with(this).load(authorAvatar).placeholder(R.drawable.ic_user).into(imgAvatar);
         }
-        if (postImage != null && !postImage.isEmpty() && imgPost != null) {
-            imgPost.setVisibility(View.VISIBLE);
-            Glide.with(this).load(postImage).into(imgPost);
-        } else if (imgPost != null) {
-            imgPost.setVisibility(View.GONE);
+
+        // ĐÃ SỬA: Set Adapter để hiển thị nhiều ảnh y như ngoài bảng tin
+        if (postImages != null && !postImages.isEmpty() && rvPostImagesFeed != null) {
+            rvPostImagesFeed.setVisibility(View.VISIBLE);
+            PostImageAdapter imageAdapter = new PostImageAdapter(this, postImages);
+            rvPostImagesFeed.setAdapter(imageAdapter);
+        } else if (rvPostImagesFeed != null) {
+            rvPostImagesFeed.setVisibility(View.GONE);
         }
 
         // 2. Đổ số lượng Comment

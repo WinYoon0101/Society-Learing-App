@@ -82,7 +82,7 @@ public class CreatePostFragment extends Fragment {
         // =======================================================
         // 3. SETUP RECYCLERVIEW HIỂN THỊ ẢNH PREVIEW (VUỐT NGANG)
         // =======================================================
-        rvImagePreview = view.findViewById(R.id.rvImagePreview);
+        rvImagePreview = view.findViewById(R.id.rvImagePreview); // Chú ý: Đảm bảo layout fragment_feed_create_post.xml đã có id này
 
         // Cài đặt dạng danh sách vuốt ngang
         rvImagePreview.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
@@ -103,7 +103,6 @@ public class CreatePostFragment extends Fragment {
             @Override
             public void onImageClick(int position) {
                 Toast.makeText(getContext(), "Click xem ảnh thứ " + (position + 1), Toast.LENGTH_SHORT).show();
-                // Nơi đây sẽ xử lý mở màn hình Full Screen ở các bước sau
             }
         });
         rvImagePreview.setAdapter(previewAdapter);
@@ -130,9 +129,8 @@ public class CreatePostFragment extends Fragment {
 
             Toast.makeText(getContext(), "Đang đăng bài...", Toast.LENGTH_SHORT).show();
 
-            // TẠM THỜI: Chỉ bốc ảnh đầu tiên ra gửi đi để không làm vỡ Backend cũ.
-            Uri firstImage = selectedImageUris.isEmpty() ? null : selectedImageUris.get(0);
-            viewModel.uploadPost(getContext(), content, firstImage);
+            // ĐÃ SỬA: Đẩy toàn bộ danh sách selectedImageUris sang ViewModel
+            viewModel.uploadPost(getContext(), content, selectedImageUris);
         });
 
         return view;
