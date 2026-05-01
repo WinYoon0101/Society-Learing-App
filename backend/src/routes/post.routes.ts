@@ -12,6 +12,6 @@ const router = express.Router();
 router.post("/create", authenticate, uploadMedia, createPost);
 router.get("/feed", authenticate, getFeed);
 router.delete("/:id", authenticate, deletePost);
-// router.get("/me", authenticate, getMyPosts);
+ router.get("/me", authenticate, getMyPosts);
 
 export default router;

@@ -18,7 +18,9 @@ const io = new Server(httpServer, {
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Hỗ trợ đọc dữ liệu form-data tốt hơn
 
+// Gắn toàn bộ router vào gốc /api
 app.use("/api", routes);
 
 swaggerDocs(app);

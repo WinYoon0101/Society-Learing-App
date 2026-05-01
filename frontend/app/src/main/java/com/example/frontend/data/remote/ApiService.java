@@ -178,13 +178,15 @@ public interface ApiService {
     Call<ApiResponse<List<Post>>> getAllPosts();
 
 
+    // ĐÃ SỬA: Bỏ chữ api/ đi, chỉ còn posts/create
     @Multipart
     @POST("posts/create")
     Call<ApiResponse<Post>> createPost(
             @Part("content") RequestBody content,
-            @Part MultipartBody.Part image
+            @Part("privacy") RequestBody privacy,
+            @Part("groupId") RequestBody groupId,
+            @Part List<MultipartBody.Part> images
     );
-
     // Quiz
     @POST("quiz/generate-quiz")
     //

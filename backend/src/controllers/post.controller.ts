@@ -8,28 +8,25 @@ import Comment from '../models/comment.model';
 import Reaction from '../models/reaction.model'; 
 
 // =====================================
-// API ĐĂNG BÀI (ĐÃ TRẢ VỀ NGUYÊN BẢN GỐC CỦA BẠN 100%)
+// API ĐĂNG BÀI (GIỮ NGUYÊN BẢN GỐC)
 // =====================================
 export const createPost = async (req: AuthRequest, res: Response) => {
     try {
         const { content, privacy, groupId } = req.body;
-        // Lấy id người đăng
         const authorId = req.user?.id;
-        // Tạo 1 post mới
+        
         const newPost = new Post({
             authorId: authorId,
             groupId: groupId || null,
             content: content,
             privacy: privacy || "Public",
         });
-        // bắt db lưu lại và chờ lưu
+        
         const savePost = await newPost.save();
-        // Kiểm tra xem có đăng ảnh/video không
+        
         if (req.files && Array.isArray(req.files) && req.files.length > 0) {   
             const mediaDocument = req.files.map((file: any) => {
-                // kt xem là ảnh hay video
                 const isVideo = file.mimetype.includes('video');
-
                 return {
                     userId: authorId,
                     url: file.path,
@@ -57,7 +54,7 @@ export const createPost = async (req: AuthRequest, res: Response) => {
 };
 
 // =====================================
-// API LẤY BẢNG TIN (CHỈ CAN THIỆP ĐỂ LẤY REACTION)
+// API LẤY BẢNG TIN (ĐÃ CẬP NHẬT TRẢ VỀ MẢNG ẢNH)
 // =====================================
 export const getFeed = async (req: AuthRequest, res: Response) => {
     try {
@@ -65,10 +62,12 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
         const posts = await Post.find().sort({ createdAt: -1 }).populate('authorId', 'username avatar').lean(); 
 
         const postsWithDetails = await Promise.all(posts.map(async (post) => {
-            // Ép kiểu chuẩn ObjectId cho Mongoose để tránh lỗi Aggregate
             const postIdObj = new mongoose.Types.ObjectId(post._id.toString());
 
-            const media = await Media.findOne({ targetId: post._id, fileType: 'image' });
+            // ĐÃ SỬA: Lấy TẤT CẢ ảnh thuộc bài viết này thay vì 1 ảnh
+            const mediaList = await Media.find({ targetId: post._id, fileType: 'image' });
+            const imageUrls = mediaList.map(media => media.url); // Trích xuất mảng các đường link
+
             const commentCount = await Comment.countDocuments({ postId: post._id });
             const countReaction = await Reaction.countDocuments({ targetId: postIdObj });
 
@@ -90,7 +89,7 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
 
             return {
                 ...post,
-                image: media ? media.url : "",
+                images: imageUrls, // ĐÃ SỬA: Trả về mảng "images"
                 countComment: commentCount,
                 countReaction: countReaction,
                 myReaction: myReaction,
@@ -106,7 +105,7 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
 };
 
 // =====================================
-// API XÓA BÀI VIẾT (GIỮ NGUYÊN BẢN)
+// API XÓA BÀI VIẾT (GIỮ NGUYÊN BẢN GỐC)
 // =====================================
 export const deletePost = async (req: AuthRequest, res: Response) => {
     try {
@@ -137,7 +136,7 @@ export const deletePost = async (req: AuthRequest, res: Response) => {
         await Media.deleteMany({ targetId: postId });
         await Post.findByIdAndDelete(postId);
         await Comment.deleteMany({ postId: postId });
-        await Reaction.deleteMany({ targetId: postId }); // Xóa luôn reaction khi xóa bài
+        await Reaction.deleteMany({ targetId: postId });
 
         res.status(200).json({ success: true, message: "Đã xóa bài viết!" });
     } catch (error) {

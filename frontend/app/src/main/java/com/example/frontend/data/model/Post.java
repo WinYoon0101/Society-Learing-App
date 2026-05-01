@@ -1,7 +1,6 @@
 package com.example.frontend.data.model;
 
 import com.google.gson.annotations.SerializedName;
-
 import java.util.List;
 
 public class Post {
@@ -9,79 +8,45 @@ public class Post {
     private String id;
 
     private String content;
-    private String image;
+
+    // ĐÃ SỬA: Nhận danh sách URL ảnh từ Backend
+    @SerializedName("images")
+    private List<String> images;
+
     private User authorId;
     private String createdAt;
 
     private int countComment;
     private int countReaction;
-    private String myReaction; // Chứa giá trị: "Like", "Love", "Haha", "Wow", "Sad", "Angry" hoặc null
+    private String myReaction;
 
-    private List<String> topReactions; // Chứa danh sách như ["Love", "Haha", "Like"]
+    private List<String> topReactions;
+
     public List<String> getTopReactions() { return topReactions; }
     public void setTopReactions(List<String> topReactions) { this.topReactions = topReactions; }
 
-    public String getId() {
-        return id;
-    }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
 
-    public String getContent() {
-        return content;
-    }
+    // ĐÃ SỬA GETTER & SETTER
+    public List<String> getImages() { return images; }
+    public void setImages(List<String> images) { this.images = images; }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
+    public User getAuthorId() { return authorId; }
+    public void setAuthorId(User authorId) { this.authorId = authorId; }
 
-    public String getImage() {
-        return image;
-    }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 
-    public void setImage(String image) {
-        this.image = image;
-    }
+    public int getcountComment() { return countComment; }
+    public void setcountComment(int countComment) { this.countComment = countComment; }
 
-    public User getAuthorId() {
-        return authorId;
-    }
+    public int getcountReaction() { return countReaction; }
+    public void setcountReaction(int countReaction) { this.countReaction = countReaction; }
 
-    public void setAuthorId(User authorId) {
-        this.authorId = authorId;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public int getcountComment() {
-        return countComment;
-    }
-
-    public void setcountComment(int countComment) {
-        this.countComment = countComment;
-    }
-
-    public int getcountReaction() {
-        return countReaction;
-    }
-
-    public void setcountReaction(int countReaction) {
-        this.countReaction = countReaction;
-    }
-
-    public String getMyReaction() {
-        return myReaction;
-    }
-
-    public void setMyReaction(String myReaction) {
-        this.myReaction = myReaction;
-    }
+    public String getMyReaction() { return myReaction; }
+    public void setMyReaction(String myReaction) { this.myReaction = myReaction; }
 }

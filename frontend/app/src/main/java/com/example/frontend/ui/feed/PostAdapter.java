@@ -65,15 +65,13 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         }
 
         // ==========================================
-        // GẮN ADAPTER CHO RECYCLERVIEW LƯỚT ẢNH
+        // CẬP NHẬT: HIỂN THỊ MẢNG ẢNH BẰNG RECYCLERVIEW
         // ==========================================
-        if (post.getImage() != null && !post.getImage().isEmpty()) {
+        if (post.getImages() != null && !post.getImages().isEmpty()) {
             holder.rvPostImages.setVisibility(View.VISIBLE);
 
-            List<String> imageList = new ArrayList<>();
-            imageList.add(post.getImage());
-
-            PostImageAdapter imageAdapter = new PostImageAdapter(context, imageList);
+            // TRUYỀN THẲNG MẢNG ẢNH VÀO
+            PostImageAdapter imageAdapter = new PostImageAdapter(context, post.getImages());
             holder.rvPostImages.setAdapter(imageAdapter);
         } else {
             holder.rvPostImages.setVisibility(View.GONE);
@@ -114,6 +112,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             }
         });
 
+        // ==========================================
+        // CHUYỂN DỮ LIỆU SANG POST DETAIL
+        // ==========================================
         if (holder.btnComment != null) {
             holder.btnComment.setOnClickListener(v -> {
                 Intent intent = new Intent(context, PostDetailActivity.class);
@@ -123,7 +124,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     intent.putExtra("AUTHOR_NAME", post.getAuthorId().getUsername());
                     intent.putExtra("AUTHOR_AVATAR", post.getAuthorId().getAvatar());
                 }
-                intent.putExtra("POST_IMAGE", post.getImage());
+
+                // CẬP NHẬT: Gửi mảng ảnh sang Detail
+                if (post.getImages() != null) {
+                    intent.putStringArrayListExtra("POST_IMAGES", new ArrayList<>(post.getImages()));
+                }
+
                 intent.putExtra("COMMENT_COUNT", post.getcountComment());
                 intent.putExtra("REACTION_COUNT", post.getcountReaction());
                 intent.putExtra("MY_REACTION", post.getMyReaction());
@@ -256,7 +262,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         ImageView imgAvatar;
         View btnComment;
 
-        // ĐÃ KHAI BÁO RECYCLERVIEW CHUẨN
         RecyclerView rvPostImages;
 
         LinearLayout layoutTopReactions;
@@ -273,7 +278,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             tvContent = itemView.findViewById(R.id.tvContent);
             imgAvatar = itemView.findViewById(R.id.imgAvatar);
 
-            // XỬ LÝ LƯỚT ẢNH BẰNG RECYCLERVIEW + SNAPHELPER
             rvPostImages = itemView.findViewById(R.id.rvPostImages);
             rvPostImages.setLayoutManager(new LinearLayoutManager(itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
             rvPostImages.setOnFlingListener(null);
