@@ -143,7 +143,7 @@ public class ChatDetailFragment extends Fragment {
     private void setupSocketListeners() {
         ChatSocketManager.INSTANCE.setOnMessageNewListener(message -> {
             if (conversationId == null || !conversationId.equals(message.getConversationId())) {
-                return null;
+                return kotlin.Unit.INSTANCE;
             }
 
             if (getActivity() != null) {
@@ -152,7 +152,7 @@ public class ChatDetailFragment extends Fragment {
                     rvMessages.scrollToPosition(messageAdapter.getItemCount() - 1);
                 });
             }
-            return null;
+            return kotlin.Unit.INSTANCE;
         });
 
         ChatSocketManager.INSTANCE.setOnErrorListener(error -> {
@@ -161,7 +161,7 @@ public class ChatDetailFragment extends Fragment {
                     Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show()
                 );
             }
-            return null;
+            return kotlin.Unit.INSTANCE;
         });
     }
 
