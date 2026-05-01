@@ -49,4 +49,7 @@ public class PostRepository {
     public void getReactionsOfPost(String targetId, retrofit2.Callback<ApiResponse<List<ReactionItem>>> callback) {
         apiService.getReactionsOfPost(targetId).enqueue(callback);
     }
+    public void getMyPosts(Callback<ApiResponse<List<Post>>> callback) {
+        apiService.getMyPosts().enqueue(callback);
+    }
 }

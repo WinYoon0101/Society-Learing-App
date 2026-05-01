@@ -22,24 +22,25 @@
 
             <ImageView
                 android:id="@+id/btnOpenMenu"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:padding="8dp"
                 android:layout_centerVertical="true"
                 android:src="@drawable/ic_menu"
                 app:tint="#283633"
                 android:clickable="true"
                 android:focusable="true"
+                android:contentDescription="Open menu"
                 android:background="?attr/selectableItemBackgroundBorderless" />
 
             <ImageView
                 android:id="@+id/imgLogo"
-                android:layout_width="120dp"
-                android:layout_height="40dp"
+                android:layout_width="100dp"
+                android:layout_height="52dp"
                 android:layout_toEndOf="@id/btnOpenMenu"
                 android:layout_marginStart="4dp"
                 android:layout_centerVertical="true"
-                android:src="@drawable/text_logo"
+                android:src="@drawable/ic_text_logo"
                 android:scaleType="centerInside" />
 
             <ImageView
@@ -79,7 +80,7 @@
                     android:layout_width="28dp"
                     android:layout_height="3dp"
                     android:layout_marginTop="6dp"
-                    android:background="#0B8A00" />
+                    android:background="#10B981" />
             </LinearLayout>
 
             <LinearLayout
@@ -101,7 +102,7 @@
                     android:layout_width="28dp"
                     android:layout_height="3dp"
                     android:layout_marginTop="6dp"
-                    android:background="#0B8A00"
+                    android:background="#10B981"
                     android:visibility="invisible" />
             </LinearLayout>
 
@@ -124,7 +125,7 @@
                     android:layout_width="28dp"
                     android:layout_height="3dp"
                     android:layout_marginTop="6dp"
-                    android:background="#0B8A00"
+                    android:background="#10B981"
                     android:visibility="invisible" />
             </LinearLayout>
 
@@ -147,7 +148,7 @@
                     android:layout_width="28dp"
                     android:layout_height="3dp"
                     android:layout_marginTop="6dp"
-                    android:background="#0B8A00"
+                    android:background="#10B981"
                     android:visibility="invisible" />
             </LinearLayout>
 
@@ -170,7 +171,7 @@
                     android:layout_width="28dp"
                     android:layout_height="3dp"
                     android:layout_marginTop="6dp"
-                    android:background="#0B8A00"
+                    android:background="#10B981"
                     android:visibility="invisible" />
             </LinearLayout>
 
@@ -193,7 +194,7 @@
                     android:layout_width="28dp"
                     android:layout_height="3dp"
                     android:layout_marginTop="6dp"
-                    android:background="#0B8A00"
+                    android:background="#10B981"
                     android:visibility="invisible" />
             </LinearLayout>
         </LinearLayout>
@@ -241,6 +242,7 @@
                 app:iconGravity="textStart"
                 app:iconTint="#FFFFFF" />
         </FrameLayout>
+
 
     </com.google.android.material.navigation.NavigationView>
 

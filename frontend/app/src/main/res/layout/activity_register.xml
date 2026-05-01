@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#F1F3E0"
+    android:background="#D1FAE5"
     android:fitsSystemWindows="true">
 
     <LinearLayout
@@ -32,7 +32,7 @@
                 <ImageView
                     android:layout_width="200dp"
                     android:layout_height="55dp"
-                    android:src="@drawable/logo"
+                    android:src="@drawable/ic_logo"
                     android:layout_gravity="center"
                     android:layout_marginBottom="10dp"
                     android:scaleType="centerInside" />
@@ -224,7 +224,7 @@
                     android:textSize="16sp"
                     android:textStyle="bold"
                     app:cornerRadius="24dp"
-                    app:backgroundTint="#6C8F7E" />
+                    app:backgroundTint="#10B981" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -290,7 +290,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Đăng nhập"
-                        android:textColor="#6C8F7E"
+                        android:textColor="#34D399"
                         android:textSize="16sp"
                         android:textStyle="bold" />
                 </LinearLayout>

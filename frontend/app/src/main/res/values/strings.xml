@@ -2,4 +2,7 @@
     <string name="app_name">Society</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="default_web_client_id">
+23935492977-qj87vsu1o32h0jbo5947dkoejubgqda7.apps.googleusercontent.com
+    </string>
 </resources>
