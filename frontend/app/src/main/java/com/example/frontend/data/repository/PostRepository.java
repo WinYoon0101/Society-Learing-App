@@ -49,4 +49,8 @@ public class PostRepository {
     public void getReactionsOfPost(String targetId, retrofit2.Callback<ApiResponse<List<ReactionItem>>> callback) {
         apiService.getReactionsOfPost(targetId).enqueue(callback);
     }
+
+    public void deletePost(String token, String postId, Callback<ApiResponse<Object>> callback) {
+        apiService.deletePost(token, postId).enqueue(callback);
+    }
 }

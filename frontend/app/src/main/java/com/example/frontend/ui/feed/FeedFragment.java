@@ -31,7 +31,7 @@ public class FeedFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_feed, container, false);
 
         // =======================================================
-        // BỔ SUNG: CẬP NHẬT GIAO DIỆN THANH ĐĂNG BÀI (AVATAR VÀ TÊN USER)
+        // CẬP NHẬT GIAO DIỆN THANH ĐĂNG BÀI (AVATAR VÀ TÊN USER)
         // =======================================================
         ImageView imgMyAvatarInFeed = view.findViewById(R.id.imgMyAvatarInFeed);
         TextView tvCreatePostHint = view.findViewById(R.id.tvCreatePostHint);
@@ -57,19 +57,20 @@ public class FeedFragment extends Fragment {
                     .placeholder(R.drawable.ic_user)
                     .into(imgMyAvatarInFeed);
         }
-        // =======================================================
 
+        // =======================================================
         // 1. Kết nối ViewModel
+        // =======================================================
         viewModel = new ViewModelProvider(this).get(FeedViewModel.class);
         viewModel.init(getContext());
 
+        // =======================================================
         // 2. Setup RecyclerView
+        // =======================================================
         RecyclerView rcv = view.findViewById(R.id.rvPosts);
         rcv.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // =======================================================
         // Khởi tạo Adapter kèm Interface Lắng nghe Reaction
-        // =======================================================
         adapter = new PostAdapter(getContext(), new ArrayList<>(), (targetId, type) -> {
             // Fix lỗi truyền Null cho Backend khi người dùng ấn Hủy Like
             String reactionToSend = (type == null) ? "Like" : type;
@@ -81,9 +82,22 @@ public class FeedFragment extends Fragment {
             }
         });
 
+        // =======================================================
+        // ĐÃ THÊM: BẮT SÓNG LỆNH XÓA TỪ ADAPTER TRUYỀN RA
+        // =======================================================
+        adapter.setOnPostDeleteListener(postId -> {
+            // Lấy Token của bạn để gửi lên Server chứng minh thân phận
+            String token = "Bearer " + requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("JWT_TOKEN", "");
+
+            Toast.makeText(getContext(), "Đang xóa...", Toast.LENGTH_SHORT).show();
+            viewModel.deletePost(token, postId); // Ra lệnh cho ViewModel gọi API Xóa
+        });
+
         rcv.setAdapter(adapter);
 
-        // 3. Quan sát dữ liệu
+        // =======================================================
+        // 3. Quan sát dữ liệu từ ViewModel
+        // =======================================================
         viewModel.getPosts().observe(getViewLifecycleOwner(), list -> {
             if (list != null) {
                 adapter.updateData(list);
@@ -92,7 +106,18 @@ public class FeedFragment extends Fragment {
             }
         });
 
+        // ĐÃ THÊM: Lắng nghe báo cáo kết quả XÓA từ ViewModel
+        viewModel.getDeleteStatus().observe(getViewLifecycleOwner(), status -> {
+            if ("SUCCESS".equals(status)) {
+                Toast.makeText(getContext(), "Xóa bài viết thành công!", Toast.LENGTH_SHORT).show();
+            } else if (status != null) {
+                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // =======================================================
         // 4. Nút mở màn hình tạo bài viết
+        // =======================================================
         view.findViewById(R.id.btnOpenCreatePost).setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new CreatePostFragment())

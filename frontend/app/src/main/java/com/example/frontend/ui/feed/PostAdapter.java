@@ -3,13 +3,18 @@ package com.example.frontend.ui.feed;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -29,14 +34,25 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         void onReactClick(String targetId, String type);
     }
 
+    // 1. ĐÃ THÊM: Tạo Interface để báo tin ra ngoài Fragment khi bấm XÓA
+    public interface OnPostDeleteListener {
+        void onDeletePost(String postId);
+    }
+
     private List<Post> postList;
     private Context context;
     private OnReactionListener reactionListener;
+    private OnPostDeleteListener deleteListener; // ĐÃ THÊM
 
     public PostAdapter(Context context, List<Post> postList, OnReactionListener listener) {
         this.context = context;
         this.postList = postList;
         this.reactionListener = listener;
+    }
+
+    // ĐÃ THÊM: Hàm để FeedFragment truyền tai nghe vào
+    public void setOnPostDeleteListener(OnPostDeleteListener listener) {
+        this.deleteListener = listener;
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -62,6 +78,46 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             Glide.with(context).load(post.getAuthorId().getAvatar()).placeholder(R.drawable.ic_user).into(holder.imgAvatar);
         } else {
             holder.tvUserName.setText("Người dùng ẩn danh");
+        }
+
+        // ==========================================
+        // SỰ KIỆN ẤN VÀO DẤU 3 CHẤM (POPUP MENU)
+        // ==========================================
+        if (holder.btnMoreOptions != null) {
+            holder.btnMoreOptions.setOnClickListener(v -> {
+                PopupMenu popupMenu = new PopupMenu(context, holder.btnMoreOptions);
+
+                // 1. Mặc định ai cũng thấy nút "Lưu bài viết" (ID = 1)
+                popupMenu.getMenu().add(Menu.NONE, 1, 1, "Lưu bài viết");
+
+                // 2. Lấy ID của bạn (người đang xài app)
+                SharedPreferences prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                String myUserId = prefs.getString("USER_ID", "");
+
+                // 3. KIỂM TRA CHÍNH CHỦ
+                if (post.getAuthorId() != null && post.getAuthorId().getId() != null && post.getAuthorId().getId().equals(myUserId)) {
+                    popupMenu.getMenu().add(Menu.NONE, 2, 2, "Xóa bài viết");
+                }
+
+                // 4. Lắng nghe hành động bấm vào Menu
+                popupMenu.setOnMenuItemClickListener(item -> {
+                    switch (item.getItemId()) {
+                        case 1: // Bấm Lưu
+                            Toast.makeText(context, "Đã lưu bài viết!", Toast.LENGTH_SHORT).show();
+                            // TODO: Gọi API Lưu ở đây
+                            return true;
+                        case 2: // ĐÃ SỬA: Báo tín hiệu xóa ra ngoài Fragment
+                            if (deleteListener != null) {
+                                deleteListener.onDeletePost(post.getId());
+                            }
+                            return true;
+                    }
+                    return false;
+                });
+
+                // Hiển thị menu lên màn hình
+                popupMenu.show();
+            });
         }
 
         // ==========================================
@@ -262,6 +318,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         ImageView imgAvatar;
         View btnComment;
 
+        ImageView btnMoreOptions;
+
         RecyclerView rvPostImages;
 
         LinearLayout layoutTopReactions;
@@ -277,6 +335,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             tvUserName = itemView.findViewById(R.id.tvAuthorName);
             tvContent = itemView.findViewById(R.id.tvContent);
             imgAvatar = itemView.findViewById(R.id.imgAvatar);
+
+            btnMoreOptions = itemView.findViewById(R.id.btnMoreOptions);
 
             rvPostImages = itemView.findViewById(R.id.rvPostImages);
             rvPostImages.setLayoutManager(new LinearLayoutManager(itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));

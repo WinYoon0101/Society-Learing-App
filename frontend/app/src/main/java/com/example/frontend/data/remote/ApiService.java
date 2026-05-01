@@ -164,7 +164,7 @@ public interface ApiService {
     Call<ApiResponse<List<Post>>> getAllPosts();
 
 
-    // ĐÃ SỬA: Bỏ chữ api/ đi, chỉ còn posts/create
+
     @Multipart
     @POST("posts/create")
     Call<ApiResponse<Post>> createPost(
@@ -172,6 +172,12 @@ public interface ApiService {
             @Part("privacy") RequestBody privacy,
             @Part("groupId") RequestBody groupId,
             @Part List<MultipartBody.Part> images
+    );
+
+    @DELETE("posts/{id}")
+    Call<ApiResponse<Object>> deletePost(
+            @Header("Authorization") String token,
+            @Path("id") String postId
     );
     // Quiz
     @POST("quiz/generate-quiz")
