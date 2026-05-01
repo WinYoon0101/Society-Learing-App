@@ -53,4 +53,8 @@ public class PostRepository {
     public void deletePost(String token, String postId, Callback<ApiResponse<Object>> callback) {
         apiService.deletePost(token, postId).enqueue(callback);
     }
+
+    public void getMyPosts(Callback<ApiResponse<List<Post>>> callback) {
+        apiService.getMyPosts().enqueue(callback);
+    }
 }

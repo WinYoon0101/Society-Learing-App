@@ -4,8 +4,11 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -18,6 +21,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"
         android:usesCleartextTraffic="true">
+        <activity
+            android:name=".ui.pomodoro.PomodoroSummaryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.pomodoro.PomodoroActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.docs.EditDocActivity"
             android:exported="false" />
@@ -57,18 +66,23 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.splash.SplashActivity"
+            android:exported="false" >
+        </activity>
+        <activity android:name=".ui.onboarding.OnboardingActivity"/>
+        <activity android:name=".ui.auth.ForgotPasswordActivity"/>
         <activity android:name=".ui.auth.RegisterActivity" />
         <activity android:name=".ui.main.HomeActivity" />
         <activity
             android:name=".ui.library.UploadDocumentActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
-
         <activity
             android:name=".ui.feed.PostDetailActivity"
-            android:windowSoftInputMode="adjustResize"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ui.profile.EditProfileActivity" />
     </application>
-
 
 </manifest>

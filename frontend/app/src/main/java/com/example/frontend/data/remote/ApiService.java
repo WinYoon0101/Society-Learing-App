@@ -1,9 +1,11 @@
 package com.example.frontend.data.remote;
 
 import com.example.frontend.data.model.ApiResponse;
+import com.example.frontend.data.model.AvatarResponse;
 import com.example.frontend.data.model.Conversation;
 import com.example.frontend.data.model.Comment;
 import com.example.frontend.data.model.CommentRequest;
+import com.example.frontend.data.model.CoverResponse;
 import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
@@ -46,6 +48,18 @@ public interface ApiService {
     @POST("auth/register")
     Call<ApiResponse<LoginResponse>> register(@Body RegisterRequest request);
 
+    @POST("auth/google-login")
+    Call<ApiResponse<LoginResponse>> googleLogin(@Body GoogleLoginRequest request);
+
+    @POST("auth/send-otp")
+    Call<ApiResponse> sendOtp(@Body EmailRequest request);
+
+    @POST("auth/verify-otp")
+    Call<ApiResponse> verifyOtp(@Body OtpRequest request);
+
+    @POST("auth/reset-password")
+    Call<ApiResponse> resetPassword(@Body ResetPasswordRequest request);
+
     // Lấy danh sách gợi ý kết bạn
     @GET("friends/suggestions")
     Call<ApiResponse<List<Friend>>> getFriendSuggestions();
@@ -74,19 +88,19 @@ public interface ApiService {
     @DELETE("friends/remove/{id}")
     Call<ApiResponse<Object>> removeFriend(@Path("id") String userId);
 
-    @GET("users/me")
+    @GET("user/profile")
     Call<ApiResponse<User>> getMyProfile();
 
-    @PUT("users/update")
+    @PUT("user/update")
     Call<ApiResponse<User>> updateProfile(@Body UpdateProfile request);
 
     @Multipart
-    @POST("users/upload-avatar")
-    Call<ApiResponse<String>> uploadAvatar(@Part MultipartBody.Part file);
+    @PUT("user/avatar")
+    Call<ApiResponse<AvatarResponse>> uploadAvatar(@Part MultipartBody.Part file);
 
     @Multipart
-    @POST("users/upload-cover")
-    Call<ApiResponse<String>> uploadCover(@Part MultipartBody.Part file);
+    @PUT("user/cover")
+    Call<ApiResponse<CoverResponse>> uploadCover(@Part MultipartBody.Part file);
     //TÀI LIỆU
 
     @GET("documents/me/list")
@@ -212,5 +226,9 @@ public interface ApiService {
     // Gọi API thả/thu hồi cảm xúc (Sửa ResponseBody thành ApiResponse<Object> luôn nhé)
     @POST("reactions/toggle")
     Call<ApiResponse<Object>> toggleReaction(@Body ReactionRequest request);
+
+    //Lấy bài viết cá nhân
+    @GET("posts/me")
+    Call<ApiResponse<List<Post>>> getMyPosts();
 }
 

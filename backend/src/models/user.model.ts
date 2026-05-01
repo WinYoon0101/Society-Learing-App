@@ -7,7 +7,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   dateOfBirth?: string;
-  gender?: string;
+  gender?: String;
   avatar?: string;
   profileCover?: string;
   bio?: string;
@@ -18,6 +18,9 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
+  hometown?: string;
+  location?: string;
+  cover?: string;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -38,7 +41,7 @@ const UserSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: [true, "Mật khẩu là bắt buộc"],
+      required: false, // Cho phép password có thể null (dành cho đăng ký bằng OAuth)
       minlength: [6, "Mật khẩu phải có ít nhất 6 ký tự"],
       select: false, // Không trả về password trong query
     },
@@ -48,7 +51,8 @@ const UserSchema = new Schema<IUser>(
     },
     gender: {
       type: String,
-      default: null,
+      enum: ["Nam", "Nữ"],
+      default: "Nam",
     },
     avatar: {
       type: String,
@@ -81,14 +85,30 @@ const UserSchema = new Schema<IUser>(
       ref: "Document",
       default: [],
     },
+    hometown: {
+      type: String,
+      default: null,
+    },
+    location: {
+      type: String,
+      default: null,
+    },
+    cover: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Hash password trước khi save
 UserSchema.pre<IUser>("save", async function () {
+  //Google login → không có password → bỏ qua
+  if (!this.password) return;
+
+  //Không đổi password → bỏ qua
   if (!this.isModified("password")) return;
 
   const salt = await bcrypt.genSalt(12);
@@ -97,7 +117,7 @@ UserSchema.pre<IUser>("save", async function () {
 
 // Method so sánh password
 UserSchema.methods.comparePassword = async function (
-  candidatePassword: string
+  candidatePassword: string,
 ): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };

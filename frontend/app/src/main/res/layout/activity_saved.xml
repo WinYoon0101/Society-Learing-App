@@ -5,9 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F4F7EE">
+    android:background="#FFFFFF">
 
-    <!-- Thanh Tiêu đề (Giữ nguyên thiết kế của bạn) -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"

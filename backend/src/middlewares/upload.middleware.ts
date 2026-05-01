@@ -8,9 +8,7 @@ import { MediaFileType } from "../models/media.model";
 /**
  * Xác định resource_type cho Cloudinary dựa theo mimetype
  */
-const getResourceType = (
-  mimetype: string
-): "image" | "video" | "raw" => {
+const getResourceType = (mimetype: string): "image" | "video" | "raw" => {
   if (mimetype.startsWith("image/")) return "image";
   if (mimetype.startsWith("video/")) return "video";
   return "raw"; // pdf, docx, pptx, ...
@@ -63,8 +61,17 @@ const documentStorage = new CloudinaryStorage({
   params: (req: any, file: Express.Multer.File) => ({
     folder: "society/documents",
     resource_type: "auto",
-    allowed_formats: ["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "txt"],
-    public_id: `doc_${Date.now()}_${file.originalname.split('.')[0]}`,
+    allowed_formats: [
+      "pdf",
+      "doc",
+      "docx",
+      "ppt",
+      "pptx",
+      "xls",
+      "xlsx",
+      "txt",
+    ],
+    public_id: `doc_${Date.now()}_${file.originalname.split(".")[0]}`,
   }),
 });
 
@@ -77,10 +84,9 @@ const autoStorage = new CloudinaryStorage({
     folder: "society/media",
     resource_type: getResourceType(file.mimetype),
     public_id: `media_${Date.now()}`,
-    transformation:
-      file.mimetype.startsWith("image/")
-        ? [{ quality: "auto", fetch_format: "auto" }]
-        : undefined,
+    transformation: file.mimetype.startsWith("image/")
+      ? [{ quality: "auto", fetch_format: "auto" }]
+      : undefined,
   }),
 });
 
@@ -89,20 +95,24 @@ const autoStorage = new CloudinaryStorage({
 const imageFilter = (
   req: Express.Request,
   file: Express.Multer.File,
-  cb: multer.FileFilterCallback
+  cb: multer.FileFilterCallback,
 ) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
   } else {
     // Cập nhật câu báo lỗi để hiện heif, heic
-    cb(new Error("Chỉ chấp nhận file ảnh (jpg, jpeg, png, webp, gif, heif, heic)."));
+    cb(
+      new Error(
+        "Chỉ chấp nhận file ảnh (jpg, jpeg, png, webp, gif, heif, heic).",
+      ),
+    );
   }
 };
 
 const videoFilter = (
   req: Express.Request,
   file: Express.Multer.File,
-  cb: multer.FileFilterCallback
+  cb: multer.FileFilterCallback,
 ) => {
   if (file.mimetype.startsWith("video/")) {
     cb(null, true);
@@ -114,7 +124,7 @@ const videoFilter = (
 const documentFilter = (
   req: Express.Request,
   file: Express.Multer.File,
-  cb: multer.FileFilterCallback
+  cb: multer.FileFilterCallback,
 ) => {
   const ALLOWED = [
     "application/pdf",
@@ -129,20 +139,31 @@ const documentFilter = (
   if (ALLOWED.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Loại file không được hỗ trợ. Vui lòng upload pdf, docx, pptx, xlsx hoặc txt."));
+    cb(
+      new Error(
+        "Loại file không được hỗ trợ. Vui lòng upload pdf, docx, pptx, xlsx hoặc txt.",
+      ),
+    );
   }
 };
 
 const autoFilter = (
   req: Express.Request,
   file: Express.Multer.File,
-  cb: multer.FileFilterCallback
+  cb: multer.FileFilterCallback,
 ) => {
   // Chấp nhận image + video + document
   const ALLOWED_MIMES = [
-    "image/jpeg", "image/png", "image/webp", "image/gif", 
-    "image/heif", "image/heic", // ĐÃ THÊM 2 ĐỊNH DẠNG NÀY
-    "video/mp4", "video/quicktime", "video/x-msvideo", "video/webm",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "image/heif",
+    "image/heic", // ĐÃ THÊM 2 ĐỊNH DẠNG NÀY
+    "video/mp4",
+    "video/quicktime",
+    "video/x-msvideo",
+    "video/webm",
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -153,7 +174,12 @@ const autoFilter = (
     "text/plain",
     "application/octet-stream",
   ];
-  console.log("Định dạng file:", file.mimetype, " | Tên file:", file.originalname);
+  console.log(
+    "Định dạng file:",
+    file.mimetype,
+    " | Tên file:",
+    file.originalname,
+  );
   if (ALLOWED_MIMES.includes(file.mimetype)) {
     cb(null, true);
   } else {
@@ -197,3 +223,14 @@ export const uploadImages = multer({
   fileFilter: imageFilter,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 }).array("images", 10);
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + path.extname(file.originalname);
+    cb(null, uniqueName);
+  },
+});
+export const upload = multer({ storage });
