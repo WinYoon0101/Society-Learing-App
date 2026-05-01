@@ -203,11 +203,11 @@ public class LoginActivity extends AppCompatActivity {
         SharedPreferences pref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
 
-        editor.remove("JWT_TOKEN");
-        editor.remove("USER_ID");
-        editor.putBoolean("IS_LOGGED_IN", false);
+        // ===== LƯU LOGIN =====
+        editor.putString("JWT_TOKEN", data.getAccessToken());
+        editor.putString("USER_ID", data.getUser().getId());
+        editor.putBoolean("IS_LOGGED_IN", true);
 
-        editor.apply();
         // ===== REMEMBER ME =====
         if (cbRemember.isChecked()) {
             editor.putString("SAVED_EMAIL", edtEmail.getText().toString().trim());

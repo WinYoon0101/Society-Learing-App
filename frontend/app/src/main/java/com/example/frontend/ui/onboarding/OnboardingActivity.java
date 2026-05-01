@@ -67,7 +67,7 @@ public class OnboardingActivity extends AppCompatActivity {
         for (int i = 0; i < total; i++) {
             TextView dot = new TextView(this);
             dot.setText("●");
-            dot.setTextSize(20);
+            dot.setTextSize(30);
             dot.setPadding(8, 0, 8, 0);
 
             if (i == current) {
