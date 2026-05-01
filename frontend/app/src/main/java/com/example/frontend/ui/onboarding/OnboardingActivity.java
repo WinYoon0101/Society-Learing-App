@@ -9,6 +9,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.frontend.R;
 import com.example.frontend.ui.auth.LoginActivity;
 import com.google.android.material.button.MaterialButton;
+import android.view.View;
 public class OnboardingActivity extends AppCompatActivity {
 
     ViewPager2 viewPager;
@@ -38,9 +39,11 @@ public class OnboardingActivity extends AppCompatActivity {
                 setupDots(position);
 
                 if (position == total - 1) {
-                    btnNext.setText("Bắt đầu");
+                    btnNext.setText("Tham gia ngay");
+                    btnSkip.setVisibility(View.GONE);
                 } else {
-                    btnNext.setText("Tiếp");
+                    btnNext.setText("Tiếp tục");
+                    btnSkip.setVisibility(View.VISIBLE);
                 }
             }
         });
@@ -64,7 +67,7 @@ public class OnboardingActivity extends AppCompatActivity {
         for (int i = 0; i < total; i++) {
             TextView dot = new TextView(this);
             dot.setText("●");
-            dot.setTextSize(20);
+            dot.setTextSize(30);
             dot.setPadding(8, 0, 8, 0);
 
             if (i == current) {

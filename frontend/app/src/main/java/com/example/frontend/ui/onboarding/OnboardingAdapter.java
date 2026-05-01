@@ -10,26 +10,24 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.frontend.R;
-
 public class OnboardingAdapter extends RecyclerView.Adapter<OnboardingAdapter.ViewHolder> {
 
-    // Danh sách dữ liệu
     int[] images = {
-            R.drawable.logo,
-            R.drawable.text_logo,
-            R.drawable.text_logo
+            R.drawable.onboarding_1, // feed/social
+            R.drawable.onboarding_2, // connect/chat
+            R.drawable.onboarding_3  // start/join
     };
 
     String[] titles = {
-            "Chào mừng",
-            "Kết nối bạn bè",
-            "Bắt đầu ngay"
+            "Khám phá thế giới của bạn",
+            "Kết nối không giới hạn",
+            "Chia sẻ khoảnh khắc"
     };
 
     String[] desc = {
-            "Ứng dụng mạng xã hội hiện đại",
-            "Kết nối mọi người dễ dàng",
-            "Trải nghiệm ngay hôm nay"
+            "Lướt feed, khám phá nội dung bạn quan tâm mỗi ngày.",
+            "Trò chuyện, tương tác với bạn bè mọi lúc mọi nơi.",
+            "Đăng tải hình ảnh, cảm xúc và câu chuyện của riêng bạn."
     };
 
     @NonNull
@@ -52,7 +50,6 @@ public class OnboardingAdapter extends RecyclerView.Adapter<OnboardingAdapter.Vi
         return titles.length;
     }
 
-    // Lớp giữ các thành phần giao diện
     static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView img;
         TextView title, desc;
