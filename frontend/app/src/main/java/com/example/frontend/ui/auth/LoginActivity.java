@@ -54,7 +54,18 @@ public class LoginActivity extends AppCompatActivity {
         tvSignUpLink = findViewById(R.id.tvSignUpLink);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
         cbRemember = findViewById(R.id.cbRemember);
+        SharedPreferences pref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
 
+        boolean isRemember = pref.getBoolean("REMEMBER_ME", false);
+
+        if (isRemember) {
+            String email = pref.getString("SAVED_EMAIL", "");
+            String password = pref.getString("SAVED_PASSWORD", "");
+
+            edtEmail.setText(email);
+            edtPassword.setText(password);
+            cbRemember.setChecked(true);
+        }
         viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
         api = ApiClient.getApiService(this);
 
@@ -91,7 +102,6 @@ public class LoginActivity extends AppCompatActivity {
 
         // ===== GOOGLE BUTTON =====
         btnGoogle.setOnClickListener(v -> {
-            // 🔥 FIX: luôn cho chọn account lại
             googleSignInClient.signOut().addOnCompleteListener(task -> {
                 Intent signInIntent = googleSignInClient.getSignInIntent();
                 startActivityForResult(signInIntent, RC_GOOGLE);
@@ -193,9 +203,21 @@ public class LoginActivity extends AppCompatActivity {
         SharedPreferences pref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
 
+        // ===== LƯU LOGIN =====
         editor.putString("JWT_TOKEN", data.getAccessToken());
         editor.putString("USER_ID", data.getUser().getId());
         editor.putBoolean("IS_LOGGED_IN", true);
+
+        // ===== REMEMBER ME =====
+        if (cbRemember.isChecked()) {
+            editor.putString("SAVED_EMAIL", edtEmail.getText().toString().trim());
+            editor.putString("SAVED_PASSWORD", edtPassword.getText().toString().trim());
+            editor.putBoolean("REMEMBER_ME", true);
+        } else {
+            editor.remove("SAVED_EMAIL");
+            editor.remove("SAVED_PASSWORD");
+            editor.putBoolean("REMEMBER_ME", false);
+        }
 
         editor.apply();
     }
