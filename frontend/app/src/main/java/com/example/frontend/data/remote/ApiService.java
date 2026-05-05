@@ -131,4 +131,12 @@ public interface ApiService {
     @POST("chat/messages")
     Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);
 
+    @Multipart
+    @POST("media/upload")
+    Call<ApiResponse<List<Media>>> uploadChatMedia(
+            @Part MultipartBody.Part file,
+            @Part("sourceType") RequestBody sourceType,
+            @Part("targetId") RequestBody targetId
+    );
+
 }

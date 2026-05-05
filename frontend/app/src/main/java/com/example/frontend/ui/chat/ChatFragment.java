@@ -48,9 +48,18 @@ public class ChatFragment extends Fragment {
 
         setupOnlineUsersRecyclerView(view);
         setupConversationsRecyclerView(view);
+        setupNewChatFab(view);
         observeViewModel(view);
 
         viewModel.fetchConversations();
+    }
+
+    private void setupNewChatFab(View view) {
+        com.google.android.material.floatingactionbutton.FloatingActionButton fab =
+                view.findViewById(R.id.fabNewChat);
+        fab.setOnClickListener(v ->
+                SelectFriendBottomSheet.newInstance()
+                        .show(getChildFragmentManager(), SelectFriendBottomSheet.TAG));
     }
 
     private void setupOnlineUsersRecyclerView(View view) {

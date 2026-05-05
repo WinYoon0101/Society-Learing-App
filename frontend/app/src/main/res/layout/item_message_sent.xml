@@ -12,12 +12,27 @@
         android:orientation="horizontal"
         android:gravity="end">
 
+        <ImageButton
+            android:id="@+id/btnReact"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_emoji_react"
+            android:alpha="0.5"
+            android:contentDescription="React" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="end"
             android:layout_marginEnd="8dp">
+
+            <include
+                android:id="@+id/mediaContainer"
+                layout="@layout/item_message_media" />
 
             <TextView
                 android:id="@+id/tvSentMessage"
@@ -32,6 +47,8 @@
                 android:maxWidth="280dp"
                 android:fontFamily="sans-serif"
                 android:breakStrategy="simple" />
+
+            <include layout="@layout/item_reaction_bar" />
 
             <TextView
                 android:id="@+id/tvSentTime"
