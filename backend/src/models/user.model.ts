@@ -7,7 +7,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   dateOfBirth?: string;
-  gender?: string;
+  gender?: String;
   avatar?: string;
   profileCover?: string;
   bio?: string;
@@ -18,6 +18,9 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
+  hometown?: string;
+  location?: string;
+  cover?: string;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -48,7 +51,8 @@ const UserSchema = new Schema<IUser>(
     },
     gender: {
       type: String,
-      default: null,
+      enum: ["Nam", "Nữ"],
+      default: "Nam",
     },
     avatar: {
       type: String,
@@ -81,10 +85,22 @@ const UserSchema = new Schema<IUser>(
       ref: "Document",
       default: [],
     },
+    hometown: {
+      type: String,
+      default: null,
+    },
+    location: {
+      type: String,
+      default: null,
+    },
+    cover: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Hash password trước khi save
@@ -101,7 +117,7 @@ UserSchema.pre<IUser>("save", async function () {
 
 // Method so sánh password
 UserSchema.methods.comparePassword = async function (
-  candidatePassword: string
+  candidatePassword: string,
 ): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };

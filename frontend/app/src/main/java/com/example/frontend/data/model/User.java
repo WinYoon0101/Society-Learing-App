@@ -37,8 +37,8 @@ public class User implements Serializable {
     @SerializedName("location")
     private String location;
 
-    @SerializedName("birthday")
-    private String birthday;
+    @SerializedName("dateOfBirth")
+    private String dateOfBirth;
 
     @SerializedName("createdAt")
     private String joinedDate;
@@ -73,7 +73,7 @@ public class User implements Serializable {
     public String getCover() {return cover;}
     public String getHometown() { return hometown; }
     public String getLocation() { return location; }
-    public String getBirthday() { return birthday; }
+    public String getBirthday() { return dateOfBirth; }
     public String getJoinedDate() { return joinedDate; }
     public int getFriendCount() { return friendCount; }
     public int getGroupCount() { return groupCount; }

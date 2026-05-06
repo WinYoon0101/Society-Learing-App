@@ -3,16 +3,24 @@ package com.example.frontend.ui.feed;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.model.Post;
@@ -26,14 +34,25 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         void onReactClick(String targetId, String type);
     }
 
+    // 1. ĐÃ THÊM: Tạo Interface để báo tin ra ngoài Fragment khi bấm XÓA
+    public interface OnPostDeleteListener {
+        void onDeletePost(String postId);
+    }
+
     private List<Post> postList;
     private Context context;
     private OnReactionListener reactionListener;
+    private OnPostDeleteListener deleteListener; // ĐÃ THÊM
 
     public PostAdapter(Context context, List<Post> postList, OnReactionListener listener) {
         this.context = context;
         this.postList = postList;
         this.reactionListener = listener;
+    }
+
+    // ĐÃ THÊM: Hàm để FeedFragment truyền tai nghe vào
+    public void setOnPostDeleteListener(OnPostDeleteListener listener) {
+        this.deleteListener = listener;
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -61,11 +80,57 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             holder.tvUserName.setText("Người dùng ẩn danh");
         }
 
-        if (post.getImage() != null && !post.getImage().isEmpty()) {
-            holder.imgPost.setVisibility(View.VISIBLE);
-            Glide.with(context).load(post.getImage()).into(holder.imgPost);
+        // ==========================================
+        // SỰ KIỆN ẤN VÀO DẤU 3 CHẤM (POPUP MENU)
+        // ==========================================
+        if (holder.btnMoreOptions != null) {
+            holder.btnMoreOptions.setOnClickListener(v -> {
+                PopupMenu popupMenu = new PopupMenu(context, holder.btnMoreOptions);
+
+                // 1. Mặc định ai cũng thấy nút "Lưu bài viết" (ID = 1)
+                popupMenu.getMenu().add(Menu.NONE, 1, 1, "Lưu bài viết");
+
+                // 2. Lấy ID của bạn (người đang xài app)
+                SharedPreferences prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                String myUserId = prefs.getString("USER_ID", "");
+
+                // 3. KIỂM TRA CHÍNH CHỦ
+                if (post.getAuthorId() != null && post.getAuthorId().getId() != null && post.getAuthorId().getId().equals(myUserId)) {
+                    popupMenu.getMenu().add(Menu.NONE, 2, 2, "Xóa bài viết");
+                }
+
+                // 4. Lắng nghe hành động bấm vào Menu
+                popupMenu.setOnMenuItemClickListener(item -> {
+                    switch (item.getItemId()) {
+                        case 1: // Bấm Lưu
+                            Toast.makeText(context, "Đã lưu bài viết!", Toast.LENGTH_SHORT).show();
+                            // TODO: Gọi API Lưu ở đây
+                            return true;
+                        case 2: // ĐÃ SỬA: Báo tín hiệu xóa ra ngoài Fragment
+                            if (deleteListener != null) {
+                                deleteListener.onDeletePost(post.getId());
+                            }
+                            return true;
+                    }
+                    return false;
+                });
+
+                // Hiển thị menu lên màn hình
+                popupMenu.show();
+            });
+        }
+
+        // ==========================================
+        // CẬP NHẬT: HIỂN THỊ MẢNG ẢNH BẰNG RECYCLERVIEW
+        // ==========================================
+        if (post.getImages() != null && !post.getImages().isEmpty()) {
+            holder.rvPostImages.setVisibility(View.VISIBLE);
+
+            // TRUYỀN THẲNG MẢNG ẢNH VÀO
+            PostImageAdapter imageAdapter = new PostImageAdapter(context, post.getImages());
+            holder.rvPostImages.setAdapter(imageAdapter);
         } else {
-            holder.imgPost.setVisibility(View.GONE);
+            holder.rvPostImages.setVisibility(View.GONE);
         }
 
         if (holder.tvCommentCount != null) {
@@ -73,9 +138,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             holder.tvCommentCount.setVisibility(View.VISIBLE);
         }
 
-        // ==========================================
-        // KHU VỰC TOP REACTION (Hiển thị ban đầu)
-        // ==========================================
         int reactCount = post.getcountReaction();
         List<String> topReactions = post.getTopReactions();
 
@@ -99,7 +161,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             holder.layoutTopReactions.setVisibility(View.GONE);
         }
 
-        // Mở BottomSheet khi nhấn vào số lượng reaction
         holder.layoutTopReactions.setOnClickListener(v -> {
             if (context instanceof AppCompatActivity) {
                 ReactionListBottomSheet bottomSheet = ReactionListBottomSheet.newInstance(post.getId());
@@ -107,6 +168,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             }
         });
 
+        // ==========================================
+        // CHUYỂN DỮ LIỆU SANG POST DETAIL
+        // ==========================================
         if (holder.btnComment != null) {
             holder.btnComment.setOnClickListener(v -> {
                 Intent intent = new Intent(context, PostDetailActivity.class);
@@ -116,14 +180,22 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     intent.putExtra("AUTHOR_NAME", post.getAuthorId().getUsername());
                     intent.putExtra("AUTHOR_AVATAR", post.getAuthorId().getAvatar());
                 }
-                intent.putExtra("POST_IMAGE", post.getImage());
+
+                // CẬP NHẬT: Gửi mảng ảnh sang Detail
+                if (post.getImages() != null) {
+                    intent.putStringArrayListExtra("POST_IMAGES", new ArrayList<>(post.getImages()));
+                }
+
+                intent.putExtra("COMMENT_COUNT", post.getcountComment());
+                intent.putExtra("REACTION_COUNT", post.getcountReaction());
+                intent.putExtra("MY_REACTION", post.getMyReaction());
+                if (post.getTopReactions() != null) {
+                    intent.putStringArrayListExtra("TOP_REACTIONS", new ArrayList<>(post.getTopReactions()));
+                }
                 context.startActivity(intent);
             });
         }
 
-        // ==========================================
-        // KHU VỰC NÚT LIKE (Thả cảm xúc)
-        // ==========================================
         if (holder.btnLikeContainer != null) {
             String currentReaction = post.getMyReaction();
             holder.imgLikeIcon.setImageResource(getIconForReaction(currentReaction));
@@ -167,10 +239,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     @Override
     public int getItemCount() { return postList != null ? postList.size() : 0; }
 
-    // ==========================================
-    // HÀM XỬ LÝ REAL-TIME KHI BẤM THẢ TIM
-    // (Đã fix lỗi kẹt 2 icon khi đổi cảm xúc)
-    // ==========================================
     private void handleReactionUpdate(PostViewHolder holder, Post post, String newReactionType) {
         String oldReaction = post.getMyReaction();
         int currentCount = post.getcountReaction();
@@ -178,13 +246,10 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         if (topReactions == null) topReactions = new ArrayList<>();
 
-        // Logic tăng/giảm số lượng và thay đổi Icon
         if (oldReaction == null && newReactionType != null) {
-            // Trường hợp 1: Thả mới hoàn toàn
             currentCount++;
             if (!topReactions.contains(newReactionType)) topReactions.add(0, newReactionType);
         } else if (oldReaction != null && newReactionType == null) {
-            // Trường hợp 2: Hủy thả cảm xúc
             currentCount--;
             if (currentCount <= 0) {
                 topReactions.clear();
@@ -192,29 +257,24 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 topReactions.remove(oldReaction);
             }
         } else if (oldReaction != null && newReactionType != null && !oldReaction.equals(newReactionType)) {
-            // Trường hợp 3: Đổi từ cảm xúc này sang cảm xúc khác
-            topReactions.remove(oldReaction); // Bắt buộc xóa cái cũ đi
+            topReactions.remove(oldReaction);
             if (!topReactions.contains(newReactionType)) {
-                topReactions.add(0, newReactionType); // Đẩy cái mới lên đầu
+                topReactions.add(0, newReactionType);
             }
         }
 
-        // Đảm bảo không hiển thị quá 2 icon gây tràn layout
         if (topReactions.size() > 2) {
             topReactions = new ArrayList<>(topReactions.subList(0, 2));
         }
 
-        // Lưu ngược lại vào Bài viết
         post.setMyReaction(newReactionType);
         post.setcountReaction(currentCount);
         post.setTopReactions(topReactions);
 
-        // Đổi màu và chữ nút Like
         holder.imgLikeIcon.setImageResource(getIconForReaction(newReactionType));
         if (newReactionType != null) holder.tvLikeLabel.setText(newReactionType);
         else holder.tvLikeLabel.setText("Thích");
 
-        // Cập nhật Vùng hiển thị số lượng ở phía trên (Tránh bị tàng hình)
         if (currentCount > 0) {
             holder.layoutTopReactions.setVisibility(View.VISIBLE);
             holder.tvReactionCount.setText(String.valueOf(currentCount));
@@ -234,7 +294,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             holder.layoutTopReactions.setVisibility(View.GONE);
         }
 
-        // Gọi API Backend
         if (reactionListener != null) {
             String typeToSend = newReactionType != null ? newReactionType : oldReaction;
             reactionListener.onReactClick(post.getId(), typeToSend);
@@ -256,8 +315,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
     public static class PostViewHolder extends RecyclerView.ViewHolder {
         TextView tvUserName, tvContent, tvCommentCount;
-        ImageView imgAvatar, imgPost;
+        ImageView imgAvatar;
         View btnComment;
+
+        ImageView btnMoreOptions;
+
+        RecyclerView rvPostImages;
 
         LinearLayout layoutTopReactions;
         TextView tvReactionCount;
@@ -272,7 +335,15 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             tvUserName = itemView.findViewById(R.id.tvAuthorName);
             tvContent = itemView.findViewById(R.id.tvContent);
             imgAvatar = itemView.findViewById(R.id.imgAvatar);
-            imgPost = itemView.findViewById(R.id.imgPost);
+
+            btnMoreOptions = itemView.findViewById(R.id.btnMoreOptions);
+
+            rvPostImages = itemView.findViewById(R.id.rvPostImages);
+            rvPostImages.setLayoutManager(new LinearLayoutManager(itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
+            rvPostImages.setOnFlingListener(null);
+            PagerSnapHelper snapHelper = new PagerSnapHelper();
+            snapHelper.attachToRecyclerView(rvPostImages);
+
             btnComment = itemView.findViewById(R.id.btnComment);
             tvCommentCount = itemView.findViewById(R.id.tvCommentCount);
 

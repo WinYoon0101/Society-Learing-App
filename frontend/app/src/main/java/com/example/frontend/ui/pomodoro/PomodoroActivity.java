@@ -57,6 +57,43 @@ public class PomodoroActivity extends AppCompatActivity {
     private long timeLeftInMillis = 1500000; // 25 mins
     private boolean timerRunning = false;
 
+    // Music Components
+    private android.media.MediaPlayer mediaPlayer;
+    private int currentMusicRes = R.raw.lofi;
+
+
+    // --- MUSIC LOGIC ---
+    private void playSelectedMusic(int resId) {
+        currentMusicRes = resId; // Cập nhật bài đang chọn
+
+        // Dừng bài cũ nếu có
+        stopMusic();
+
+        // Nếu chọn "Tắt nhạc" thì không làm gì thêm
+        if (resId == 0) return;
+
+        // Khởi tạo nhạc mới
+        mediaPlayer = android.media.MediaPlayer.create(this, resId);
+        if (mediaPlayer != null) {
+            mediaPlayer.setLooping(true); // Lặp đi lặp lại
+
+            // Chỉ phát nhạc nếu đồng hồ đang chạy
+            if (timerRunning) {
+                mediaPlayer.start();
+            }
+        }
+    }
+
+    private void stopMusic() {
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,6 +103,15 @@ public class PomodoroActivity extends AppCompatActivity {
         initAI();
         checkPermissions();
         setupListeners();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopMusic(); // Giải phóng MediaPlayer
+        if (countDownTimer != null) {
+            countDownTimer.cancel(); // Hủy luôn timer
+        }
     }
 
     private void initUI() {
@@ -79,6 +125,9 @@ public class PomodoroActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
 
         txtAIMessage.setText("Sẵn sàng tập trung chưa? Nhấn Bắt đầu nhé!");
+
+        // Nạp sẵn nhạc Lofi
+        playSelectedMusic(currentMusicRes);
     }
 
     private void setupListeners() {
@@ -131,7 +180,13 @@ public class PomodoroActivity extends AppCompatActivity {
                 .setTitle("Nhạc nền tập trung")
                 .setItems(music, (dialog, which) -> {
                     Toast.makeText(this, "Đã chọn: " + music[which], Toast.LENGTH_SHORT).show();
-                    // Dương có thể thêm logic MediaPlayer ở đây để phát nhạc thật
+                    // Gọi hàm phát nhạc tương ứng với lựa chọn
+                    switch (which) {
+                        case 0: playSelectedMusic(0); break;
+                        case 1: playSelectedMusic(R.raw.lofi); break;
+                        case 2: playSelectedMusic(R.raw.rain); break;
+                        case 3: playSelectedMusic(R.raw.waves); break;
+                    }
                 })
                 .show();
     }
@@ -249,12 +304,22 @@ public class PomodoroActivity extends AppCompatActivity {
         }.start();
         timerRunning = true;
         btnStartPause.setIconResource(R.drawable.ic_pause);
+
+        // TIẾP TỤC PHÁT NHẠC
+        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+            mediaPlayer.start();
+        }
     }
 
     private void pauseTimer() {
         if (countDownTimer != null) countDownTimer.cancel();
         timerRunning = false;
         btnStartPause.setIconResource(R.drawable.ic_play);
+
+        // TẠM DỪNG NHẠC
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+        }
     }
 
     private void resetTimer() {
@@ -273,6 +338,7 @@ public class PomodoroActivity extends AppCompatActivity {
 
     private void showSummary() {
         if (countDownTimer != null) countDownTimer.cancel();
+        stopMusic(); // TẮT NHẠC KHI CHUYỂN QUA MÀN HÌNH KẾT QUẢ
         Intent intent = new Intent(this, PomodoroSummaryActivity.class);
         intent.putExtra("STATS", emotionStats);
         startActivity(intent);

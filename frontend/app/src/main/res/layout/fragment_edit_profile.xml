@@ -1,0 +1,122 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- TITLE -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edit Profile"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- BIO -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bio"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/edtBio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nhập bio..."
+            android:inputType="textMultiLine"
+            android:minHeight="80dp"
+            android:gravity="top"
+            android:padding="10dp"
+            android:background="@drawable/bg_input"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- LOCATION -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Location"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/edtLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Bạn đang sống ở đâu?"
+            android:inputType="text"
+            android:autofillHints="address"
+            android:padding="10dp"
+            android:background="@drawable/bg_input"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- HOMETOWN -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hometown"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/edtHometown"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Quê quán"
+            android:inputType="text"
+            android:autofillHints="address"
+            android:padding="10dp"
+            android:background="@drawable/bg_input"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- GENDER -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gender"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/edtGender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nam / Nữ / Khác"
+            android:inputType="text"
+            android:padding="10dp"
+            android:background="@drawable/bg_input"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- BIRTHDAY -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Birthday"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/edtBirthday"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="YYYY-MM-DD"
+            android:inputType="date"
+            android:autofillHints="birthDate"
+            android:padding="10dp"
+            android:background="@drawable/bg_input"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- SAVE BUTTON -->
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Lưu thay đổi"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#1877F2"/>
+
+    </LinearLayout>
+</ScrollView>
