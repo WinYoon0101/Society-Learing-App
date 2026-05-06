@@ -25,15 +25,18 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- ĐÃ FIX: Giới hạn chiều rộng để tên không đè lên nút 3 chấm -->
         <TextView
             android:id="@+id/tvAuthorName"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
             android:text="Tên người dùng"
             android:textColor="#000000"
             android:textSize="16sp"
             android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/btnMoreOptions"
             app:layout_constraintStart_toEndOf="@id/imgAvatar"
             app:layout_constraintTop_toTopOf="@id/imgAvatar" />
 
@@ -45,6 +48,18 @@
             android:textSize="12sp"
             app:layout_constraintStart_toStartOf="@id/tvAuthorName"
             app:layout_constraintTop_toBottomOf="@id/tvAuthorName" />
+
+        <!-- ĐÃ FIX: Ép cứng size 32dp và căn giữa theo Avatar để không bị phình -->
+        <ImageView
+            android:id="@+id/btnMoreOptions"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="6dp"
+            android:src="@drawable/ic_more_vert"
+            app:layout_constraintBottom_toBottomOf="@id/imgAvatar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/imgAvatar" />
 
         <TextView
             android:id="@+id/tvContent"
@@ -58,7 +73,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/imgAvatar" />
 
-        <!-- ĐÃ ĐỔI SANG RECYCLERVIEW ĐỂ ẢNH TỰ CO GIÃN VỪA KHÍT -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvPostImages"
             android:layout_width="match_parent"
@@ -73,9 +87,9 @@
             android:id="@+id/layoutTopReactions"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
             android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/rvPostImages">
@@ -106,8 +120,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:text="0"
-                android:textSize="14sp"
-                android:textColor="#666666" />
+                android:textColor="#666666"
+                android:textSize="14sp" />
         </LinearLayout>
 
         <View
@@ -122,8 +136,8 @@
             android:id="@+id/layoutActions"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:layout_marginTop="8dp"
+            android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/line">
@@ -132,17 +146,18 @@
                 android:id="@+id/btnLike"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:background="?attr/selectableItemBackground"
                 android:gravity="center"
+                android:orientation="horizontal"
                 android:paddingVertical="10dp"
-                android:paddingEnd="16dp"
-                android:background="?attr/selectableItemBackground">
+                android:paddingEnd="16dp">
 
                 <ImageView
                     android:id="@+id/imgLike"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_like" />
+
                 <TextView
                     android:id="@+id/tvLikeCount"
                     android:layout_width="wrap_content"
@@ -156,16 +171,18 @@
                 android:id="@+id/btnComment"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:background="?attr/selectableItemBackground"
                 android:gravity="center"
-                android:paddingVertical="10dp"
+                android:orientation="horizontal"
                 android:paddingHorizontal="16dp"
-                android:background="?attr/selectableItemBackground">
+                android:paddingVertical="10dp">
+
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_comment"
                     app:tint="#666666" />
+
                 <TextView
                     android:id="@+id/tvCommentCount"
                     android:layout_width="wrap_content"
@@ -179,16 +196,18 @@
                 android:id="@+id/btnShare"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:background="?attr/selectableItemBackground"
                 android:gravity="center"
-                android:paddingVertical="10dp"
+                android:orientation="horizontal"
                 android:paddingStart="16dp"
-                android:background="?attr/selectableItemBackground">
+                android:paddingVertical="10dp">
+
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_share"
                     app:tint="#666666" />
+
                 <TextView
                     android:id="@+id/tvShareCount"
                     android:layout_width="wrap_content"

@@ -21,6 +21,9 @@ public class FeedViewModel extends ViewModel {
     private PostRepository repository;
     private final MutableLiveData<List<Post>> postsLiveData = new MutableLiveData<>();
 
+    // ĐÃ THÊM: Biến theo dõi trạng thái xóa bài viết
+    private final MutableLiveData<String> deleteStatus = new MutableLiveData<>();
+
     public void init(Context context) {
         if (repository == null) {
             repository = new PostRepository(context);
@@ -29,6 +32,11 @@ public class FeedViewModel extends ViewModel {
 
     public LiveData<List<Post>> getPosts() {
         return postsLiveData;
+    }
+
+    // ĐÃ THÊM: Getter cho trạng thái xóa
+    public LiveData<String> getDeleteStatus() {
+        return deleteStatus;
     }
 
     public void loadPosts() {
@@ -52,7 +60,31 @@ public class FeedViewModel extends ViewModel {
     }
 
     // ==========================================================
-    // HÀM MỚI BỔ SUNG: XỬ LÝ GỌI API THẢ CẢM XÚC LÊN SERVER
+    // HÀM MỚI BỔ SUNG: XỬ LÝ GỌI API XÓA BÀI VIẾT
+    // ==========================================================
+    public void deletePost(String token, String postId) {
+        if (repository != null) {
+            repository.deletePost(token, postId, new Callback<ApiResponse<Object>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                    if (response.isSuccessful()) {
+                        deleteStatus.setValue("SUCCESS");
+                        loadPosts(); // Tự động load lại bảng tin sau khi xóa thành công
+                    } else {
+                        deleteStatus.setValue("Lỗi khi xóa bài viết: " + response.code());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                    deleteStatus.setValue("Lỗi mạng, không thể xóa: " + t.getMessage());
+                }
+            });
+        }
+    }
+
+    // ==========================================================
+    // HÀM XỬ LÝ GỌI API THẢ CẢM XÚC LÊN SERVER
     // ==========================================================
     public void toggleReaction(String targetId, String targetType, String type) {
         if (repository != null) {
