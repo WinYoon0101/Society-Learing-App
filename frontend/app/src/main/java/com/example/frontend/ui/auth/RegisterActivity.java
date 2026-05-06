@@ -86,12 +86,12 @@ public class RegisterActivity extends AppCompatActivity {
             String dateOfBirth = edtDateOfBirth.getText().toString().trim();
 
             // Lấy Giới tính
-            String gender = "other";
+            String gender = "Khác";
             int selectedGenderId = rgGender.getCheckedRadioButtonId();
             if (selectedGenderId == R.id.rbMale) {
-                gender = "male";
+                gender = "Nam";
             } else if (selectedGenderId == R.id.rbFemale) {
-                gender = "female";
+                gender = "Nữ";
             }
 
             // Kiểm tra lỗi cơ bản

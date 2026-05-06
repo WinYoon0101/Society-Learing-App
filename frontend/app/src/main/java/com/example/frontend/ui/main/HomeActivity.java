@@ -5,10 +5,20 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.example.frontend.R;
+import com.example.frontend.data.model.ApiResponse;
+import com.example.frontend.data.model.User;
+import com.example.frontend.data.remote.ApiClient;
+import com.example.frontend.data.remote.ApiService;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,7 +26,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
-import com.example.frontend.R;
+
 import com.example.frontend.ui.auth.LoginActivity;
 import com.example.frontend.ui.calendar.CalendarActivity;
 import com.example.frontend.ui.docs.DocsActivity;
@@ -99,6 +109,9 @@ public class HomeActivity extends AppCompatActivity {
     private void setupDrawer() {
         btnOpenMenu.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
 
+        // Load thông tin user vào nav_header
+        loadNavHeader();
+
         // CHỖ SỬA QUAN TRỌNG:
         // Vì btnNavLogout nằm trực tiếp trong NavigationView (trong FrameLayout cuối cùng),
         // chứ không nằm trong file header (nav_header), nên ta tìm trực tiếp từ navigationView.
@@ -131,6 +144,51 @@ public class HomeActivity extends AppCompatActivity {
             }, 150);
 
             return true;
+        });
+    }
+
+    private void loadNavHeader() {
+        // Lấy header view từ NavigationView
+        View headerView = navigationView.getHeaderView(0);
+        if (headerView == null) return;
+
+        ImageView imgNavAvatar = headerView.findViewById(R.id.imgNavAvatar);
+        TextView tvNavName = headerView.findViewById(R.id.tvNavName);
+
+        // Gọi API lấy profile người dùng đang đăng nhập
+        ApiService api = ApiClient.getApiService(this);
+        api.getMyProfile().enqueue(new retrofit2.Callback<ApiResponse<User>>() {
+            @Override
+            public void onResponse(retrofit2.Call<ApiResponse<User>> call,
+                                   retrofit2.Response<ApiResponse<User>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    User user = response.body().getData();
+                    if (user == null) return;
+
+                    // Hiển thị username
+                    if (tvNavName != null && user.getUsername() != null) {
+                        tvNavName.setText(user.getUsername());
+                    }
+
+                    // Load avatar bằng Glide
+                    if (imgNavAvatar != null && user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+                        Glide.with(HomeActivity.this)
+                                .load(user.getAvatar())
+                                .placeholder(R.drawable.ic_profile)
+                                .error(R.drawable.ic_profile)
+                                .transition(DrawableTransitionOptions.withCrossFade())
+                                .centerCrop()
+                                .into(imgNavAvatar);
+                    }
+                } else {
+                    Log.w("HomeActivity", "Không lấy được thông tin user cho nav header");
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<ApiResponse<User>> call, Throwable t) {
+                Log.e("HomeActivity", "Lỗi khi load nav header: " + t.getMessage());
+            }
         });
     }
 

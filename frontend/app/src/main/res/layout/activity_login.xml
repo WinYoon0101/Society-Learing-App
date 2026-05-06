@@ -73,7 +73,9 @@
                         android:layout_height="wrap_content"
                         android:hint="Email"
                         android:textCursorDrawable="@null"
-                        android:textColor="#1A1A1A" />
+                        android:textColor="#1A1A1A"
+                        android:importantForAutofill="no"
+                        android:autofillHints=""/>
                 </com.google.android.material.textfield.TextInputLayout>
 
 
@@ -96,7 +98,9 @@
                         android:layout_height="wrap_content"
                         android:hint="Mật khẩu"
                         android:textCursorDrawable="@null"
-                        android:inputType="textPassword" />
+                        android:inputType="textPassword"
+                        android:importantForAutofill="no"
+                        android:autofillHints=""/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <LinearLayout
