@@ -33,10 +33,10 @@ export const uploadMediaFiles = async (
       return;
     }
 
-    if (!sourceType || !["post", "story", "message"].includes(sourceType)) {
+    if (!sourceType || !["post", "story", "message","document"].includes(sourceType)) {
       res.status(400).json({
         success: false,
-        message: "sourceType không hợp lệ. Phải là post, story hoặc message.",
+        message: "sourceType không hợp lệ. Phải là post, story, message hoặc document.",
       });
       return;
     }
@@ -78,7 +78,7 @@ export const uploadMediaFiles = async (
  *
  * Body (multipart/form-data):
  *   - media: file
- *   - sourceType: 'post' | 'story' | 'message'
+ *   - sourceType: 'post' | 'story' | 'message' | 'document'
  *   - targetId: ObjectId
  */
 export const uploadSingleFile = async (
