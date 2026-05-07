@@ -34,7 +34,7 @@
                 android:layout_height="26dp"
                 android:layout_gravity="center"
                 android:src="@android:drawable/ic_menu_agenda"
-                app:tint="#4A5C58" />
+                />
         </com.google.android.material.card.MaterialCardView>
 
         <TextView
