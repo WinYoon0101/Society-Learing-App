@@ -129,90 +129,87 @@
             android:layout_marginEnd="16dp"/>
 
         <LinearLayout
-        android:id="@+id/layoutIntro"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="@drawable/bg_card"
-
-        app:layout_constraintTop_toBottomOf="@id/btnAddStory"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="16dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Thông tin cá nhân"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"/>
-
-        <!-- LOCATION -->
-        <TextView
-            android:id="@+id/tvLocation"
+            android:id="@+id/tabLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_home"
-            android:drawablePadding="12dp"
-            android:textColor="#444"
-            android:visibility="visible"
-            android:layout_marginBottom="10dp"/>
-
-        <!-- HOMETOWN -->
-        <TextView
-            android:id="@+id/tvHometown"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_location"
-            android:drawablePadding="12dp"
-            android:textColor="#444"
-            android:visibility="visible"
-            android:layout_marginBottom="10dp"/>
-
-        <!-- BIRTHDAY -->
-        <TextView
-            android:id="@+id/tvBirthday"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_calendar"
-            android:drawablePadding="12dp"
-            android:textColor="#444"
-            android:visibility="visible"
-            android:layout_marginBottom="10dp"/>
-
-        <!-- GENDER -->
-        <TextView
-            android:id="@+id/tvGender"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_gender"
-            android:drawablePadding="12dp"
-            android:textColor="#444"
-            android:visibility="visible"
-            android:layout_marginBottom="16dp"/>
-
-        <Button
-            android:id="@+id/btnEditDetails"
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:text="Chỉnh sửa thông tin"
-            android:textAllCaps="false"
-            android:textColor="#000"
-            android:backgroundTint="#E0E0E0"/>
-
-
-    </LinearLayout>
+            android:layout_height="60dp"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/btnAddStory"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+            <LinearLayout
+                android:id="@+id/tabAll"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackground">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tất cả"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="0dp"/>
+                <View
+                    android:id="@+id/lineAll"
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="6dp"
+                    android:background="#10B981" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/tabPic"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackground">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ảnh"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                <View
+                    android:id="@+id/linePic"
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="6dp"
+                    android:background="#10B981" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/tabFriends"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackground">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bạn bè"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+                <View
+                    android:id="@+id/lineFriends"
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="6dp"
+                    android:background="#10B981" />
+            </LinearLayout>
+        </LinearLayout>
         <FrameLayout
-            android:id="@+id/feedContainer"
+            android:id="@+id/contentContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/layoutIntro"
+
+            app:layout_constraintTop_toBottomOf="@id/tabLayout"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
-
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>

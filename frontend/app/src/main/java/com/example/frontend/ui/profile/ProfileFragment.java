@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import android.widget.FrameLayout;
 
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
@@ -53,8 +55,11 @@ public class ProfileFragment extends Fragment {
 
     private UserRepository repository;
     private TextView tvBio, tvLocation, tvHometown, tvBirthday, tvGender;
+    private LinearLayout tabAll, tabFriends, tabPic;
+    private View lineAll, lineFriends, linePic;
+    private FrameLayout contentContainer;
 
-    // ================= ACTIVITY RESULT LAUNCHERS =================
+    //ACTIVITY RESULT LAUNCHERS
     private final ActivityResultLauncher<String> pickImageLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
@@ -91,11 +96,14 @@ public class ProfileFragment extends Fragment {
         tvStats = view.findViewById(R.id.tvStats);
         btnEdit = view.findViewById(R.id.btnEdit);
         tvBio = view.findViewById(R.id.tvBio);
-        tvLocation = view.findViewById(R.id.tvLocation);
-        tvHometown = view.findViewById(R.id.tvHometown);
-        tvBirthday = view.findViewById(R.id.tvBirthday);
-        tvGender = view.findViewById(R.id.tvGender);
-        btnEditDetails = view.findViewById(R.id.btnEditDetails);
+
+        tabAll = view.findViewById(R.id.tabAll);
+        tabFriends = view.findViewById(R.id.tabFriends);
+        tabPic = view.findViewById(R.id.tabPic);
+        lineAll = view.findViewById(R.id.lineAll);
+        lineFriends = view.findViewById(R.id.lineFriends);
+        linePic = view.findViewById(R.id.linePic);
+        contentContainer = view.findViewById(R.id.contentContainer);
 
         repository = new UserRepository(requireContext());
 
@@ -103,22 +111,26 @@ public class ProfileFragment extends Fragment {
 
         btnEdit.setOnClickListener(v -> showEditOptions());
 
-        if (savedInstanceState == null) {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.feedContainer, new ProfileFeedFragment())
-                    .commit();
-        }
-
-        btnEditDetails.setOnClickListener(v -> {
-            Intent intent = new Intent(requireContext(), EditProfileActivity.class);
-            startActivity(intent);
+        tabAll.setOnClickListener(v -> {
+            selectTab(lineAll);
+            showLayout(R.layout.fragment_profile_all);
         });
 
+        tabFriends.setOnClickListener(v -> {
+            selectTab(lineFriends);
+            showLayout(R.layout.fragment_profile_friends);
+        });
+
+        tabPic.setOnClickListener(v -> {
+            selectTab(linePic);
+            showLayout(R.layout.fragment_profile_picture);
+        });
+        selectTab(lineAll);
+        showLayout(R.layout.fragment_profile_all);
         return view;
     }
 
-    // ================= LOAD PROFILE =================
+    //LOAD PROFILE
     private void loadProfile() {
         repository.getProfile().observe(getViewLifecycleOwner(), result -> {
             if (result.status == Result.Status.SUCCESS && result.data != null) {
@@ -177,7 +189,7 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    // ================= EDIT =================
+    //EDIT
     private void showEditOptions() {
         String[] options = {"Đổi Avatar", "Đổi Ảnh bìa"};
         new AlertDialog.Builder(requireContext())
@@ -188,7 +200,7 @@ public class ProfileFragment extends Fragment {
                 .show();
     }
 
-    // ================= PERMISSION =================
+    //PERMISSION
     private void checkPermissionAndOpenGallery() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             // Android 13+ dùng READ_MEDIA_IMAGES
@@ -209,13 +221,13 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-    // ================= GALLERY =================
+    //GALLERY
     private void openGallery() {
         isSelectingImage = true; // Bắt đầu quá trình chọn ảnh
         pickImageLauncher.launch("image/*");
     }
 
-    // ================= HANDLE IMAGE SELECTED =================
+    //HANDLE IMAGE SELECTED
     private void handleImageSelected(Uri uri) {
         currentSelectedUri = uri;
 
@@ -242,7 +254,7 @@ public class ProfileFragment extends Fragment {
         confirmUpload(uri, file);
     }
 
-    // ================= ROLLBACK =================
+    //ROLLBACK
     private void rollbackImage() {
         if (currentType == TYPE_AVATAR) {
             Glide.with(requireContext())
@@ -257,7 +269,7 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-    // ================= CONFIRM =================
+    //CONFIRM
     private void confirmUpload(Uri previewUri, File file) {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Xác nhận")
@@ -306,5 +318,44 @@ public class ProfileFragment extends Fragment {
     public void onResume() {
         super.onResume();
         loadProfile();
+    }
+
+    //Hiện layout tab
+    private void showLayout(int layoutRes) {
+        contentContainer.removeAllViews();
+        View contentView = LayoutInflater.from(requireContext()).inflate(layoutRes, contentContainer, true);
+
+        if (layoutRes == R.layout.fragment_profile_all) {
+            tvLocation = contentView.findViewById(R.id.tvLocation);
+            tvHometown = contentView.findViewById(R.id.tvHometown);
+            tvBirthday = contentView.findViewById(R.id.tvBirthday);
+            tvGender = contentView.findViewById(R.id.tvGender);
+
+            btnEditDetails = contentView.findViewById(R.id.btnEditDetails);
+            btnEditDetails.setOnClickListener(v -> {
+                Intent intent =
+                        new Intent(requireContext(),
+                                EditProfileActivity.class);
+
+                startActivity(intent);
+            });
+            loadProfile();
+
+            FrameLayout feedContainer =
+                    contentView.findViewById(R.id.feedContainer);
+            getChildFragmentManager()
+                    .beginTransaction()
+                    .replace(feedContainer.getId(),
+                            new ProfileFeedFragment())
+                    .commit();
+        }
+    }
+    //Chọn tab
+    private void selectTab(View activeLine) {
+        lineAll.setVisibility(View.INVISIBLE);
+        lineFriends.setVisibility(View.INVISIBLE);
+        linePic.setVisibility(View.INVISIBLE);
+
+        activeLine.setVisibility(View.VISIBLE);
     }
 }
