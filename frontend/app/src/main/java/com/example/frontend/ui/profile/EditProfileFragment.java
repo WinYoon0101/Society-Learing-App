@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
@@ -28,8 +29,9 @@ public class EditProfileFragment extends Fragment {
 
     private EditText edtBio, edtLocation, edtHometown, edtGender, edtBirthday;
     private Button btnSave;
-
+    private ImageButton btnBack;
     private boolean isChanged = false;
+    private boolean isLoading = false;
 
     private UserRepository repository;
 
@@ -44,6 +46,7 @@ public class EditProfileFragment extends Fragment {
         edtGender = view.findViewById(R.id.edtGender);
         edtBirthday = view.findViewById(R.id.edtBirthday);
         btnSave = view.findViewById(R.id.btnSave);
+        btnBack = view.findViewById(R.id.btnBack);
 
         repository = new UserRepository(requireContext());
 
@@ -93,10 +96,12 @@ public class EditProfileFragment extends Fragment {
                     .show();
         });
         btnSave.setOnClickListener(v -> confirmSave());
+        btnBack.setOnClickListener(v->showConfirmExit());
 
         return view;
     }
     private void loadData() {
+        isLoading = true;
         repository.getProfile().observe(getViewLifecycleOwner(), r -> {
             if (r.status == Result.Status.SUCCESS && r.data != null) {
 
@@ -107,6 +112,9 @@ public class EditProfileFragment extends Fragment {
                 edtHometown.setText(u.getHometown());
                 edtGender.setText(u.getGender());
                 edtBirthday.setText(u.getBirthday());
+
+                isChanged = false;
+                isLoading = false;
             }
         });
     }
@@ -115,7 +123,9 @@ public class EditProfileFragment extends Fragment {
         TextWatcher watcher = new SimpleTextWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                isChanged = true;
+                if (!isLoading) {
+                    isChanged = true;
+                }
             }
         };
 
@@ -125,34 +135,21 @@ public class EditProfileFragment extends Fragment {
         edtGender.addTextChangedListener(watcher);
         edtBirthday.addTextChangedListener(watcher);
     }
-    @Override
-    public void onResume() {
-        super.onResume();
 
-        requireActivity().getOnBackPressedDispatcher().addCallback(
-                getViewLifecycleOwner(),
-                new OnBackPressedCallback(true) {
-                    @Override
-                    public void handleOnBackPressed() {
-
-                        if (isChanged) {
-                            showConfirmExit();
-                        } else {
-                            getParentFragmentManager().popBackStack();
-                        }
-                    }
-                }
-        );
-    }
     private void showConfirmExit() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Thoát?")
-                .setMessage("Bạn có thay đổi chưa lưu")
-                .setPositiveButton("Rời đi", (d, w) -> {
-                    getParentFragmentManager().popBackStack();
-                })
-                .setNegativeButton("Ở lại", null)
-                .show();
+        if (isChanged == false){
+            requireActivity().finish();
+        }
+        else{
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Lưu thay đổi?")
+                    .setPositiveButton("Lưu", (d, w) -> saveData())
+                    .setNeutralButton("Thoát", (d, w) -> {
+                        requireActivity().finish();
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
+        }
     }
     private void confirmSave() {
         new AlertDialog.Builder(requireContext())
@@ -183,6 +180,7 @@ public class EditProfileFragment extends Fragment {
         repository.updateProfile(req)
                 .observe(getViewLifecycleOwner(), r -> {
                     if (r.status == Result.Status.SUCCESS) {
+                        isChanged = false;
                         requireActivity().finish();
                     }
                 });
