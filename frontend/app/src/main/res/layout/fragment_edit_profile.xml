@@ -7,16 +7,34 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="25dp">
 
-        <!-- TITLE -->
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Edit Profile"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="10dp"
+                android:src="@drawable/ic_arrow_back"
+                android:background="@drawable/bg_circle_gray"
+                android:contentDescription="Back"/>
+
+            <!-- Tittle -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit Profile"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginStart="12dp"/>
+
+        </LinearLayout>
 
         <!-- BIO -->
         <TextView
@@ -116,7 +134,7 @@
             android:text="Lưu thay đổi"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#1877F2"/>
+            android:backgroundTint="#0B8A00"/>
 
     </LinearLayout>
 </ScrollView>
