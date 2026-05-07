@@ -6,7 +6,8 @@ export interface IComment extends Document {
     userId: mongoose.Types.ObjectId;   
     postId: mongoose.Types.ObjectId;   
     parentId?: mongoose.Types.ObjectId;
-    text: string;                     
+    content: string; 
+    replies?: any[];                    
     createdAt: Date;
     updatedAt: Date;
 }
@@ -27,7 +28,7 @@ const CommentSchema: Schema = new Schema({
         default: null 
     },
     
-    text: { 
+    content: { 
         type: String,
         required: true
     },

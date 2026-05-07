@@ -43,13 +43,16 @@ public class FriendFragment extends Fragment {
             @Override
             public void onAcceptClick(Friend friend) {
                 lastAcceptedFriendId = friend.getId();
+                requestAdapter.removeItem(friend.getId());
                 viewModel.acceptRequest(friend.getId());
             }
 
             @Override
             public void onDeclineClick(Friend friend) {
+                // Xóa lời mời/Từ chối:
+                requestAdapter.removeItem(friend.getId());
                 viewModel.declineRequest(friend.getId());
-                Toast.makeText(getContext(), "Đang xóa lời mời...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Đã xóa lời mời", Toast.LENGTH_SHORT).show();
             }
 
             @Override public void onAddFriendClick(Friend friend) {}
@@ -66,30 +69,23 @@ public class FriendFragment extends Fragment {
         suggestionAdapter = new FriendAdapter(true, new FriendAdapter.OnFriendActionListener() {
             @Override
             public void onAddFriendClick(Friend friend) {
-                // 1. Cập nhật UI ngay lập tức
                 suggestionAdapter.updateItemStatus(friend.getId(), true);
-
-                // 2. Gọi API ngầm
                 viewModel.sendFriendRequest(friend.getId());
-                Toast.makeText(getContext(), "Đã gửi yêu cầu kết bạn", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onDeclineClick(Friend friend) {
-                // Nếu là list gợi ý và đang hiện "Hủy lời mời"
-                // 1. Cập nhật UI ngay lập tức quay về "Thêm bạn bè"
+                // Hủy lời mời đã gửi: Chuyển trạng thái nút về "Thêm bạn bè"
                 suggestionAdapter.updateItemStatus(friend.getId(), false);
-
-                // 2. Gọi API hủy (dùng chung hàm decline/xóa lời mời)
                 viewModel.declineRequest(friend.getId());
-                Toast.makeText(getContext(), "Đã hủy yêu cầu", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onRemoveSuggestClick(Friend friend) {
-                // Gỡ khỏi danh sách gợi ý
+                // FIX: Gọi hàm xóa item đã thêm ở trên
+                suggestionAdapter.removeItem(friend.getId());
                 Toast.makeText(getContext(), "Đã gỡ gợi ý", Toast.LENGTH_SHORT).show();
-                viewModel.fetchFriendSuggestions();
+                // Không cần gọi fetch lại ngay lập tức vì sẽ bị hiện lại người cũ
             }
 
             @Override public void onAcceptClick(Friend friend) {}
@@ -154,6 +150,9 @@ public class FriendFragment extends Fragment {
             if (result == null) return;
             switch (result.status) {
                 case SUCCESS:
+                    viewModel.resetActionResult();
+
+                    // Tải lại danh sách để đồng bộ với DB
                     viewModel.fetchPendingRequests();
                     viewModel.fetchFriendSuggestions();
                     // Nếu vừa accept friend → tạo conversation ngay
@@ -163,7 +162,8 @@ public class FriendFragment extends Fragment {
                     }
                     break;
                 case ERROR:
-                    Toast.makeText(getContext(), result.message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Lỗi: " + result.message, Toast.LENGTH_SHORT).show();
+                    viewModel.fetchFriendSuggestions();
                     break;
                 case LOADING:
                     break;

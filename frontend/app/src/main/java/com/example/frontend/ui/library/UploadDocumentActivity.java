@@ -109,7 +109,7 @@ public class UploadDocumentActivity extends AppCompatActivity {
                 file
         );
         MultipartBody.Part body = MultipartBody.Part.createFormData("media", file.getName(), requestFile);
-        RequestBody sourceType = RequestBody.create(MediaType.parse("text/plain"), "post");
+        RequestBody sourceType = RequestBody.create(MediaType.parse("text/plain"), "document");
         RequestBody targetIdBody = RequestBody.create(MediaType.parse("text/plain"), userId);
 
         Log.d("UPLOAD_FLOW", "Bắt đầu bước 1: Upload Media...");
