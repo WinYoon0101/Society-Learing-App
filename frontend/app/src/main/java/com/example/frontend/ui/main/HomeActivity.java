@@ -1,6 +1,5 @@
 package com.example.frontend.ui.main;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -40,7 +39,7 @@ import com.example.frontend.ui.notify.NotifyFragment;
 import com.example.frontend.ui.pomodoro.PomodoroActivity;
 import com.example.frontend.ui.profile.ProfileFragment;
 import com.example.frontend.ui.quiz.QuizListActivity;
-import com.example.frontend.ui.saved.SavedActivity;
+import com.example.frontend.ui.feed.SavedActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
