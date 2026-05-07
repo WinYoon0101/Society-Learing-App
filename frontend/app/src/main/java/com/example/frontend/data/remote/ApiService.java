@@ -1,28 +1,36 @@
 package com.example.frontend.data.remote;
 
 import com.example.frontend.data.model.ApiResponse;
+import com.example.frontend.data.model.AvatarResponse;
 import com.example.frontend.data.model.Conversation;
 import com.example.frontend.data.model.Comment;
 import com.example.frontend.data.model.CommentRequest;
+import com.example.frontend.data.model.CoverResponse;
 import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.data.model.ReactionItem;
+import com.example.frontend.data.model.UpdateProfile;
+import com.example.frontend.data.model.User;
 import com.example.frontend.data.model.ProfileResponse;
 import com.example.frontend.data.model.Media;
 import com.example.frontend.data.model.Message;
 import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.Quiz;
+import com.example.frontend.data.model.ReactionRequest;
 
 import java.util.List;
 import java.util.Map;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.Header;
 import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
@@ -33,11 +41,24 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
-    @POST("auth/login") // Endpoint đăng nhập
+    @POST("auth/login")
+        // Endpoint đăng nhập
     Call<ApiResponse<LoginResponse>> login(@Body LoginRequest request);
 
     @POST("auth/register")
     Call<ApiResponse<LoginResponse>> register(@Body RegisterRequest request);
+
+    @POST("auth/google-login")
+    Call<ApiResponse<LoginResponse>> googleLogin(@Body GoogleLoginRequest request);
+
+    @POST("auth/send-otp")
+    Call<ApiResponse> sendOtp(@Body EmailRequest request);
+
+    @POST("auth/verify-otp")
+    Call<ApiResponse> verifyOtp(@Body OtpRequest request);
+
+    @POST("auth/reset-password")
+    Call<ApiResponse> resetPassword(@Body ResetPasswordRequest request);
 
     // Lấy danh sách gợi ý kết bạn
     @GET("friends/suggestions")
@@ -67,13 +88,19 @@ public interface ApiService {
     @DELETE("friends/remove/{id}")
     Call<ApiResponse<Object>> removeFriend(@Path("id") String userId);
 
-    //7. Xem profile
-    @GET("api/auth/me")
-    Call<ProfileResponse> getProfile();
+    @GET("user/profile")
+    Call<ApiResponse<User>> getMyProfile();
 
-    //8. Update Profile
-    @PUT("api/user/update")
-    Call<ProfileResponse> updateProfile(@Body UpdateProfileRequest request);
+    @PUT("user/update")
+    Call<ApiResponse<User>> updateProfile(@Body UpdateProfile request);
+
+    @Multipart
+    @PUT("user/avatar")
+    Call<ApiResponse<AvatarResponse>> uploadAvatar(@Part MultipartBody.Part file);
+
+    @Multipart
+    @PUT("user/cover")
+    Call<ApiResponse<CoverResponse>> uploadCover(@Part MultipartBody.Part file);
     //TÀI LIỆU
 
     @GET("documents/me/list")
@@ -95,7 +122,8 @@ public interface ApiService {
 
     //Tải file lên Cloudinary thông qua Route Media để lấy mediaId rồi mới tạo Document
     @Multipart
-    @POST("media/upload/document") // Đổi từ /single thành /document cho giống backend
+    @POST("media/upload/document")
+    // Đổi từ /single thành /document cho giống backend
     Call<ApiResponse<Media>> uploadSingleFile(
             @Part MultipartBody.Part file, // Giữ nguyên "media" ở đây nếu code Activity gửi "media"
             @Part("sourceType") RequestBody sourceType,
@@ -120,10 +148,12 @@ public interface ApiService {
     // 5. Xóa tài liệu
     @DELETE("documents/{id}")
     Call<ApiResponse<Void>> deleteDocument(@Path("id") String id);
-// 6. Tăng lượt tải về
+
+    // 6. Tăng lượt tải về
     @POST("documents/{id}/download")
     Call<ApiResponse<Object>> incrementDownload(@Path("id") String id);
-        // 7. Cập nhật tài liệu (PATCH)
+
+    // 7. Cập nhật tài liệu (PATCH)
     @PATCH("documents/{id}")
     Call<ApiResponse<Document>> updateDocument(@Path("id") String id, @Body Map<String, Object> updates);
 
@@ -143,40 +173,51 @@ public interface ApiService {
 
     @POST("chat/messages")
     Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);
+
     @GET("posts/feed")
     Call<ApiResponse<List<Post>>> getAllPosts();
+
 
 
     @Multipart
     @POST("posts/create")
     Call<ApiResponse<Post>> createPost(
             @Part("content") RequestBody content,
-            @Part MultipartBody.Part image
+            @Part("privacy") RequestBody privacy,
+            @Part("groupId") RequestBody groupId,
+            @Part List<MultipartBody.Part> images
     );
-// Quiz
-    @POST("quiz/generate-quiz") //
+
+    @DELETE("posts/{id}")
+    Call<ApiResponse<Object>> deletePost(
+            @Header("Authorization") String token,
+            @Path("id") String postId
+    );
+    // Quiz
+    @POST("quiz/generate-quiz")
+    //
     Call<ApiResponse<Quiz>> generateQuiz(@Body QuizRequest request);
 
     @GET("quiz/my-quizzes")
     Call<ApiResponse<List<Quiz>>> getMyQuizzes();
 
 
-        // 1. Lấy danh sách (Nó sẽ trả về List các Comment gốc)
-        @GET("/api/comments/post/{postId}")
-        Call<ApiResponse<List<Comment>>> getComments(@Path("postId") String postId);
+    // 1. Lấy danh sách (Nó sẽ trả về List các Comment gốc)
+    @GET("/api/comments/post/{postId}")
+    Call<ApiResponse<List<Comment>>> getComments(@Path("postId") String postId);
 
-        @POST("/api/comments")
-        Call<ApiResponse<Comment>> createComment(
-                @Header("Authorization") String token,
-                @Body CommentRequest body
-        );
+    @POST("/api/comments")
+    Call<ApiResponse<Comment>> createComment(
+            @Header("Authorization") String token,
+            @Body CommentRequest body
+    );
 
-        // 3. Xóa bình luận
-        @DELETE("/api/comments/{commentId}")
-        Call<ApiResponse<Object>> deleteComment(
-                @Header("Authorization") String token,
-                @Path("commentId") String commentId
-        );
+    // 3. Xóa bình luận
+    @DELETE("/api/comments/{commentId}")
+    Call<ApiResponse<Object>> deleteComment(
+            @Header("Authorization") String token,
+            @Path("commentId") String commentId
+    );
 
     @Multipart
     @POST("media/upload")
@@ -186,4 +227,16 @@ public interface ApiService {
             @Part("targetId") RequestBody targetId
     );
 
+    // Gọi API lấy danh sách thả cảm xúc (Nếu bạn có khai báo)
+    @GET("reactions/{targetId}")
+    Call<ApiResponse<List<ReactionItem>>> getReactionsOfPost(@Path("targetId") String targetId);
+
+    // Gọi API thả/thu hồi cảm xúc (Sửa ResponseBody thành ApiResponse<Object> luôn nhé)
+    @POST("reactions/toggle")
+    Call<ApiResponse<Object>> toggleReaction(@Body ReactionRequest request);
+
+    //Lấy bài viết cá nhân
+    @GET("posts/me")
+    Call<ApiResponse<List<Post>>> getMyPosts();
 }
+

@@ -1,10 +1,14 @@
 package com.example.frontend.ui.feed;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -13,6 +17,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import java.util.ArrayList;
 
@@ -24,17 +30,74 @@ public class FeedFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_feed, container, false);
 
-        // Setup RecyclerView
-        RecyclerView rcv = view.findViewById(R.id.rvPosts);
-        rcv.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new PostAdapter(getContext(), new ArrayList<>());
-        rcv.setAdapter(adapter);
+        // =======================================================
+        // CẬP NHẬT GIAO DIỆN THANH ĐĂNG BÀI (AVATAR VÀ TÊN USER)
+        // =======================================================
+        ImageView imgMyAvatarInFeed = view.findViewById(R.id.imgMyAvatarInFeed);
+        TextView tvCreatePostHint = view.findViewById(R.id.tvCreatePostHint);
 
-        // Kết nối ViewModel
+        // Lấy thông tin từ SharedPreferences
+        SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+        String myAvatarUrl = prefs.getString("USER_AVATAR", "");
+        String myUsername = prefs.getString("USERNAME", "Bạn");
+
+        // 1. Cài đặt chữ (Cắt lấy tên cuối cho giống Facebook)
+        if (tvCreatePostHint != null) {
+            String shortName = myUsername;
+            if (myUsername.contains(" ")) {
+                shortName = myUsername.substring(myUsername.lastIndexOf(" ") + 1); // Lấy chữ cuối cùng
+            }
+            tvCreatePostHint.setText(shortName + " ơi, bạn muốn chia sẻ kiến thức gì?");
+        }
+
+        // 2. Cài đặt Avatar
+        if (!myAvatarUrl.isEmpty() && imgMyAvatarInFeed != null) {
+            Glide.with(this)
+                    .load(myAvatarUrl)
+                    .placeholder(R.drawable.ic_user)
+                    .into(imgMyAvatarInFeed);
+        }
+
+        // =======================================================
+        // 1. Kết nối ViewModel
+        // =======================================================
         viewModel = new ViewModelProvider(this).get(FeedViewModel.class);
         viewModel.init(getContext());
 
-        // Quan sát dữ liệu
+        // =======================================================
+        // 2. Setup RecyclerView
+        // =======================================================
+        RecyclerView rcv = view.findViewById(R.id.rvPosts);
+        rcv.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        // Khởi tạo Adapter kèm Interface Lắng nghe Reaction
+        adapter = new PostAdapter(getContext(), new ArrayList<>(), (targetId, type) -> {
+            // Fix lỗi truyền Null cho Backend khi người dùng ấn Hủy Like
+            String reactionToSend = (type == null) ? "Like" : type;
+
+            if (viewModel != null) {
+                // CHÚ Ý: Truyền đúng chữ "Post" (không có s) để Backend Node.js nhận diện đúng
+                Log.d("DEBUG_REACT", "👉 Đang gửi API thả tim lên Server: " + reactionToSend);
+                viewModel.toggleReaction(targetId, "Post", reactionToSend);
+            }
+        });
+
+        // =======================================================
+        // ĐÃ THÊM: BẮT SÓNG LỆNH XÓA TỪ ADAPTER TRUYỀN RA
+        // =======================================================
+        adapter.setOnPostDeleteListener(postId -> {
+            // Lấy Token của bạn để gửi lên Server chứng minh thân phận
+            String token = "Bearer " + requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("JWT_TOKEN", "");
+
+            Toast.makeText(getContext(), "Đang xóa...", Toast.LENGTH_SHORT).show();
+            viewModel.deletePost(token, postId); // Ra lệnh cho ViewModel gọi API Xóa
+        });
+
+        rcv.setAdapter(adapter);
+
+        // =======================================================
+        // 3. Quan sát dữ liệu từ ViewModel
+        // =======================================================
         viewModel.getPosts().observe(getViewLifecycleOwner(), list -> {
             if (list != null) {
                 adapter.updateData(list);
@@ -43,23 +106,33 @@ public class FeedFragment extends Fragment {
             }
         });
 
-        // Nút mở màn hình tạo bài viết
+        // ĐÃ THÊM: Lắng nghe báo cáo kết quả XÓA từ ViewModel
+        viewModel.getDeleteStatus().observe(getViewLifecycleOwner(), status -> {
+            if ("SUCCESS".equals(status)) {
+                Toast.makeText(getContext(), "Xóa bài viết thành công!", Toast.LENGTH_SHORT).show();
+            } else if (status != null) {
+                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // =======================================================
+        // 4. Nút mở màn hình tạo bài viết
+        // =======================================================
         view.findViewById(R.id.btnOpenCreatePost).setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new CreatePostFragment())
                     .addToBackStack(null)
                     .commit();
         });
+
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Hàm này tự động chạy mỗi khi màn hình Feed hiển thị lại trước mặt người dùng
         if (viewModel != null) {
-            // Ra lệnh cho ViewModel đi lấy danh sách mới ngay lập tức
-            viewModel.loadPosts();
+            viewModel.loadPosts(); // Load lại data mới nhất khi quay lại màn hình
         }
     }
 }

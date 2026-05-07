@@ -137,8 +137,8 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
                     btnPositive.setTextColor(Color.parseColor("#1A1A1A"));
                 } else {
                     btnPositive.setText("Thêm bạn bè");
-                    btnPositive.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#A9C0AE")));
-                    btnPositive.setTextColor(Color.WHITE);
+                    btnPositive.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#D1FAE5")));
+                    btnPositive.setTextColor(Color.parseColor("#059669"));
                 }
 
                 btnPositive.setOnClickListener(v -> {

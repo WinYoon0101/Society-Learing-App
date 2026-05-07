@@ -63,7 +63,7 @@ public class DocsAdapter extends RecyclerView.Adapter<DocsAdapter.ViewHolder> {
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Lưu ý: Đảm bảo tên file layout là item_docs (hoặc item_my_document tùy bạn đặt)
+        // Lưu ý: Đảm bảo tên file layout là item_docs
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_docs, parent, false);
         return new ViewHolder(view);
     }
@@ -87,17 +87,15 @@ public class DocsAdapter extends RecyclerView.Adapter<DocsAdapter.ViewHolder> {
 
         // Reset về mặc định trước khi check
         holder.ivFileType.setColorFilter(null);
-        holder.iconCard.setCardBackgroundColor(Color.parseColor("#F1F3F0"));
+        holder.iconCard.setCardBackgroundColor(Color.WHITE);
 
         if (url.contains(".pdf")) {
             holder.ivFileType.setImageResource(R.drawable.ic_pdf);
-            holder.ivFileType.setColorFilter(Color.parseColor("#E53935"));
-            holder.iconCard.setCardBackgroundColor(Color.parseColor("#FFEBEE"));
+
         }
         else if (url.contains(".doc") || url.contains(".docx")) {
             holder.ivFileType.setImageResource(R.drawable.ic_word);
-            holder.ivFileType.setColorFilter(Color.parseColor("#1E88E5"));
-            holder.iconCard.setCardBackgroundColor(Color.parseColor("#E3F2FD"));
+
         }
         else if (url.contains(".ppt") || url.contains(".pptx")) {
             holder.ivFileType.setImageResource(android.R.drawable.ic_menu_slideshow);
