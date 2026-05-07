@@ -187,7 +187,7 @@
             android:id="@+id/tvGender"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_heart"
+            android:drawableStart="@drawable/ic_gender"
             android:drawablePadding="12dp"
             android:textColor="#444"
             android:visibility="visible"
