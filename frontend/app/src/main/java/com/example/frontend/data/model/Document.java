@@ -130,16 +130,16 @@ public class Document implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         Document document = (Document) o;
 
-        // Sửa tên biến cho đúng với khai báo ở trên
         return numberView == document.numberView &&
                 numberDownload == document.numberDownload &&
-                Objects.equals(_id, document._id) && // Dùng Objects.equals để tránh null
-                Objects.equals(title, document.title);
+                Objects.equals(_id, document._id) &&
+                Objects.equals(title, document.title) &&
+                Objects.equals(subject, document.subject) &&
+                Objects.equals(description, document.description);
     }
 
     @Override
     public int hashCode() {
-        // Sửa tên biến ở đây luôn
-        return Objects.hash(_id, title, numberView, numberDownload);
+        return Objects.hash(_id, title, subject, description, numberView, numberDownload);
     }
 }
