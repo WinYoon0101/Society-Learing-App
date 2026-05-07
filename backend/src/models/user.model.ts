@@ -15,6 +15,7 @@ export interface IUser extends Document {
   isActive: boolean;
   refreshToken?: string;
   savedDocument: mongoose.Types.ObjectId[];
+  savedPosts: mongoose.Types.ObjectId[]; // Mảng lưu bài viết
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -83,6 +84,11 @@ const UserSchema = new Schema<IUser>(
     savedDocument: {
       type: [Schema.Types.ObjectId],
       ref: "Document",
+      default: [],
+    },
+    savedPosts: { // lưu bài viết
+      type: [Schema.Types.ObjectId],
+      ref: "Post",
       default: [],
     },
     hometown: {

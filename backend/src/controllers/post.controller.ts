@@ -6,6 +6,7 @@ import Media from '../models/media.model';
 import Group from '../models/group.model';
 import Comment from '../models/comment.model'; 
 import Reaction from '../models/reaction.model'; 
+import User from '../models/user.model';
 
 // =====================================
 // API ĐĂNG BÀI (GIỮ NGUYÊN BẢN GỐC)
@@ -141,5 +142,66 @@ export const deletePost = async (req: AuthRequest, res: Response) => {
         res.status(200).json({ success: true, message: "Đã xóa bài viết!" });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi hệ thống khi xóa bài" });
+    }
+};
+
+
+export const toggleSavePost = async (req: AuthRequest, res: Response): Promise<any> => {
+    try {
+        const userId = req.user?.id; 
+        const postId = req.params.id;
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "Không tìm thấy User" });
+
+        const isSaved = user.savedPosts.includes(postId as any);
+
+        if (isSaved) {
+            // Nếu đã lưu -> Rút nó ra khỏi mảng (Bỏ lưu)
+            await User.findByIdAndUpdate(userId, { $pull: { savedPosts: postId } });
+            return res.status(200).json({ message: "Đã bỏ lưu bài viết" });
+        } else {
+            // Nếu chưa lưu -> Nhét nó vào mảng (Lưu)
+            await User.findByIdAndUpdate(userId, { $addToSet: { savedPosts: postId } });
+            return res.status(200).json({ message: "Đã lưu bài viết thành công" });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Lỗi Server" });
+    }
+};
+
+// 2. Logic Lấy danh sách bài đã lưu của tôi
+export const getSavedPosts = async (req: AuthRequest, res: Response): Promise<any> => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ message: "Vui lòng đăng nhập" });
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "Không tìm thấy User" });
+
+        // 1. Tìm bài viết + Nhúng Tác giả + Nhúng luôn cả Ảnh 
+        const posts = await Post.find({ _id: { $in: user.savedPosts } })
+            .populate('authorId', 'username avatar') 
+            .populate('mediaFiles') // Đi tìm ảnh của bài viết
+            .sort({ createdAt: -1 });
+
+       
+        const formattedPosts = posts.map((post: any) => {
+            const postObj = post.toJSON({ virtuals: true }); 
+            if (postObj.mediaFiles && postObj.mediaFiles.length > 0) {
+                postObj.images = postObj.mediaFiles.map((media: any) => media.url); 
+            } else {
+                postObj.images = [];
+            }
+            delete postObj.mediaFiles;
+            return postObj;
+        });
+
+        // Gửi về Frontend
+        return res.status(200).json({ data: formattedPosts });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Lỗi Server" });
     }
 };
