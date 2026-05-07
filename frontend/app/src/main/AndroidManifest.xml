@@ -52,7 +52,7 @@
             android:name=".ui.docs.DocsActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.saved.SavedActivity"
+            android:name=".ui.feed.SavedActivity"
             android:exported="false" />
         <activity
             android:name=".ui.calendar.CalendarActivity"

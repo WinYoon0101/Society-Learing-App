@@ -230,5 +230,18 @@ public interface ApiService {
     //Lấy bài viết cá nhân
     @GET("posts/me")
     Call<ApiResponse<List<Post>>> getMyPosts();
+
+    // Gọi API Lưu / Bỏ lưu bài viết (Toggle)
+    @POST("posts/{id}/save")
+    Call<ApiResponse<Object>> toggleSavePost(
+            @Header("Authorization") String token,
+            @Path("id") String postId
+    );
+
+    // Lấy danh sách Bài viết đã lưu của User
+    @GET("posts/my/saved")
+    Call<ApiResponse<List<Post>>> getSavedPosts(
+            @Header("Authorization") String token
+    );
 }
 
