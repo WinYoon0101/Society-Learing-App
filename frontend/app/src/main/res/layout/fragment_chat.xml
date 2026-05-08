@@ -123,7 +123,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="20dp"
-        android:src="@drawable/ic_chat"
+        android:src="@drawable/ic_add"
         app:backgroundTint="#10B981"
         app:tint="#FFFFFF"
         android:contentDescription="Chat mới" />
