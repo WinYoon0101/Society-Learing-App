@@ -25,7 +25,7 @@
                 android:icon="@drawable/ic_group"
                 android:title="Nhóm" />
             <item
-                android:id="@+id/nav_meeting"
+                android:id="@+id/nav_live"
                 android:icon="@drawable/ic_video"
                 android:title="Cuộc họp nhanh" />
             <item
