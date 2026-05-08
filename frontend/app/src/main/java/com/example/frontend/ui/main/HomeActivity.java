@@ -34,7 +34,7 @@ import com.example.frontend.ui.friend.FriendFragment;
 import com.example.frontend.ui.chat.ChatFragment;
 import com.example.frontend.ui.group.GroupActivity;
 import com.example.frontend.ui.library.LibraryFragment;
-import com.example.frontend.ui.meeting.MeetingActivity;
+import com.example.frontend.ui.live.LiveActivity;
 import com.example.frontend.ui.notify.NotifyFragment;
 import com.example.frontend.ui.pomodoro.PomodoroActivity;
 import com.example.frontend.ui.profile.ProfileFragment;
@@ -111,9 +111,7 @@ public class HomeActivity extends AppCompatActivity {
         // Load thông tin user vào nav_header
         loadNavHeader();
 
-        // CHỖ SỬA QUAN TRỌNG:
-        // Vì btnNavLogout nằm trực tiếp trong NavigationView (trong FrameLayout cuối cùng),
-        // chứ không nằm trong file header (nav_header), nên ta tìm trực tiếp từ navigationView.
+
         MaterialButton btnNavLogout = navigationView.findViewById(R.id.btnNavLogout);
 
         if (btnNavLogout != null) {
@@ -133,7 +131,7 @@ public class HomeActivity extends AppCompatActivity {
                 else if (id == R.id.nav_docs) intent = new Intent(this, DocsActivity.class);
                 else if (id == R.id.nav_calendar) intent = new Intent(this, CalendarActivity.class);
                 else if (id == R.id.nav_group) intent = new Intent(this, GroupActivity.class);
-                else if (id == R.id.nav_meeting) intent = new Intent(this, MeetingActivity.class);
+                else if (id == R.id.nav_live) intent = new Intent(this, LiveActivity.class);
                 else if (id == R.id.nav_quiz) intent = new Intent(this, QuizListActivity.class);
                 else if (id == R.id.nav_pomodoro) intent = new Intent(this, PomodoroActivity.class);
 

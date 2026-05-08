@@ -43,7 +43,7 @@
             android:name=".ui.library.ViewDocumentActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.meeting.MeetingActivity"
+            android:name=".ui.live.LiveActivity"
             android:exported="false" />
         <activity
             android:name=".ui.group.GroupActivity"
