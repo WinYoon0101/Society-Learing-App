@@ -46,6 +46,9 @@
             android:name=".ui.live.LiveActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.live.LiveStartActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.group.GroupActivity"
             android:exported="false" />
         <activity
