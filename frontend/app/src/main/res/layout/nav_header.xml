@@ -1,33 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:padding="20dp"
-    android:layout_marginTop="30dp">
+    android:layout_height="176dp"
+    android:background="#10B981"
+    android:padding="20dp">
 
+    <!-- Avatar -->
     <com.google.android.material.card.MaterialCardView
-        android:layout_width="45dp"
-        android:layout_height="45dp"
-        app:cardCornerRadius="22.5dp"
-        app:cardElevation="0dp">
+        android:id="@+id/cardAvatar"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        app:cardCornerRadius="36dp"
+        app:cardElevation="4dp"
+        app:strokeWidth="2.5dp"
+        app:strokeColor="#FFFFFF"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="16dp">
+
         <ImageView
             android:id="@+id/imgNavAvatar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/ic_profile"
-            android:scaleType="centerCrop" />
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_profile" />
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- Tên người dùng -->
     <TextView
         android:id="@+id/tvNavName"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="15dp"
+        android:layout_marginTop="12dp"
         android:text="Dương Lê"
-        android:textColor="#000000"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-</LinearLayout>
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/cardAvatar"
+        app:layout_constraintTop_toBottomOf="@id/cardAvatar" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
