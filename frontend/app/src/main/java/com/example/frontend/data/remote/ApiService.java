@@ -9,6 +9,7 @@ import com.example.frontend.data.model.CoverResponse;
 import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
+import com.example.frontend.data.model.LiveModel;
 import com.example.frontend.data.model.LoginResponse;
 import com.example.frontend.data.model.ReactionItem;
 import com.example.frontend.data.model.UpdateProfile;
@@ -243,5 +244,15 @@ public interface ApiService {
     Call<ApiResponse<List<Post>>> getSavedPosts(
             @Header("Authorization") String token
     );
+
+
+    @POST("live/start")
+    Call<ApiResponse<LiveModel>> startLive(@Body LiveRequest request);
+
+    @GET("live/active")
+    Call<ApiResponse<List<LiveModel>>> getActiveLives();
+
+    @PUT("live/end/{liveId}")
+    Call<ApiResponse<Void>> endLive(@Path("liveId") String liveId);
 }
 
