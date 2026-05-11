@@ -35,25 +35,28 @@ public class GroupActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
-
-        findViewById(R.id.btnAdd).setOnClickListener(v ->
-                Toast.makeText(this, "Tạo nhóm (chưa làm)", Toast.LENGTH_SHORT).show());
-
+        findViewById(R.id.btnAdd).setOnClickListener(v -> showCreateGroupSheet());
         findViewById(R.id.btnSearch).setOnClickListener(v ->
                 Toast.makeText(this, "Tìm kiếm (chưa làm)", Toast.LENGTH_SHORT).show());
 
         ViewPager2 viewPager = findViewById(R.id.viewPagerGroup);
         TabLayout tabLayout = findViewById(R.id.tabGroup);
 
-        // Center tab text vertically by removing indicator bottom space
         int dp36 = (int) (36 * getResources().getDisplayMetrics().density);
         tabLayout.setMinimumHeight(dp36);
 
         viewPager.setAdapter(new GroupPagerAdapter(this));
-
         new TabLayoutMediator(tabLayout, viewPager,
                 (tab, position) -> tab.setText(TAB_TITLES[position])
         ).attach();
+    }
+
+    private void showCreateGroupSheet() {
+        CreateGroupBottomSheet sheet = CreateGroupBottomSheet.newInstance();
+        sheet.setOnGroupCreatedListener(() -> {
+            // TODO: refresh tab "Nhóm của bạn" sau khi tạo thành công
+        });
+        sheet.show(getSupportFragmentManager(), CreateGroupBottomSheet.TAG);
     }
 
     private static class GroupPagerAdapter extends FragmentStateAdapter {

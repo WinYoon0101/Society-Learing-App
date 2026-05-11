@@ -241,8 +241,16 @@ public interface ApiService {
     Call<ApiResponse<List<Post>>> getMyPosts();
 
     // ====== GROUPS ======
-    // Tab "Nhóm của bạn"
     @GET("groups/my")
     Call<ApiResponse<List<Group>>> getMyGroups();
+
+    @Multipart
+    @POST("groups")
+    Call<ApiResponse<Group>> createGroup(
+            @Part("groupName") RequestBody groupName,
+            @Part("description") RequestBody description,
+            @Part("privacy") RequestBody privacy,
+            @Part MultipartBody.Part avatar
+    );
 }
 

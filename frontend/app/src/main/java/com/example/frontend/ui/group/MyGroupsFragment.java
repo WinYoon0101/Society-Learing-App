@@ -58,9 +58,11 @@ public class MyGroupsFragment extends Fragment {
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
         rv.setAdapter(adapter);
 
-        btnCreate.setOnClickListener(v ->
-                Toast.makeText(requireContext(),
-                        "Tạo nhóm (chưa làm)", Toast.LENGTH_SHORT).show());
+        btnCreate.setOnClickListener(v -> {
+            CreateGroupBottomSheet sheet = CreateGroupBottomSheet.newInstance();
+            sheet.setOnGroupCreatedListener(this::loadGroups);
+            sheet.show(getParentFragmentManager(), CreateGroupBottomSheet.TAG);
+        });
 
         swipeRefresh.setOnRefreshListener(this::loadGroups);
 
