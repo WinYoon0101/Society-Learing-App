@@ -85,6 +85,8 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:$camerax_version")
     implementation("androidx.camera:camera-view:$camerax_version")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
 
     // Thêm dòng này để sử dụng Google Auth (gms)
     implementation("com.google.android.gms:play-services-auth:21.0.0")

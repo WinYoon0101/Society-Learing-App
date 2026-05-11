@@ -9,6 +9,7 @@ import com.example.frontend.data.model.CoverResponse;
 import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
+import com.example.frontend.data.model.Group;
 import com.example.frontend.data.model.LoginResponse;
 import com.example.frontend.data.model.ReactionItem;
 import com.example.frontend.data.model.UpdateProfile;
@@ -238,5 +239,10 @@ public interface ApiService {
     //Lấy bài viết cá nhân
     @GET("posts/me")
     Call<ApiResponse<List<Post>>> getMyPosts();
+
+    // ====== GROUPS ======
+    // Tab "Nhóm của bạn"
+    @GET("groups/my")
+    Call<ApiResponse<List<Group>>> getMyGroups();
 }
 
