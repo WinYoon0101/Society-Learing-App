@@ -14,6 +14,7 @@ import quizRoutes from "./quiz.routes";
 // 1. THÊM DÒNG IMPORT NÀY
 import commentRoutes from "./comment.routes"; // (Tên file bên trong ./ có thể khác tùy bạn đặt nhé, vd: comment.routes)
 import reactionRoutes from "./reaction.routes";
+import groupRoutes from "./group.routes";
 
 
 const router = Router();
@@ -44,5 +45,7 @@ router.use('/quiz', quizRoutes);
 
 router.use("/reactions", reactionRoutes);
 
+// Group routes
+router.use("/groups", groupRoutes);
 
 export default router;

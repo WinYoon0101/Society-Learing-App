@@ -8,12 +8,24 @@ import Comment from '../models/comment.model';
 import Reaction from '../models/reaction.model'; 
 
 // =====================================
-// API ĐĂNG BÀI (GIỮ NGUYÊN BẢN GỐC)
+// API ĐĂNG BÀI
 // =====================================
 export const createPost = async (req: AuthRequest, res: Response) => {
     try {
         const { content, privacy, groupId } = req.body;
         const authorId = req.user?.id;
+
+        // Nếu đăng vào nhóm, kiểm tra user có phải thành viên không
+        if (groupId) {
+            const group = await Group.findById(groupId).lean();
+            if (!group) {
+                return res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            }
+            const isMember = group.member.some((m) => m.userId.toString() === authorId);
+            if (!isMember) {
+                return res.status(403).json({ success: false, message: "Bạn không phải thành viên của nhóm này" });
+            }
+        }
         
         const newPost = new Post({
             authorId: authorId,
