@@ -4,148 +4,164 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
+    android:layout_marginHorizontal="6dp"
+    android:layout_marginVertical="8dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
     app:cardBackgroundColor="#FFFFFF"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="1dp"
-    app:strokeWidth="0dp">
+    app:cardCornerRadius="20dp"
+    app:cardElevation="2dp"
+    app:strokeColor="#F0F0F0"
+    app:strokeWidth="1dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:padding="16dp">
 
+        <!-- Icon Wrapper: Tạo khối tròn hoặc bo góc sâu cho icon file -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/iconCard"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            app:cardBackgroundColor="#F1F3F0"
-            app:cardCornerRadius="12dp"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            app:cardBackgroundColor="#F8F9FA"
+            app:cardCornerRadius="14dp"
             app:cardElevation="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
                 android:id="@+id/ivFileType"
-                android:layout_width="26dp"
-                android:layout_height="26dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:src="@android:drawable/ic_menu_agenda"
-                />
+                 />
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Title: Chữ đậm hơn, size lớn hơn chút -->
         <TextView
             android:id="@+id/tvDocumentTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="12dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#1F2924"
-            android:textSize="15sp"
+            android:textColor="#1A1C1E"
+            android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@+id/btnEditDoc"
             app:layout_constraintStart_toEndOf="@id/iconCard"
             app:layout_constraintTop_toTopOf="@id/iconCard"
             tools:text="Giáo trình Giải tích 1 - Bản chuẩn" />
 
+        <!-- Subtitle: Màu chữ nhẹ nhàng hơn -->
         <TextView
             android:id="@+id/tvSubtitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
+            android:alpha="0.7"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#6E7E73"
-            android:textSize="12sp"
+            android:textColor="#42474E"
+            android:textSize="13sp"
             app:layout_constraintEnd_toStartOf="@+id/btnEditDoc"
             app:layout_constraintStart_toStartOf="@id/tvDocumentTitle"
             app:layout_constraintTop_toBottomOf="@id/tvDocumentTitle"
             tools:text="Toán học • Riêng tư" />
 
+        <!-- Stats & Time: Gom nhóm lại nhìn cho gọn -->
         <LinearLayout
-            android:id="@+id/layoutStats"
-            android:layout_width="wrap_content"
+            android:id="@+id/layoutInfo"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="@id/iconCard"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnEditDoc"
             app:layout_constraintStart_toStartOf="@id/tvDocumentTitle"
             app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
 
             <ImageView
                 android:layout_width="14dp"
                 android:layout_height="14dp"
+                android:alpha="0.5"
                 android:src="@android:drawable/ic_menu_view"
-                app:tint="#8B9A91" />
+                app:tint="#000000" />
 
             <TextView
                 android:id="@+id/tvViews"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:textColor="#8B9A91"
+                android:textColor="#74777F"
                 android:textSize="12sp"
                 tools:text="1.2k" />
 
             <ImageView
-                android:layout_width="12dp"
-                android:layout_height="12dp"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
                 android:layout_marginStart="12dp"
+                android:alpha="0.5"
                 android:src="@android:drawable/stat_sys_download"
-                app:tint="#8B9A91" />
+                app:tint="#000000" />
 
             <TextView
                 android:id="@+id/tvDownloads"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:textColor="#8B9A91"
+                android:textColor="#74777F"
                 android:textSize="12sp"
                 tools:text="340" />
+
+            <View
+                android:layout_width="3dp"
+                android:layout_height="3dp"
+                android:layout_marginHorizontal="8dp"
+                android:background="@android:drawable/presence_invisible"
+                android:alpha="0.2" />
+
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#9BA1A7"
+                android:textSize="12sp"
+                tools:text="2 giờ trước" />
         </LinearLayout>
 
+        <!-- Nút Xóa -->
         <ImageView
             android:id="@+id/btnDeleteDoc"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:padding="6dp"
+            android:padding="8dp"
             android:src="@android:drawable/ic_menu_delete"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="#FF5252" />
+            app:tint="#BA1A1A" />
 
+        <!-- Nút Sửa -->
         <ImageView
             android:id="@+id/btnEditDoc"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:padding="6dp"
+            android:padding="8dp"
             android:src="@android:drawable/ic_menu_edit"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/btnDeleteDoc"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="#4CAF50" />
-
-        <TextView
-            android:id="@+id/tvTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textColor="#A0AEA4"
-            android:textSize="11sp"
-            app:layout_constraintEnd_toEndOf="@id/layoutStats"
-            app:layout_constraintStart_toStartOf="@id/layoutStats"
-            app:layout_constraintTop_toBottomOf="@id/layoutStats"
-            tools:text="2 giờ trước" />
+            app:tint="#006D3A" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

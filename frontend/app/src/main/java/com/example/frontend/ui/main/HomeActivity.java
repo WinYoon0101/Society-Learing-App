@@ -1,6 +1,5 @@
 package com.example.frontend.ui.main;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -35,12 +34,13 @@ import com.example.frontend.ui.friend.FriendFragment;
 import com.example.frontend.ui.chat.ChatFragment;
 import com.example.frontend.ui.group.GroupActivity;
 import com.example.frontend.ui.library.LibraryFragment;
-import com.example.frontend.ui.meeting.MeetingActivity;
+import com.example.frontend.ui.live.LiveActivity;
+import com.example.frontend.ui.live.LiveStartActivity;
 import com.example.frontend.ui.notify.NotifyFragment;
 import com.example.frontend.ui.pomodoro.PomodoroActivity;
 import com.example.frontend.ui.profile.ProfileFragment;
 import com.example.frontend.ui.quiz.QuizListActivity;
-import com.example.frontend.ui.saved.SavedActivity;
+import com.example.frontend.ui.feed.SavedActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -112,9 +112,7 @@ public class HomeActivity extends AppCompatActivity {
         // Load thông tin user vào nav_header
         loadNavHeader();
 
-        // CHỖ SỬA QUAN TRỌNG:
-        // Vì btnNavLogout nằm trực tiếp trong NavigationView (trong FrameLayout cuối cùng),
-        // chứ không nằm trong file header (nav_header), nên ta tìm trực tiếp từ navigationView.
+
         MaterialButton btnNavLogout = navigationView.findViewById(R.id.btnNavLogout);
 
         if (btnNavLogout != null) {
@@ -134,7 +132,7 @@ public class HomeActivity extends AppCompatActivity {
                 else if (id == R.id.nav_docs) intent = new Intent(this, DocsActivity.class);
                 else if (id == R.id.nav_calendar) intent = new Intent(this, CalendarActivity.class);
                 else if (id == R.id.nav_group) intent = new Intent(this, GroupActivity.class);
-                else if (id == R.id.nav_meeting) intent = new Intent(this, MeetingActivity.class);
+                else if (id == R.id.nav_live) intent = new Intent(this, LiveStartActivity.class);
                 else if (id == R.id.nav_quiz) intent = new Intent(this, QuizListActivity.class);
                 else if (id == R.id.nav_pomodoro) intent = new Intent(this, PomodoroActivity.class);
 
@@ -152,8 +150,10 @@ public class HomeActivity extends AppCompatActivity {
         View headerView = navigationView.getHeaderView(0);
         if (headerView == null) return;
 
+        // Ánh xạ thêm TextView cho Email
         ImageView imgNavAvatar = headerView.findViewById(R.id.imgNavAvatar);
         TextView tvNavName = headerView.findViewById(R.id.tvNavName);
+        TextView tvNavEmail = headerView.findViewById(R.id.tvNavEmail); // Thêm dòng này
 
         // Gọi API lấy profile người dùng đang đăng nhập
         ApiService api = ApiClient.getApiService(this);
@@ -165,19 +165,27 @@ public class HomeActivity extends AppCompatActivity {
                     User user = response.body().getData();
                     if (user == null) return;
 
-                    // Hiển thị username
+                    // 1. Hiển thị Username
                     if (tvNavName != null && user.getUsername() != null) {
                         tvNavName.setText(user.getUsername());
                     }
 
-                    // Load avatar bằng Glide
+                    // 2. Hiển thị Email (Mới bổ sung)
+                    if (tvNavEmail != null && user.getEmail() != null) {
+                        tvNavEmail.setText(user.getEmail());
+                    } else if (tvNavEmail != null) {
+                        // Hiển thị MSSV làm fallback nếu không có email
+                        tvNavEmail.setText("MSSV: " + user.getId());
+                    }
+
+                    // 3. Load avatar bằng Glide
                     if (imgNavAvatar != null && user.getAvatar() != null && !user.getAvatar().isEmpty()) {
                         Glide.with(HomeActivity.this)
                                 .load(user.getAvatar())
                                 .placeholder(R.drawable.ic_profile)
                                 .error(R.drawable.ic_profile)
                                 .transition(DrawableTransitionOptions.withCrossFade())
-                                .centerCrop()
+                                .circleCrop() // Dùng circleCrop để bo tròn đẹp hơn centerCrop
                                 .into(imgNavAvatar);
                     }
                 } else {

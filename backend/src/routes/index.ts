@@ -11,7 +11,7 @@ import chatRoutes from "./chat.routes";
 
 import quizRoutes from "./quiz.routes";
 
-// 1. THÊM DÒNG IMPORT NÀY
+import liveRoutes from "./live.routes";
 import commentRoutes from "./comment.routes"; // (Tên file bên trong ./ có thể khác tùy bạn đặt nhé, vd: comment.routes)
 import reactionRoutes from "./reaction.routes";
 import groupRoutes from "./group.routes";
@@ -41,11 +41,15 @@ router.use('/posts', postRoutes);
 router.use('/chat', chatRoutes);
 
 router.use("/comments", commentRoutes); 
+
 router.use('/quiz', quizRoutes);
 
 router.use("/reactions", reactionRoutes);
 
 // Group routes
 router.use("/groups", groupRoutes);
+
+// Live routes
+router.use("/live", liveRoutes);
 
 export default router;

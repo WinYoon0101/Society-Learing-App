@@ -21,7 +21,7 @@ public class FeedViewModel extends ViewModel {
     private PostRepository repository;
     private final MutableLiveData<List<Post>> postsLiveData = new MutableLiveData<>();
 
-    // ĐÃ THÊM: Biến theo dõi trạng thái xóa bài viết
+    // Biến theo dõi trạng thái xóa bài viết
     private final MutableLiveData<String> deleteStatus = new MutableLiveData<>();
 
     public void init(Context context) {
@@ -34,7 +34,7 @@ public class FeedViewModel extends ViewModel {
         return postsLiveData;
     }
 
-    // ĐÃ THÊM: Getter cho trạng thái xóa
+    // Getter cho trạng thái xóa
     public LiveData<String> getDeleteStatus() {
         return deleteStatus;
     }
@@ -60,7 +60,7 @@ public class FeedViewModel extends ViewModel {
     }
 
     // ==========================================================
-    // HÀM MỚI BỔ SUNG: XỬ LÝ GỌI API XÓA BÀI VIẾT
+    // HÀM XỬ LÝ GỌI API XÓA BÀI VIẾT
     // ==========================================================
     public void deletePost(String token, String postId) {
         if (repository != null) {
@@ -78,6 +78,29 @@ public class FeedViewModel extends ViewModel {
                 @Override
                 public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                     deleteStatus.setValue("Lỗi mạng, không thể xóa: " + t.getMessage());
+                }
+            });
+        }
+    }
+
+    // ==========================================================
+    // ĐÃ THÊM: HÀM XỬ LÝ GỌI API LƯU / BỎ LƯU BÀI VIẾT
+    // ==========================================================
+    public void toggleSavePost(String token, String postId) {
+        if (repository != null) {
+            repository.toggleSavePost(token, postId, new Callback<ApiResponse<Object>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                    if (response.isSuccessful()) {
+                        Log.d("DEBUG_SAVE", "✅ Đã lưu/bỏ lưu bài viết thành công!");
+                    } else {
+                        Log.e("DEBUG_SAVE", "❌ Lỗi khi lưu bài viết: " + response.code());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                    Log.e("DEBUG_SAVE", "❌ Lỗi mạng: " + t.getMessage());
                 }
             });
         }

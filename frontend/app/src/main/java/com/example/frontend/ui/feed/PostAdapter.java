@@ -39,10 +39,16 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         void onDeletePost(String postId);
     }
 
+    // ĐÃ THÊM: Tạo Interface để báo tin ra ngoài Fragment khi bấm LƯU
+    public interface OnPostSaveListener {
+        void onSavePost(String postId);
+    }
+
     private List<Post> postList;
     private Context context;
     private OnReactionListener reactionListener;
-    private OnPostDeleteListener deleteListener; // ĐÃ THÊM
+    private OnPostDeleteListener deleteListener;
+    private OnPostSaveListener saveListener; // ĐÃ THÊM
 
     public PostAdapter(Context context, List<Post> postList, OnReactionListener listener) {
         this.context = context;
@@ -50,9 +56,14 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         this.reactionListener = listener;
     }
 
-    // ĐÃ THÊM: Hàm để FeedFragment truyền tai nghe vào
+    // ĐÃ THÊM: Hàm để FeedFragment truyền tai nghe vào (cho Xóa)
     public void setOnPostDeleteListener(OnPostDeleteListener listener) {
         this.deleteListener = listener;
+    }
+
+    // ĐÃ THÊM: Hàm để FeedFragment truyền tai nghe vào (cho Lưu)
+    public void setOnPostSaveListener(OnPostSaveListener listener) {
+        this.saveListener = listener;
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -103,10 +114,11 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 popupMenu.setOnMenuItemClickListener(item -> {
                     switch (item.getItemId()) {
                         case 1: // Bấm Lưu
-                            Toast.makeText(context, "Đã lưu bài viết!", Toast.LENGTH_SHORT).show();
-                            // TODO: Gọi API Lưu ở đây
+                            if (saveListener != null) {
+                                saveListener.onSavePost(post.getId());
+                            }
                             return true;
-                        case 2: // ĐÃ SỬA: Báo tín hiệu xóa ra ngoài Fragment
+                        case 2: // Bấm Xóa
                             if (deleteListener != null) {
                                 deleteListener.onDeletePost(post.getId());
                             }
