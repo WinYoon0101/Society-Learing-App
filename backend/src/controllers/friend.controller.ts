@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import Friend from "../models/friend.model";
 import User from "../models/user.model";
+import Notification from "../models/notification.model";
 
 
 // 1. Gửi lời mời kết bạn
@@ -45,18 +46,28 @@ export const sendFriendRequest = async (
         res.status(400).json({ success: false, message: "Đã tồn tại lời mời kết bạn đang chờ xử lý." });
         return;
       }
-      // Nếu trạng thái là declined, có thể cho phép gửi lại bằng cách xoá record cũ và tạo mới hoặc update.
-      // Ở đây ta update lại trạng thái thành pending và đặt người gửi là userA.
+      // Nếu trạng thái là declined...
       if (existingFriendship.status === "declined") {
         existingFriendship.requester = userA as any;
         existingFriendship.recipient = userB as any;
         existingFriendship.status = "pending";
         await existingFriendship.save();
+
+        // TẠO THÔNG BÁO KHI GỬI LẠI LỜI MỜI
+        const newNotification = new Notification({
+          receiverId: userB,
+          senderId: userA,
+          targetId: existingFriendship._id,
+          targetType: "Friend",
+          type: "friend_request"
+        });
+        await newNotification.save();
+
         res.status(200).json({ 
-        success: true, 
-        message: "Đã gửi lại lời mời kết bạn.",
-        data: existingFriendship 
-    });
+          success: true, 
+          message: "Đã gửi lại lời mời kết bạn.",
+          data: existingFriendship 
+        });
         return;
       }
     }
@@ -68,6 +79,19 @@ export const sendFriendRequest = async (
     });
 
     await newRequest.save();
+
+    // ==========================================
+    // TẠO THÔNG BÁO GỬI LỜI MỜI MỚI
+    // ==========================================
+    const newNotification = new Notification({
+      receiverId: userB,
+      senderId: userA,
+      targetId: newRequest._id,
+      targetType: "Friend",
+      type: "friend_request"
+    });
+    await newNotification.save();
+    // ==========================================
 
     res.status(201).json({
       success: true,
@@ -101,6 +125,19 @@ export const acceptFriendRequest = async (
 
     request.status = "accepted";
     await request.save();
+
+    // ==========================================
+    // TẠO THÔNG BÁO ĐỒNG Ý KẾT BẠN
+    // ==========================================
+    const newNotification = new Notification({
+      receiverId: userA, // Thông báo về cho người đã gửi lời mời
+      senderId: userB,   // Mình là người đồng ý
+      targetId: request._id,
+      targetType: "Friend",
+      type: "friend_accept"
+    });
+    await newNotification.save();
+    // ==========================================
 
     res.status(200).json({
       success: true,
