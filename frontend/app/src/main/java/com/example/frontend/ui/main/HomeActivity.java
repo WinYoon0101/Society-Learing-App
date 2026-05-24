@@ -155,6 +155,21 @@ public class HomeActivity extends AppCompatActivity {
         TextView tvNavName = headerView.findViewById(R.id.tvNavName);
         TextView tvNavEmail = headerView.findViewById(R.id.tvNavEmail); // Thêm dòng này
 
+        View.OnClickListener openProfileTab = v -> {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            new Handler().postDelayed(() -> selectTab(imgProfile, lineProfile, new ProfileFragment()), 150);
+        };
+
+        if (imgNavAvatar != null) {
+            imgNavAvatar.setOnClickListener(openProfileTab);
+        }
+        if (tvNavName != null) {
+            tvNavName.setOnClickListener(openProfileTab);
+        }
+        if (tvNavEmail != null) {
+            tvNavEmail.setOnClickListener(openProfileTab);
+        }
+
         // Gọi API lấy profile người dùng đang đăng nhập
         ApiService api = ApiClient.getApiService(this);
         api.getMyProfile().enqueue(new retrofit2.Callback<ApiResponse<User>>() {
