@@ -21,6 +21,7 @@ import com.example.frontend.data.model.Message;
 import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.Quiz;
 import com.example.frontend.data.model.ReactionRequest;
+import com.example.frontend.data.remote.SubmitQuizRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -202,6 +203,9 @@ public interface ApiService {
 
     @GET("quiz/my-quizzes")
     Call<ApiResponse<List<Quiz>>> getMyQuizzes();
+
+        @POST("quiz/submit")
+        Call<ApiResponse<Object>> submitQuiz(@Body SubmitQuizRequest request);
 
 
     // 1. Lấy danh sách (Nó sẽ trả về List các Comment gốc)

@@ -1,5 +1,15 @@
 <resources>
     <string name="app_name">Society</string>
+    <string name="back">Back</string>
+    <string name="society_quiz">Society Quiz</string>
+    <string name="create_by_ai">Tạo bằng AI</string>
+    <string name="quiz_icon_desc">Quiz</string>
+    <string name="quiz_rate_default">0%%</string>
+    <string name="quiz_rate_format">%1$d%%</string>
+    <string name="quiz_count_format">%1$d câu</string>
+    <string name="quiz_untitled">Không tiêu đề</string>
+    <string name="question_title_format">Câu %1$d: %2$s</string>
+    <string name="percent_format">%1$d%%</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="default_web_client_id">
