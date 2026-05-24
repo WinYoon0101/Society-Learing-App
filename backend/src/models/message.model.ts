@@ -15,6 +15,8 @@ export interface IMessage extends Document {
   replyTo?: mongoose.Types.ObjectId; // reply tin nhắn
   reactions: IReaction[];            // thả cảm xúc
   isDeleted: boolean;
+  mediaUrl?: string;                 // Cloudinary URL nếu có đính kèm file
+  mediaType?: "image" | "video" | "document"; // loại file đính kèm
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,9 +47,19 @@ const MessageSchema = new Schema<IMessage>(
     },
     text: {
       type: String,
-      required: true,
+      required: false,
+      default: "",
       trim: true,
       maxlength: [5000, "Tin nhắn không được vượt quá 5000 ký tự"],
+    },
+    mediaUrl: {
+      type: String,
+      default: null,
+    },
+    mediaType: {
+      type: String,
+      enum: ["image", "video", "document"],
+      default: null,
     },
     replyTo: {
       type: Schema.Types.ObjectId,

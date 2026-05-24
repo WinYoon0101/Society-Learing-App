@@ -193,7 +193,14 @@ object ChatSocketManager {
     // EMIT EVENTS
     // ═══════════════════════════════════════════════════════════════════════
 
-    fun sendMessage(conversationId: String, text: String, replyTo: String? = null) {
+    @JvmOverloads
+    fun sendMessage(
+        conversationId: String,
+        text: String,
+        replyTo: String? = null,
+        mediaUrl: String? = null,
+        mediaType: String? = null
+    ) {
         if (socket == null || !socket!!.connected()) {
             Log.e(TAG, "Socket not connected")
             onError?.invoke("Socket not connected")
@@ -203,9 +210,9 @@ object ChatSocketManager {
         val data = JSONObject().apply {
             put("conversationId", conversationId)
             put("text", text)
-            if (replyTo != null) {
-                put("replyTo", replyTo)
-            }
+            if (replyTo != null) put("replyTo", replyTo)
+            if (mediaUrl != null) put("mediaUrl", mediaUrl)
+            if (mediaType != null) put("mediaType", mediaType)
         }
 
         socket?.emit("message:send", data)

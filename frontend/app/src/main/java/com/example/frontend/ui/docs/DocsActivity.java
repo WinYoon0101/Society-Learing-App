@@ -8,6 +8,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ImageView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -24,6 +26,19 @@ public class DocsActivity extends AppCompatActivity {
     private DocsViewModel viewModel;
     private ProgressBar progressBar;
     private TextView tvEmpty;
+
+    // 1. Thêm ActivityResultLauncher để nhận kết quả trả về từ EditDocActivity
+    private final ActivityResultLauncher<Intent> editLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    // Nếu chỉnh sửa thành công, load lại danh sách
+                    if (viewModel != null) {
+                        viewModel.fetchMyDocuments(1, 20);
+                    }
+                }
+            }
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +75,8 @@ public class DocsActivity extends AppCompatActivity {
                 Intent intent = new Intent(DocsActivity.this, EditDocActivity.class);
                 // Truyền toàn bộ object sang để hiển thị thông tin cũ
                 intent.putExtra("DOC_DATA", doc);
-                startActivity(intent);
+                // 2. Sử dụng launcher để khởi chạy Activity thay vì startActivity thông thường
+                editLauncher.launch(intent);
             }
 
             @Override

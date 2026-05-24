@@ -57,4 +57,12 @@ public class PostRepository {
     public void getMyPosts(Callback<ApiResponse<List<Post>>> callback) {
         apiService.getMyPosts().enqueue(callback);
     }
+
+    public void toggleSavePost(String token, String postId, Callback<ApiResponse<Object>> callback) {
+        apiService.toggleSavePost(token, postId).enqueue(callback);
+    }
+
+    public void getSavedPosts(String token, Callback<ApiResponse<List<Post>>> callback) {
+        apiService.getSavedPosts(token).enqueue(callback);
+    }
 }

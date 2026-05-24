@@ -94,13 +94,16 @@ export function initChatSocket(io: Server) {
       "message:send",
       async (data: {
         conversationId: string;
-        text: string;
+        text?: string;
         replyTo?: string;
+        mediaUrl?: string;
+        mediaType?: string;
       }) => {
         try {
-          const { conversationId, text, replyTo } = data;
+          const { conversationId, text, replyTo, mediaUrl, mediaType } = data;
 
-          if (!text?.trim()) return;
+          // Phải có text hoặc mediaUrl
+          if (!text?.trim() && !mediaUrl) return;
 
           // Kiểm tra user có trong conversation không
           const conversation = await Conversation.findOne({
@@ -117,12 +120,16 @@ export function initChatSocket(io: Server) {
           joinConversationRoom(conversationId);
 
           // Tạo message
-          const message = await Message.create({
+          const messageData: Record<string, any> = {
             conversationId,
             sender: userId,
-            text: text.trim(),
-            replyTo: replyTo ? new mongoose.Types.ObjectId(replyTo) : undefined,
-          });
+            text: text?.trim() || "",
+          };
+          if (replyTo) messageData.replyTo = new mongoose.Types.ObjectId(replyTo);
+          if (mediaUrl) messageData.mediaUrl = mediaUrl;
+          if (mediaType) messageData.mediaType = mediaType;
+
+          const message = await Message.create(messageData);
 
           // Cập nhật lastMessage của conversation
           await Conversation.findByIdAndUpdate(conversationId, {

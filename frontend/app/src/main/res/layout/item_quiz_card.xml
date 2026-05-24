@@ -40,14 +40,25 @@
             android:textColor="#64748B"
             android:textSize="12sp" />
 
-        <TextView
-            android:id="@+id/tvRate"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/tagRate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Tỉ lệ đúng: 80%"
-            android:textColor="#10B981"
-            android:textStyle="bold"
-            android:textSize="11sp" />
+            app:cardCornerRadius="999dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#E6F4F1">
+
+            <TextView
+                android:id="@+id/tvRate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:text="Tỉ lệ đúng: 80%"
+                android:textColor="#10B981"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

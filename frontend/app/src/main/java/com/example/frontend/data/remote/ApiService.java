@@ -9,6 +9,8 @@ import com.example.frontend.data.model.CoverResponse;
 import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
+import com.example.frontend.data.model.Group;
+import com.example.frontend.data.model.LiveModel;
 import com.example.frontend.data.model.LoginResponse;
 import com.example.frontend.data.model.ReactionItem;
 import com.example.frontend.data.model.UpdateProfile;
@@ -19,6 +21,7 @@ import com.example.frontend.data.model.Message;
 import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.Quiz;
 import com.example.frontend.data.model.ReactionRequest;
+import com.example.frontend.data.remote.SubmitQuizRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -200,6 +203,9 @@ public interface ApiService {
     @GET("quiz/my-quizzes")
     Call<ApiResponse<List<Quiz>>> getMyQuizzes();
 
+        @POST("quiz/submit")
+        Call<ApiResponse<Object>> submitQuiz(@Body SubmitQuizRequest request);
+
 
     // 1. Lấy danh sách (Nó sẽ trả về List các Comment gốc)
     @GET("/api/comments/post/{postId}")
@@ -218,6 +224,14 @@ public interface ApiService {
             @Path("commentId") String commentId
     );
 
+    @Multipart
+    @POST("media/upload")
+    Call<ApiResponse<List<Media>>> uploadChatMedia(
+            @Part MultipartBody.Part file,
+            @Part("sourceType") RequestBody sourceType,
+            @Part("targetId") RequestBody targetId
+    );
+
     // Gọi API lấy danh sách thả cảm xúc (Nếu bạn có khai báo)
     @GET("reactions/{targetId}")
     Call<ApiResponse<List<ReactionItem>>> getReactionsOfPost(@Path("targetId") String targetId);
@@ -229,5 +243,40 @@ public interface ApiService {
     //Lấy bài viết cá nhân
     @GET("posts/me")
     Call<ApiResponse<List<Post>>> getMyPosts();
+
+    // ====== GROUPS ======
+    @GET("groups/my")
+    Call<ApiResponse<List<Group>>> getMyGroups();
+
+    @Multipart
+    @POST("groups")
+    Call<ApiResponse<Group>> createGroup(
+            @Part("groupName") RequestBody groupName,
+            @Part("description") RequestBody description,
+            @Part("privacy") RequestBody privacy,
+            @Part MultipartBody.Part avatar
+    );
+
+    // Gọi API Lưu / Bỏ lưu bài viết (Toggle)
+    @POST("posts/{id}/save")
+    Call<ApiResponse<Object>> toggleSavePost(
+            @Header("Authorization") String token,
+            @Path("id") String postId
+    );
+
+    // Lấy danh sách Bài viết đã lưu của User
+    @GET("posts/my/saved")
+    Call<ApiResponse<List<Post>>> getSavedPosts(
+            @Header("Authorization") String token
+    );
+
+    @POST("live/start")
+    Call<ApiResponse<LiveModel>> startLive(@Body LiveRequest request);
+
+    @GET("live/active")
+    Call<ApiResponse<List<LiveModel>>> getActiveLives();
+
+    @PUT("live/end/{liveId}")
+    Call<ApiResponse<Void>> endLive(@Path("liveId") String liveId);
 }
 

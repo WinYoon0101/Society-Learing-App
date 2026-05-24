@@ -83,7 +83,16 @@ public class FeedFragment extends Fragment {
         });
 
         // =======================================================
-        // ĐÃ THÊM: BẮT SÓNG LỆNH XÓA TỪ ADAPTER TRUYỀN RA
+        // ĐÃ THÊM MỚI: BẮT SÓNG LỆNH LƯU TỪ ADAPTER TRUYỀN RA
+        // =======================================================
+        adapter.setOnPostSaveListener(postId -> {
+            String token = "Bearer " + requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("JWT_TOKEN", "");
+            Toast.makeText(getContext(), "Đang xử lý...", Toast.LENGTH_SHORT).show();
+            viewModel.toggleSavePost(token, postId); // Ra lệnh cho ViewModel gọi API Lưu
+        });
+
+        // =======================================================
+        // BẮT SÓNG LỆNH XÓA TỪ ADAPTER TRUYỀN RA
         // =======================================================
         adapter.setOnPostDeleteListener(postId -> {
             // Lấy Token của bạn để gửi lên Server chứng minh thân phận
@@ -106,7 +115,7 @@ public class FeedFragment extends Fragment {
             }
         });
 
-        // ĐÃ THÊM: Lắng nghe báo cáo kết quả XÓA từ ViewModel
+        // Lắng nghe báo cáo kết quả XÓA từ ViewModel
         viewModel.getDeleteStatus().observe(getViewLifecycleOwner(), status -> {
             if ("SUCCESS".equals(status)) {
                 Toast.makeText(getContext(), "Xóa bài viết thành công!", Toast.LENGTH_SHORT).show();

@@ -21,8 +21,8 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_arrow_down"
-            android:rotation="90"
+            android:src="@drawable/ic_arrow_back"
+            android:tint="#3D594B"
             android:contentDescription="Back" />
 
         <TextView
@@ -36,12 +36,6 @@
             android:textStyle="bold"
             android:textColor="#3D594B" />
 
-        <ImageButton
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_filter"
-            android:contentDescription="Options" />
     </LinearLayout>
 
     <!-- Messages RecyclerView -->
@@ -64,6 +58,16 @@
         android:paddingVertical="8dp"
         android:background="#FFFFFF">
 
+        <ImageButton
+            android:id="@+id/btnAttach"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_attachment"
+            android:tint="#888888"
+            android:contentDescription="Đính kèm" />
+
         <EditText
             android:id="@+id/etMessage"
             android:layout_width="0dp"
@@ -73,6 +77,7 @@
             android:hint="Tin nhắn..."
             android:background="@drawable/bg_message_input"
             android:textSize="14sp"
+            android:inputType="textMultiLine|textCapSentences"
             android:maxLines="3"
             android:textColor="#333333"
             android:textColorHint="#CCCCCC"
@@ -85,7 +90,7 @@
             android:layout_height="40dp"
             android:layout_marginStart="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_chat"
+            android:src="@drawable/ic_send"
             android:scaleType="centerInside"
             android:tint="#4A7C59"
             android:contentDescription="Send" />

@@ -19,15 +19,6 @@
             android:gravity="center_vertical"
             android:paddingHorizontal="8dp">
 
-            <ImageButton
-                android:id="@+id/btnChatBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_arrow_down"
-                android:rotation="90"
-                android:contentDescription="Back" />
-
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -38,13 +29,6 @@
                 android:textStyle="bold"
                 android:textColor="#3D594B" />
 
-            <ImageButton
-                android:id="@+id/btnChatSearch"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_filter"
-                android:contentDescription="Tìm kiếm" />
         </LinearLayout>
 
         <!-- Scrollable content -->
@@ -60,17 +44,18 @@
                 android:orientation="vertical">
 
                 <!-- Online users horizontal strip -->
+
+                <!-- Divider -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvOnlineUsers"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="8dp"
                     android:clipToPadding="false"
                     android:nestedScrollingEnabled="false"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="8dp"
                     tools:listitem="@layout/item_online_user" />
 
-                <!-- Divider -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
@@ -131,14 +116,14 @@
 
     </LinearLayout>
 
-    <!-- FAB new chat -->
+    <!-- FAB new chat: dấu + để chọn bạn nhắn tin mới -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabNewChat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="20dp"
-        android:src="@drawable/ic_chat"
+        android:src="@drawable/ic_add"
         app:backgroundTint="#10B981"
         app:tint="#FFFFFF"
         android:contentDescription="Chat mới" />
