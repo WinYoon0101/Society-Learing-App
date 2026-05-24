@@ -7,11 +7,11 @@ import {
   JWT_REFRESH_SECRET,
   JWT_EXPIRES_IN,
   JWT_REFRESH_EXPIRES_IN,
+  GOOGLE_CLIENT_ID,
 } from "../config/env";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
 // ===== GOOGLE CLIENT =====
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // ===== TOKEN =====

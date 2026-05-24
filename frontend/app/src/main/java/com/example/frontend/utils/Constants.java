@@ -2,7 +2,7 @@ package com.example.frontend.utils;
 
 public class Constants {
 
-    public static final String BASE_URL = "http://192.168.54.22:3000/api/";
+    public static final String BASE_URL = "http://10.252.149.85:3000/api/";
     public static final String SOCKET_URL = "http://192.168.54.22:3000";
 
     public static final long ZEGO_APP_ID = 948164799;
