@@ -84,26 +84,18 @@ export function initChatSocket(io: Server) {
       socket.join(conv._id.toString());
     });
 
-    // Helper: join room cho conversation mới tạo
-    const joinConversationRoom = (conversationId: string) => {
-      socket.join(conversationId);
-    };
-
     // ─── GỬI TIN NHẮN ───────────────────────────────────────────────
     socket.on(
       "message:send",
       async (data: {
         conversationId: string;
-        text?: string;
+        text: string;
         replyTo?: string;
-        mediaUrl?: string;
-        mediaType?: string;
       }) => {
         try {
-          const { conversationId, text, replyTo, mediaUrl, mediaType } = data;
+          const { conversationId, text, replyTo } = data;
 
-          // Phải có text hoặc mediaUrl
-          if (!text?.trim() && !mediaUrl) return;
+          if (!text?.trim()) return;
 
           // Kiểm tra user có trong conversation không
           const conversation = await Conversation.findOne({
@@ -116,40 +108,31 @@ export function initChatSocket(io: Server) {
             return;
           }
 
-          // Đảm bảo socket đã join room (trường hợp conversation mới tạo sau khi connect)
-          joinConversationRoom(conversationId);
-
           // Tạo message
-          const messageData: Record<string, any> = {
+          const message = await Message.create({
             conversationId,
             sender: userId,
-            text: text?.trim() || "",
-          };
-          if (replyTo) messageData.replyTo = new mongoose.Types.ObjectId(replyTo);
-          if (mediaUrl) messageData.mediaUrl = mediaUrl;
-          if (mediaType) messageData.mediaType = mediaType;
-
-          const message = await Message.create(messageData);
+            text: text.trim(),
+            replyTo: replyTo ? new mongoose.Types.ObjectId(replyTo) : undefined,
+          });
 
           // Cập nhật lastMessage của conversation
           await Conversation.findByIdAndUpdate(conversationId, {
             lastMessage: message._id,
-            updatedAt: new Date(),
           });
 
-          // Populate để gửi về client — đảm bảo _id là string
-          const populated = await Message.findById(message._id)
-            .populate("sender", "username avatar _id")
-            .populate({
+          // Populate để gửi về client
+          const populated = await Message.findById(message._id).populate([
+            { path: "sender", select: "username avatar" },
+            {
               path: "replyTo",
-              populate: { path: "sender", select: "username avatar _id" },
-            })
-            .lean(); // lean() trả plain object, _id tự convert thành string khi JSON.stringify
+              populate: { path: "sender", select: "username avatar" },
+            },
+          ]);
 
           // Broadcast tới tất cả members trong room
           io.to(conversationId).emit("message:new", populated);
         } catch (error) {
-          console.error("message:send error:", error);
           socket.emit("error", { message: "Lỗi gửi tin nhắn" });
         }
       }

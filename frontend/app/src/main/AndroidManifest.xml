@@ -4,11 +4,6 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-
-    <uses-permission android:name="android.permission.CAMERA" />
-
-    <uses-feature android:name="android.hardware.camera" android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -16,37 +11,15 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".ui.pomodoro.PomodoroSummaryActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.pomodoro.PomodoroActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.docs.EditDocActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.quiz.QuizResultActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.quiz.QuizListActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.quiz.QuizActivity"
-            android:exported="false" />
-        <activity
             android:name=".ui.library.ViewDocumentActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.live.LiveActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.live.LiveStartActivity"
+            android:name=".ui.meeting.MeetingActivity"
             android:exported="false" />
         <activity
             android:name=".ui.group.GroupActivity"
@@ -55,36 +28,26 @@
             android:name=".ui.docs.DocsActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.feed.SavedActivity"
+            android:name=".ui.saved.SavedActivity"
             android:exported="false" />
         <activity
             android:name=".ui.calendar.CalendarActivity"
             android:exported="false" />
         <activity
             android:name=".ui.auth.LoginActivity"
-            android:exported="false">
-        </activity>
-        <activity
-            android:name=".ui.splash.SplashActivity"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.onboarding.OnboardingActivity"/>
-        <activity android:name=".ui.auth.ForgotPasswordActivity"/>
         <activity android:name=".ui.auth.RegisterActivity" />
         <activity android:name=".ui.main.HomeActivity" />
         <activity
             android:name=".ui.library.UploadDocumentActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
-        <activity
-            android:name=".ui.feed.PostDetailActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity android:name=".ui.profile.EditProfileActivity" />
     </application>
 
 </manifest>

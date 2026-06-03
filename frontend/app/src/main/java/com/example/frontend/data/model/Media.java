@@ -1,8 +1,6 @@
 package com.example.frontend.data.model;
 
-import java.io.Serializable;
-
-public class Media implements Serializable {
+public class Media {
     private String _id;
     private String url;
     private String fileType;
