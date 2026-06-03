@@ -11,7 +11,6 @@ import {
   checkFriendStatus,
 } from "../controllers/friend.controller";
 
-
 const router = Router();
 
 // Middleware xác thực tất cả route bên dưới

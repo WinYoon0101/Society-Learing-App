@@ -25,13 +25,13 @@ const ReactionSchema: Schema = new Schema({
 
     targetType: { 
         type: String, 
-        enum: ['Post', 'Comment', 'Stories'], 
+        enum: ['Posts', 'Comment', 'Stories'], 
         required: true 
     },
 
     type: { 
         type: String, 
-        enum: ['Like', 'Love', 'Haha', 'Wow', 'Angry', 'Sad'], 
+        enum: ['Like', 'Love', 'Haha', 'Wow'], 
         required: true 
     }
 

@@ -24,8 +24,8 @@ const targetValidators = [
   body("sourceType")
     .notEmpty()
     .withMessage("sourceType là bắt buộc")
-    .isIn(["post", "story", "message","document"])
-    .withMessage("sourceType phải là post, story, message hoặc document"),
+    .isIn(["post", "story", "message"])
+    .withMessage("sourceType phải là post, story hoặc message"),
   body("targetId")
     .notEmpty()
     .withMessage("targetId là bắt buộc")
