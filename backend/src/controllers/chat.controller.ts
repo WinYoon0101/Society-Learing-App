@@ -13,10 +13,10 @@ export const getConversations = async (
     const userId = req.user!.id;
 
     const conversations = await Conversation.find({ members: userId })
-      .populate("members", "username avatar isActive")
+      .populate("members", "username avatar isActive _id")
       .populate({
         path: "lastMessage",
-        populate: { path: "sender", select: "username avatar" },
+        populate: { path: "sender", select: "username avatar _id" },
       })
       .sort({ updatedAt: -1 });
 
@@ -54,14 +54,34 @@ export const getOrCreateConversation = async (
         ],
         $size: 2,
       },
-    }).populate("members", "username avatar isActive");
+    })
+    .populate("members", "username avatar isActive")
+    .populate({
+      path: "lastMessage",
+      populate: {
+        path: "sender",
+        select: "username avatar _id",
+      },
+    });
 
     if (!conversation) {
       conversation = await Conversation.create({
         members: [userId, targetUserId],
       });
-      conversation = await conversation.populate("members", "username avatar isActive");
-    }
+        conversation = await conversation.populate([
+          {
+            path: "members",
+            select: "username avatar isActive",
+          },
+          {
+            path: "lastMessage",
+            populate: {
+              path: "sender",
+              select: "username avatar _id",
+            },
+          },
+        ]);
+ }
 
     res.json({ success: true, data: conversation });
   } catch (error) {
@@ -92,10 +112,10 @@ export const getMessages = async (
     }
 
     const messages = await Message.find({ conversationId })
-      .populate("sender", "username avatar")
+      .populate("sender", "username avatar _id")
       .populate({
         path: "replyTo",
-        populate: { path: "sender", select: "username avatar" },
+        populate: { path: "sender", select: "username avatar _id" },
       })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)

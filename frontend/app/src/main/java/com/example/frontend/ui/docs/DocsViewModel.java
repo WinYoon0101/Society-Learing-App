@@ -6,38 +6,54 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.repository.DocumentRepository;
 import com.example.frontend.utils.Result;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class DocsViewModel extends AndroidViewModel {
 
     private final DocumentRepository repository;
-
-    // LiveData dùng để lưu trữ và quan sát kết quả trả về từ API
-    // Kết quả bao gồm danh sách tài liệu và thông tin phân trang (pagination)
     private final MutableLiveData<Result<DocumentListData>> myDocsResult = new MutableLiveData<>();
+
+    // LiveData riêng để theo dõi kết quả xóa
+    private final MutableLiveData<Result<String>> deleteResult = new MutableLiveData<>();
+    private final MutableLiveData<Result<Document>> updateResult = new MutableLiveData<>();
+
 
     public DocsViewModel(@NonNull Application application) {
         super(application);
-        // Khởi tạo Repository để giao tiếp với ApiService
         repository = new DocumentRepository(application);
     }
 
-    /**
-     * Getter để Activity có thể quan sát (observe) dữ liệu.
-     * Dùng LiveData thay vì MutableLiveData để đảm bảo Activity không thay đổi trực tiếp dữ liệu.
-     */
     public LiveData<Result<DocumentListData>> getMyDocsResult() {
         return myDocsResult;
     }
 
-    /**
-     * Hàm gọi xuống Repository để bắt đầu quá trình lấy danh sách tài liệu cá nhân.
-     * @param page Trang hiện tại (thường bắt đầu từ 1)
-     * @param limit Số lượng tài liệu trên mỗi trang
-     */
+    public LiveData<Result<String>> getDeleteResult() {
+        return deleteResult;
+    }
+
+    public LiveData<Result<Document>> getUpdateResult() {
+        return updateResult;
+    }
+
     public void fetchMyDocuments(int page, int limit) {
         repository.getMyDocuments(page, limit, myDocsResult);
+    }
+
+    // Gắn hành động xóa vào Backend
+    public void deleteDocument(String docId) {
+        repository.deleteDocument(docId, deleteResult);
+    }
+
+    public void updateDocument(String docId, String newTitle, String newSubject) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("title", newTitle);
+        updates.put("subject", newSubject);
+        repository.updateDocument(docId, updates, updateResult);
     }
 }

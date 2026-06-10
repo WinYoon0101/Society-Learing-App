@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import Reaction from '../models/reaction.model';
+import Post from '../models/post.model';
+import Notification from '../models/notification.model';
 
 export const toggleReaction = async (req: Request, res: Response): Promise<void> => {
     try {
-        const userId = (req as any).user?.id || req.body.userId; 
+        const userId = (req as any).user?.id || req.body.userId;
         const { targetId, targetType, type } = req.body;
 
         if (!userId || !targetId || !targetType || !type) {
@@ -16,6 +18,8 @@ export const toggleReaction = async (req: Request, res: Response): Promise<void>
         if (existingReaction) {
             if (existingReaction.type === type) {
                 await Reaction.findByIdAndDelete(existingReaction._id);
+                // Xóa thông báo cũ khi bỏ react
+                await Notification.deleteOne({ senderId: userId, targetId: targetId, type: "REACTION" });
                 res.status(200).json({ message: "Đã thu hồi cảm xúc", action: "REMOVED" });
             } else {
                 existingReaction.type = type;
@@ -25,6 +29,22 @@ export const toggleReaction = async (req: Request, res: Response): Promise<void>
         } else {
             const newReaction = new Reaction({ userId, targetId, targetType, type });
             await newReaction.save();
+
+            // Tạo thông báo nếu react bài viết và không phải react bài của chính mình
+            if (targetType === "Post") {
+                const post = await Post.findById(targetId).select("authorId").lean();
+                if (post && post.authorId.toString() !== userId) {
+                    const notification = new Notification({
+                        receiverId: post.authorId,
+                        senderId: userId,
+                        targetId: targetId,
+                        targetType: "Post",
+                        type: "REACTION",
+                    });
+                    notification.save().catch(err => console.error("Lỗi tạo thông báo reaction:", err));
+                }
+            }
+
             res.status(201).json({ message: "Đã thả cảm xúc thành công", action: "ADDED", data: newReaction });
         }
     } catch (error: any) {

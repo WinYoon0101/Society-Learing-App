@@ -4,6 +4,9 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -11,43 +14,133 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"
         android:usesCleartextTraffic="true">
+
+        <!-- FACEBOOK -->
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+
+        <meta-data
+            android:name="com.facebook.sdk.ClientToken"
+            android:value="@string/facebook_client_token" />
+
+        <!-- FACEBOOK ACTIVITY -->
+        <activity
+            android:name="com.facebook.FacebookActivity"
+            android:configChanges=
+                "keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:label="@string/app_name"
+            android:exported="true" />
+
+        <!-- FACEBOOK CUSTOM TAB -->
+        <activity
+            android:name="com.facebook.CustomTabActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="@string/fb_login_protocol_scheme" />
+            </intent-filter>
+        </activity>
+
+        <!-- SPLASH -->
+        <activity
+            android:name=".ui.splash.SplashActivity"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="fb2270510573758665" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.pomodoro.PomodoroSummaryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.pomodoro.PomodoroActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.docs.EditDocActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.quiz.QuizResultActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.quiz.QuizListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.quiz.QuizActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.library.ViewDocumentActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.meeting.MeetingActivity"
+            android:name=".ui.live.LiveActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.live.LiveStartActivity"
             android:exported="false" />
         <activity
             android:name=".ui.group.GroupActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.group.GroupDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.group.EditGroupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.group.GroupMembersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.feed.CreatePostActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.docs.DocsActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.saved.SavedActivity"
+            android:name=".ui.feed.SavedActivity"
             android:exported="false" />
         <activity
             android:name=".ui.calendar.CalendarActivity"
             android:exported="false" />
         <activity
             android:name=".ui.auth.LoginActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false" />
+        <activity android:name=".ui.onboarding.OnboardingActivity" />
+        <activity android:name=".ui.auth.ForgotPasswordActivity" />
         <activity android:name=".ui.auth.RegisterActivity" />
         <activity android:name=".ui.main.HomeActivity" />
         <activity
             android:name=".ui.library.UploadDocumentActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".ui.feed.PostDetailActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ui.profile.EditProfileActivity" />
+        <activity
+            android:name=".ui.search.SearchActivity"
+            android:exported="false" />
+        <activity android:name=".ui.profile.FriendProfileActivity"/>
+        <activity android:name=".ui.story.CreateStoryActivity"/>
+        <activity android:name=".ui.story.StoryViewActivity"/>
+        <activity android:name=".ui.chat.ChatDetailActivity"/>
     </application>
 
 </manifest>

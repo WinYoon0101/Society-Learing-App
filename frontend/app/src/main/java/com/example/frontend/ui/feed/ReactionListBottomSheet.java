@@ -107,19 +107,18 @@ public class ReactionListBottomSheet extends BottomSheetDialogFragment {
         }
 
         tabLayoutReactions.removeAllTabs();
-        addTab("Tất cả " + all, 0, "All");
+        addTab("Tất cả " + all, "All");
 
-        if (like > 0) addTab(" " + like, R.drawable.ic_like_color, "Like");
-        if (love > 0) addTab(" " + love, R.drawable.ic_love, "Love");
-        if (haha > 0) addTab(" " + haha, R.drawable.ic_haha, "Haha");
-        if (wow > 0)  addTab(" " + wow,  R.drawable.ic_wow,  "Wow");
-        if (sad > 0)  addTab(" " + sad,  R.drawable.ic_sad,  "Sad");
-        if (angry > 0) addTab(" " + angry, R.drawable.ic_angry, "Angry");
+        if (like > 0) addTab("👍 " + like, "Like");
+        if (love > 0) addTab("❤️ " + love, "Love");
+        if (haha > 0) addTab("😆 " + haha, "Haha");
+        if (wow > 0)  addTab("😮 " + wow,  "Wow");
+        if (sad > 0)  addTab("😢 " + sad,  "Sad");
+        if (angry > 0) addTab("😡 " + angry, "Angry");
     }
 
-    private void addTab(String text, int iconResId, String tag) {
+    private void addTab(String text, String tag) {
         TabLayout.Tab tab = tabLayoutReactions.newTab().setText(text);
-        if (iconResId != 0) tab.setIcon(iconResId);
         tab.setTag(tag);
         tabLayoutReactions.addTab(tab);
     }

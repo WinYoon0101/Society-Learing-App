@@ -39,6 +39,10 @@ object ChatSocketManager {
                 reconnectionDelay = 1000
                 reconnectionDelayMax = 5000
                 reconnectionAttempts = 5
+                forceNew = true
+                transports = arrayOf("websocket")
+                query = "token=$token"
+                auth = mapOf("token" to token)
                 // ✅ Set header đúng chỗ — trong Options trước khi tạo socket
                 extraHeaders = mapOf(
                     "Authorization" to listOf("Bearer $token")
@@ -48,7 +52,7 @@ object ChatSocketManager {
             socket = IO.socket(serverUrl, opts)
             setupListeners()
 
-            Log.d(TAG, "Socket initialized")
+            Log.d(TAG, "Socket initialized to $serverUrl")
         } catch (e: URISyntaxException) {
             Log.e(TAG, "Socket URI error: ${e.message}")
         }
