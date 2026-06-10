@@ -34,12 +34,10 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         void onReactClick(String targetId, String type);
     }
 
-    // 1. ĐÃ THÊM: Tạo Interface để báo tin ra ngoài Fragment khi bấm XÓA
     public interface OnPostDeleteListener {
         void onDeletePost(String postId);
     }
 
-    // ĐÃ THÊM: Tạo Interface để báo tin ra ngoài Fragment khi bấm LƯU
     public interface OnPostSaveListener {
         void onSavePost(String postId);
     }
@@ -48,7 +46,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     private Context context;
     private OnReactionListener reactionListener;
     private OnPostDeleteListener deleteListener;
-    private OnPostSaveListener saveListener; // ĐÃ THÊM
+    private OnPostSaveListener saveListener;
 
     public PostAdapter(Context context, List<Post> postList, OnReactionListener listener) {
         this.context = context;
@@ -56,12 +54,10 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         this.reactionListener = listener;
     }
 
-    // ĐÃ THÊM: Hàm để FeedFragment truyền tai nghe vào (cho Xóa)
     public void setOnPostDeleteListener(OnPostDeleteListener listener) {
         this.deleteListener = listener;
     }
 
-    // ĐÃ THÊM: Hàm để FeedFragment truyền tai nghe vào (cho Lưu)
     public void setOnPostSaveListener(OnPostSaveListener listener) {
         this.saveListener = listener;
     }
@@ -90,6 +86,40 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         } else {
             holder.tvUserName.setText("Người dùng ẩn danh");
         }
+
+        // ==========================================
+        // 1. ĐÃ THÊM: HIỂN THỊ THỜI GIAN BÀI VIẾT
+        // ==========================================
+        if (holder.tvTime != null && post.getCreatedAt() != null) {
+            String timeAgo = com.example.frontend.utils.TimeUtils.getTimeAgo(post.getCreatedAt());
+            holder.tvTime.setText(timeAgo);
+        }
+
+        // ==========================================
+        // 2. ĐÃ THÊM: CLICK AVATAR/TÊN -> CHUYỂN SANG PROFILE
+        // ==========================================
+        View.OnClickListener goToProfileListener = v -> {
+            if (post.getAuthorId() != null && post.getAuthorId().getId() != null) {
+                try {
+                    com.example.frontend.ui.profile.ProfileFragment profileFragment = new com.example.frontend.ui.profile.ProfileFragment();
+                    android.os.Bundle args = new android.os.Bundle();
+                    args.putString("USER_ID", post.getAuthorId().getId());
+                    profileFragment.setArguments(args);
+
+                    ((androidx.appcompat.app.AppCompatActivity) context).getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, profileFragment)
+                            .addToBackStack(null) // Cho phép ấn nút Back để trở lại Feed
+                            .commit();
+                } catch (Exception e) {
+                    android.util.Log.e("PostAdapter", "Lỗi chuyển trang Profile: " + e.getMessage());
+                }
+            }
+        };
+
+        if (holder.imgAvatar != null) holder.imgAvatar.setOnClickListener(goToProfileListener);
+        if (holder.tvUserName != null) holder.tvUserName.setOnClickListener(goToProfileListener);
+
 
         // ==========================================
         // SỰ KIỆN ẤN VÀO DẤU 3 CHẤM (POPUP MENU)
@@ -326,7 +356,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     }
 
     public static class PostViewHolder extends RecyclerView.ViewHolder {
-        TextView tvUserName, tvContent, tvCommentCount;
+        // ĐÃ THÊM: Khai báo biến tvTime
+        TextView tvUserName, tvContent, tvCommentCount, tvTime;
         ImageView imgAvatar;
         View btnComment;
 
@@ -347,6 +378,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             tvUserName = itemView.findViewById(R.id.tvAuthorName);
             tvContent = itemView.findViewById(R.id.tvContent);
             imgAvatar = itemView.findViewById(R.id.imgAvatar);
+
+            // ĐÃ THÊM: Ánh xạ tvTime (Lưu ý: bạn kiểm tra lại id này trong file item_home_posts.xml nhé)
+            tvTime = itemView.findViewById(R.id.tvTime);
 
             btnMoreOptions = itemView.findViewById(R.id.btnMoreOptions);
 
