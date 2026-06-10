@@ -86,12 +86,12 @@ public class RegisterActivity extends AppCompatActivity {
             String dateOfBirth = edtDateOfBirth.getText().toString().trim();
 
             // Lấy Giới tính
-            String gender = "Khác";
+            String gender = "other";
             int selectedGenderId = rgGender.getCheckedRadioButtonId();
             if (selectedGenderId == R.id.rbMale) {
-                gender = "Nam";
+                gender = "male";
             } else if (selectedGenderId == R.id.rbFemale) {
-                gender = "Nữ";
+                gender = "female";
             }
 
             // Kiểm tra lỗi cơ bản
@@ -131,19 +131,10 @@ public class RegisterActivity extends AppCompatActivity {
 
                             String token = result.data.getAccessToken();
                             String username = result.data.getUser().getUsername();
-                            String userId = result.data.getUser().getId();
-                            String avatar = result.data.getUser().getAvatar();
 
-                            android.util.Log.d("RegisterActivity", "userId saved: [" + userId + "]");
-
-                            // Lưu đầy đủ giống LoginActivity
+                            // ✅ Lưu token
                             SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-                            SharedPreferences.Editor editor = sharedPref.edit();
-                            editor.putString("JWT_TOKEN", token);
-                            editor.putString("USER_ID", userId);
-                            editor.putString("USER_AVATAR", avatar);
-                            editor.putString("USERNAME", username);
-                            editor.apply();
+                            sharedPref.edit().putString("JWT_TOKEN", token).apply();
 
                             Toast.makeText(RegisterActivity.this,
                                     "Đăng ký thành công! Chào mừng " + username,

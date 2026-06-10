@@ -19,9 +19,10 @@ import com.example.frontend.data.model.Friend; // Nhớ import model Friend
 public class FriendFragment extends Fragment {
 
     private FriendViewModel viewModel;
+
+    // 1. Khai báo 2 biến Adapter
     private FriendAdapter requestAdapter;
     private FriendAdapter suggestionAdapter;
-    private String lastAcceptedFriendId = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -42,7 +43,6 @@ public class FriendFragment extends Fragment {
         requestAdapter = new FriendAdapter(false, new FriendAdapter.OnFriendActionListener() {
             @Override
             public void onAcceptClick(Friend friend) {
-                lastAcceptedFriendId = friend.getId();
                 requestAdapter.removeItem(friend.getId());
                 viewModel.acceptRequest(friend.getId());
             }
@@ -155,25 +155,15 @@ public class FriendFragment extends Fragment {
                     // Tải lại danh sách để đồng bộ với DB
                     viewModel.fetchPendingRequests();
                     viewModel.fetchFriendSuggestions();
-                    // Nếu vừa accept friend → tạo conversation ngay
-                    if (lastAcceptedFriendId != null) {
-                        viewModel.createConversationWithFriend(lastAcceptedFriendId);
-                        lastAcceptedFriendId = null;
-                    }
                     break;
+
                 case ERROR:
                     Toast.makeText(getContext(), "Lỗi: " + result.message, Toast.LENGTH_SHORT).show();
                     viewModel.fetchFriendSuggestions();
                     break;
+
                 case LOADING:
                     break;
-            }
-        });
-
-        viewModel.getCreateConversationResult().observe(getViewLifecycleOwner(), result -> {
-            if (result == null) return;
-            if (result.status == com.example.frontend.utils.Result.Status.SUCCESS) {
-                Toast.makeText(getContext(), "Đã kết bạn! Vào Chat để bắt đầu nhắn tin 💬", Toast.LENGTH_SHORT).show();
             }
         });
 

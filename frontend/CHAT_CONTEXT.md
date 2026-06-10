@@ -132,10 +132,12 @@ createdAt, updatedAt: Date?
 id: String
 conversationId: String
 sender: User         // populated: { _id, username, avatar }
-text: String
+text: String         // có thể rỗng nếu chỉ gửi media
 replyTo: Message?    // populated nếu là reply
 reactions: List<Reaction>
 isDeleted: Boolean   // true = "Tin nhắn đã bị thu hồi"
+mediaUrl: String?    // Cloudinary URL nếu có file đính kèm
+mediaType: String?   // "image" | "video" | "document"
 createdAt, updatedAt: Date?
 ```
 
@@ -191,9 +193,9 @@ boolean isActive // dùng để check online status
 
 ## 8. Những gì chưa implement (TODO)
 
-- [ ] `MessageAdapter` — chưa có UI cho reaction, reply, isDeleted
+- [x] `MessageAdapter` — UI reaction xong (chip bar + popup picker kiểu Facebook). Reply, isDeleted vẫn TODO.
 - [ ] Typing indicator UI trong `ChatDetailFragment`
-- [ ] `message:reacted` listener chưa update UI
+- [x] `message:reacted` listener đã wire: `messageAdapter.updateReactions(messageId, reactions)`
 - [ ] `message:deleted` listener chưa update UI (đổi text thành "Tin nhắn đã bị thu hồi")
 - [ ] Online status real-time (hiện chỉ dựa vào `isActive` từ REST, chưa dùng `user:online/offline` socket events)
 - [ ] `OnlineUserAdapter` — chưa rõ data source (hiện lấy từ conversations members)

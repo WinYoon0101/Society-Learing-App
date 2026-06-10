@@ -1,6 +1,5 @@
 package com.example.frontend.ui.docs;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -8,9 +7,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ImageView;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -22,23 +18,10 @@ import com.example.frontend.data.model.Document;
 public class DocsActivity extends AppCompatActivity {
 
     private RecyclerView rvMyDocs;
-    private DocsAdapter adapter;
+    private DocsAdapter adapter; // ĐÃ ĐỔI SANG DocsAdapter
     private DocsViewModel viewModel;
     private ProgressBar progressBar;
     private TextView tvEmpty;
-
-    // 1. Thêm ActivityResultLauncher để nhận kết quả trả về từ EditDocActivity
-    private final ActivityResultLauncher<Intent> editLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK) {
-                    // Nếu chỉnh sửa thành công, load lại danh sách
-                    if (viewModel != null) {
-                        viewModel.fetchMyDocuments(1, 20);
-                    }
-                }
-            }
-    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,35 +36,27 @@ public class DocsActivity extends AppCompatActivity {
 
         btnBack.setOnClickListener(v -> finish());
 
-        // 2. Setup RecyclerView
+        // 2. Setup RecyclerView với Listener cho DocsAdapter
         rvMyDocs.setLayoutManager(new LinearLayoutManager(this));
 
         adapter = new DocsAdapter(new DocsAdapter.OnDocActionListener() {
             @Override
             public void onDeleteClick(Document doc) {
-                // HIỂN THỊ DIALOG XÁC NHẬN TRƯỚC KHI XÓA
-                new AlertDialog.Builder(DocsActivity.this)
-                        .setTitle("Xóa tài liệu")
-                        .setMessage("Bạn có chắc chắn muốn xóa '" + doc.getTitle() + "'? Hành động này không thể hoàn tác.")
-                        .setPositiveButton("Xóa", (dialog, which) -> {
-                            viewModel.deleteDocument(doc.getId());
-                        })
-                        .setNegativeButton("Hủy", null)
-                        .show();
+                // Xử lý xóa tài liệu: Hiển thị Dialog xác nhận rồi gọi API xóa
+                Toast.makeText(DocsActivity.this, "Xóa: " + doc.getTitle(), Toast.LENGTH_SHORT).show();
+                // viewModel.deleteDocument(doc.getId());
             }
 
             @Override
             public void onEditClick(Document doc) {
-                Intent intent = new Intent(DocsActivity.this, EditDocActivity.class);
-                // Truyền toàn bộ object sang để hiển thị thông tin cũ
-                intent.putExtra("DOC_DATA", doc);
-                // 2. Sử dụng launcher để khởi chạy Activity thay vì startActivity thông thường
-                editLauncher.launch(intent);
+                // Chuyển sang màn hình Edit tài liệu
+                Toast.makeText(DocsActivity.this, "Sửa: " + doc.getTitle(), Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onItemClick(Document doc) {
-                Toast.makeText(DocsActivity.this, "Xem tài liệu: " + doc.getTitle(), Toast.LENGTH_SHORT).show();
+                // Mở file tài liệu
+                Toast.makeText(DocsActivity.this, "Mở: " + doc.getTitle(), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -90,48 +65,39 @@ public class DocsActivity extends AppCompatActivity {
         // 3. Khởi tạo ViewModel
         viewModel = new ViewModelProvider(this).get(DocsViewModel.class);
 
-        // 4. QUAN SÁT KẾT QUẢ DANH SÁCH (Fetch)
+        // 4. Quan sát dữ liệu
         viewModel.getMyDocsResult().observe(this, result -> {
             if (result == null) return;
+
             switch (result.status) {
                 case LOADING:
                     progressBar.setVisibility(View.VISIBLE);
+                    tvEmpty.setVisibility(View.GONE);
                     break;
+
                 case SUCCESS:
                     progressBar.setVisibility(View.GONE);
-                    if (result.data != null) {
-                        adapter.submitList(result.data.getDocuments());
-                        tvEmpty.setVisibility(result.data.getDocuments().isEmpty() ? View.VISIBLE : View.GONE);
+                    if (result.data != null && result.data.getDocuments() != null) {
+                        // FIX: Đưa vào hàng đợi để đảm bảo RecyclerView đã sẵn sàng
+                        rvMyDocs.post(() -> {
+                            adapter.submitList(result.data.getDocuments());
+                            if (result.data.getDocuments().isEmpty()) {
+                                tvEmpty.setVisibility(View.VISIBLE);
+                            } else {
+                                tvEmpty.setVisibility(View.GONE);
+                            }
+                        });
                     }
                     break;
+
                 case ERROR:
                     progressBar.setVisibility(View.GONE);
-                    Toast.makeText(this, "Lỗi tải: " + result.message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Lỗi: " + result.message, Toast.LENGTH_SHORT).show();
                     break;
             }
         });
 
-        // 5. QUAN SÁT KẾT QUẢ XÓA (Delete)
-        viewModel.getDeleteResult().observe(this, result -> {
-            if (result == null) return;
-            switch (result.status) {
-                case LOADING:
-                    progressBar.setVisibility(View.VISIBLE);
-                    break;
-                case SUCCESS:
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(this, "Đã xóa tài liệu!", Toast.LENGTH_SHORT).show();
-                    // Load lại danh sách trang 1 để cập nhật UI
-                    viewModel.fetchMyDocuments(1, 20);
-                    break;
-                case ERROR:
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(this, "Xóa thất bại: " + result.message, Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        });
-
-        // Gọi API lần đầu
+        // 5. Gọi API
         viewModel.fetchMyDocuments(1, 20);
     }
 }
