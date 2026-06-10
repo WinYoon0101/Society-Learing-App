@@ -44,7 +44,7 @@ public class PostDetailActivity extends AppCompatActivity {
     // View liên quan đến Reaction
     private LinearLayout layoutTopReactions, btnLikeContainer;
     private TextView tvReactionCount, tvLikeLabel;
-    private ImageView imgReact1, imgReact2, imgLikeIcon;
+    private TextView imgReact1, imgReact2, imgLikeIcon;
 
     // Dữ liệu quản lý trạng thái
     private String currentPostId;
@@ -175,7 +175,7 @@ public class PostDetailActivity extends AppCompatActivity {
 
         // 3. Đổ Nút Like (Trạng thái màu sắc)
         if (imgLikeIcon != null && tvLikeLabel != null) {
-            imgLikeIcon.setImageResource(getIconForReaction(myReaction));
+            imgLikeIcon.setText(getEmojiForReaction(myReaction));
             if (myReaction != null) {
                 tvLikeLabel.setText(myReaction);
             } else {
@@ -194,11 +194,11 @@ public class PostDetailActivity extends AppCompatActivity {
 
                 if (topReactions != null && !topReactions.isEmpty()) {
                     imgReact1.setVisibility(View.VISIBLE);
-                    imgReact1.setImageResource(getIconForReaction(topReactions.get(0)));
+                    imgReact1.setText(getEmojiForReaction(topReactions.get(0)));
 
                     if (topReactions.size() > 1) {
                         imgReact2.setVisibility(View.VISIBLE);
-                        imgReact2.setImageResource(getIconForReaction(topReactions.get(1)));
+                        imgReact2.setText(getEmojiForReaction(topReactions.get(1)));
                     }
                 }
             } else {
@@ -228,6 +228,13 @@ public class PostDetailActivity extends AppCompatActivity {
         commentAdapter.setOnDeleteClickListener((commentId, position) -> {
             String token = "Bearer " + getSavedToken();
             viewModel.deleteComment(token, currentPostId, commentId);
+        });
+
+        // Lắng nghe khi reaction comment thay đổi → reload để đồng bộ server
+        commentAdapter.setOnReactionChangedListener(() -> {
+            if (currentPostId != null) {
+                viewModel.fetchComments(currentPostId);
+            }
         });
     }
 
@@ -262,16 +269,16 @@ public class PostDetailActivity extends AppCompatActivity {
     }
 
     // --- Hàm hỗ trợ chuyển đổi chữ thành Icon ---
-    private int getIconForReaction(String type) {
-        if (type == null) return R.drawable.ic_like;
+    private String getEmojiForReaction(String type) {
+        if (type == null) return "👍";
         switch (type) {
-            case "Like": return R.drawable.ic_like_color;
-            case "Love": return R.drawable.ic_love;
-            case "Haha": return R.drawable.ic_haha;
-            case "Wow":  return R.drawable.ic_wow;
-            case "Sad":  return R.drawable.ic_sad;
-            case "Angry":return R.drawable.ic_angry;
-            default: return R.drawable.ic_like;
+            case "Like": return "👍";
+            case "Love": return "❤️";
+            case "Haha": return "😆";
+            case "Wow":  return "😮";
+            case "Sad":  return "😢";
+            case "Angry":return "😡";
+            default: return "👍";
         }
     }
 

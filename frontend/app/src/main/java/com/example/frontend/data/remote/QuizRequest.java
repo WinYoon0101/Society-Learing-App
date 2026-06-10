@@ -10,4 +10,14 @@ public class QuizRequest {
         this.numQuestions = numQuestions;
         this.title = title;
     }
+
+    public static class OtpRequest {
+        private String email;
+        private String otp;
+
+        public OtpRequest(String email, String otp) {
+            this.email = email;
+            this.otp = otp;
+        }
+    }
 }

@@ -21,3 +21,10 @@ export const JWT_REFRESH_EXPIRES_IN =
 export const CLOUDINARY_NAME = process.env.CLOUDINARY_NAME || "";
 export const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || "";
 export const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || "";
+
+export const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID || "";
+
+export const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET || "";
+
+export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+

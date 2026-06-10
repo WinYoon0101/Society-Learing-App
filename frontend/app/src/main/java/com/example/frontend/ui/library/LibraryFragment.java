@@ -41,12 +41,20 @@ public class LibraryFragment extends Fragment {
     private ProgressBar progressBar;
     private TextView tvSortLabel;
 
+    private String currentSubject = ""; // Lưu tab đang chọn
+
+
     private final ActivityResultLauncher<Intent> uploadLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
-                    // Nếu upload thành công, tải lại danh sách ngay lập tức
-                    viewModel.loadDocuments("");
+
+                    // Nếu upload thành công, tải lại danh sách theo tab hiện tại
+                    if (currentSubject.isEmpty()) {
+                        viewModel.loadDocuments("");
+                    } else {
+                        viewModel.loadDocumentsBySubject(currentSubject);
+                    }
 
                 }
             }
@@ -70,6 +78,10 @@ public class LibraryFragment extends Fragment {
         for (int i = 0; i < chips.length; i++) {
             final int index = i;
             chips[i].setOnClickListener(v -> {
+
+                currentSubject = subjectNames[index]; // Lưu lại tab hiện tại
+                
+
                 // 1. Đổi màu tất cả về xám nhạt (Chưa chọn)
                 for (MaterialCardView chip : chips) {
                     chip.setCardBackgroundColor(android.graphics.Color.parseColor("#E8EFE0"));
@@ -80,13 +92,19 @@ public class LibraryFragment extends Fragment {
                 }
 
                 // 2. Nhuộm màu xanh cho cái được chọn
-                chips[index].setCardBackgroundColor(android.graphics.Color.parseColor("#0A7D21"));
+                chips[index].setCardBackgroundColor(android.graphics.Color.parseColor("#10B981"));
                 TextView activeTv = (TextView) chips[index].getChildAt(0);
                 activeTv.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
                 activeTv.setTypeface(null, android.graphics.Typeface.BOLD);
 
                 // 3. Gọi API lấy dữ liệu
-                viewModel.loadDocumentsBySubject(subjectNames[index]);
+
+                if (currentSubject.isEmpty()) {
+                    viewModel.loadDocuments("");
+                } else {
+                    viewModel.loadDocumentsBySubject(currentSubject);
+                }
+
             });
         }
 

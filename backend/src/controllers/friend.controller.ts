@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import Friend from "../models/friend.model";
 import User from "../models/user.model";
+import Notification from "../models/notification.model";
 
 
 // 1. Gửi lời mời kết bạn
@@ -45,18 +46,28 @@ export const sendFriendRequest = async (
         res.status(400).json({ success: false, message: "Đã tồn tại lời mời kết bạn đang chờ xử lý." });
         return;
       }
-      // Nếu trạng thái là declined, có thể cho phép gửi lại bằng cách xoá record cũ và tạo mới hoặc update.
-      // Ở đây ta update lại trạng thái thành pending và đặt người gửi là userA.
+      // Nếu trạng thái là declined...
       if (existingFriendship.status === "declined") {
         existingFriendship.requester = userA as any;
         existingFriendship.recipient = userB as any;
         existingFriendship.status = "pending";
         await existingFriendship.save();
+
+        // TẠO THÔNG BÁO KHI GỬI LẠI LỜI MỜI
+        const newNotification = new Notification({
+          receiverId: userB,
+          senderId: userA,
+          targetId: existingFriendship._id,
+          targetType: "Friend",
+          type: "friend_request"
+        });
+        await newNotification.save();
+
         res.status(200).json({ 
-        success: true, 
-        message: "Đã gửi lại lời mời kết bạn.",
-        data: existingFriendship 
-    });
+          success: true, 
+          message: "Đã gửi lại lời mời kết bạn.",
+          data: existingFriendship 
+        });
         return;
       }
     }
@@ -68,6 +79,19 @@ export const sendFriendRequest = async (
     });
 
     await newRequest.save();
+
+    // ==========================================
+    // TẠO THÔNG BÁO GỬI LỜI MỜI MỚI
+    // ==========================================
+    const newNotification = new Notification({
+      receiverId: userB,
+      senderId: userA,
+      targetId: newRequest._id,
+      targetType: "Friend",
+      type: "friend_request"
+    });
+    await newNotification.save();
+    // ==========================================
 
     res.status(201).json({
       success: true,
@@ -101,6 +125,19 @@ export const acceptFriendRequest = async (
 
     request.status = "accepted";
     await request.save();
+
+    // ==========================================
+    // TẠO THÔNG BÁO ĐỒNG Ý KẾT BẠN
+    // ==========================================
+    const newNotification = new Notification({
+      receiverId: userA, // Thông báo về cho người đã gửi lời mời
+      senderId: userB,   // Mình là người đồng ý
+      targetId: request._id,
+      targetType: "Friend",
+      type: "friend_accept"
+    });
+    await newNotification.save();
+    // ==========================================
 
     res.status(200).json({
       success: true,
@@ -190,14 +227,13 @@ export const getFriends = async (
       .populate("requester", "_id username avatar")
       .populate("recipient", "_id username avatar");
 
-    const friends = friendships.map((f: any) => {
-      // Lọc ra người kia
-      if (f.requester._id.toString() === userId) {
-        return f.recipient;
-      } else {
-        return f.requester;
-      }
-    });
+    const friends = friendships
+      .map((f: any) => {
+        // Bỏ qua nếu populate trả null (user bị xóa)
+        if (!f.requester || !f.recipient) return null;
+        return f.requester._id.toString() === userId ? f.recipient : f.requester;
+      })
+      .filter(Boolean); // Loại bỏ null
 
     res.status(200).json({
       success: true,
@@ -217,9 +253,11 @@ export const getPendingRequests = async (
     const userId = req.user?.id;
 
     if (!userId) {
-  res.status(401).json({ success: false, message: "Không tìm thấy thông tin xác thực." });
-  return;
-}
+
+      res.status(401).json({ success: false, message: "Không tìm thấy thông tin xác thực." });
+      return;
+    }
+
 
     // 1. Lấy danh sách lời mời
     const requests = await Friend.find({
@@ -232,6 +270,7 @@ export const getPendingRequests = async (
       $or: [{ requester: userId }, { recipient: userId }],
       status: "accepted",
     });
+    
     const myFriendIds = myFriends.map((f) =>
       f.requester.toString() === userId ? f.recipient.toString() : f.requester.toString()
     );
@@ -239,6 +278,11 @@ export const getPendingRequests = async (
     // 3. Đếm bạn chung cho từng lời mời
     const requestsWithMutual = await Promise.all(
       requests.map(async (reqItem: any) => {
+
+        // FIX: Nếu tài khoản người gửi đã bị xóa, reqItem.requester sẽ null -> Bỏ qua
+        if (!reqItem.requester) return null;
+
+
         const otherUserId = reqItem.requester._id.toString();
 
         // Lấy bạn bè của người kia
@@ -246,6 +290,9 @@ export const getPendingRequests = async (
           $or: [{ requester: otherUserId }, { recipient: otherUserId }],
           status: "accepted",
         });
+
+        
+
         const theirFriendIds = theirFriends.map((f) =>
           f.requester.toString() === otherUserId ? f.recipient.toString() : f.requester.toString()
         );
@@ -264,55 +311,17 @@ export const getPendingRequests = async (
       })
     );
 
+
+    // Lọc bỏ các giá trị null (những lời mời từ user đã bị xóa)
+    const validRequests = requestsWithMutual.filter(Boolean);
+
     res.status(200).json({
       success: true,
-      data: requestsWithMutual,
+      data: validRequests,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Lỗi server", error });
-  }
-};
+    console.error("Lỗi getPendingRequests:", error); // Thêm log để dễ debug backend
 
-export const checkFriendStatus = async (
-  req: AuthRequest,
-  res: Response
-): Promise<void> => {
-  try {
-    const me = req.user?.id;
-    const otherUser = req.params.id;
-
-    if (me === otherUser) {
-      res.status(200).json({ success: true, status: "self" });
-      return;
-    }
-
-    const friendship = await Friend.findOne({
-      $or: [
-        { requester: me, recipient: otherUser },
-        { requester: otherUser, recipient: me },
-      ],
-    });
-
-    if (!friendship) {
-      res.status(200).json({ success: true, status: "none" }); // Chưa kết bạn -> Hiện nút "Thêm bạn bè"
-      return;
-    }
-
-    if (friendship.status === "accepted") {
-      res.status(200).json({ success: true, status: "friends" }); // Đã là bạn -> Hiện nút "Bạn bè / Hủy kết bạn"
-      return;
-    }
-
-    if (friendship.status === "pending") {
-      if (friendship.requester.toString() === me) {
-        res.status(200).json({ success: true, status: "request_sent" }); // Mình gửi -> Hiện nút "Đã gửi lời mời / Hủy"
-      } else {
-        res.status(200).json({ success: true, status: "request_received" }); // Họ gửi -> Hiện nút "Chấp nhận / Từ chối"
-      }
-      return;
-    }
-
-  } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server", error });
   }
 };

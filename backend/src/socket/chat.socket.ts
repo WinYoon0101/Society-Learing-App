@@ -62,40 +62,54 @@ async function authenticateSocket(
 
 export function initChatSocket(io: Server) {
   io.on("connection", async (socket: Socket) => {
-    const user = await authenticateSocket(socket);
+    try {
+      const user = await authenticateSocket(socket);
 
-    if (!user) {
-      socket.emit("error", { message: "Xác thực thất bại" });
-      socket.disconnect();
-      return;
-    }
+      if (!user) {
+        socket.emit("error", { message: "Xác thực thất bại" });
+        socket.disconnect();
+        return;
+      }
 
-    const userId = user.id;
-    addOnlineUser(userId, socket.id);
+      const userId = user.id;
+      addOnlineUser(userId, socket.id);
 
-    // Thông báo cho bạn bè biết user online
-    socket.broadcast.emit("user:online", { userId });
+      // Thông báo cho bạn bè biết user online
+      socket.broadcast.emit("user:online", { userId });
 
-    console.log(`✅ User ${user.username} connected [${socket.id}]`);
+      console.log(`✅ User ${user.username} connected [${socket.id}]`);
 
-    // Join vào các room conversation của user
-    const conversations = await Conversation.find({ members: userId });
-    conversations.forEach((conv) => {
-      socket.join(conv._id.toString());
-    });
+      // Join vào các room conversation của user
+      try {
+        const conversations = await Conversation.find({ members: userId });
+        conversations.forEach((conv) => {
+          socket.join(conv._id.toString());
+        });
+      } catch (convErr) {
+        console.error(`⚠️ Lỗi join conversation rooms cho ${user.username}:`, convErr);
+        // Không disconnect - chỉ bỏ qua bước join rooms
+      }
+
+    // Helper: join room cho conversation mới tạo
+    const joinConversationRoom = (conversationId: string) => {
+      socket.join(conversationId);
+    };
 
     // ─── GỬI TIN NHẮN ───────────────────────────────────────────────
     socket.on(
       "message:send",
       async (data: {
         conversationId: string;
-        text: string;
+        text?: string;
         replyTo?: string;
+        mediaUrl?: string;
+        mediaType?: string;
       }) => {
         try {
-          const { conversationId, text, replyTo } = data;
+          const { conversationId, text, replyTo, mediaUrl, mediaType } = data;
 
-          if (!text?.trim()) return;
+          // Phải có text hoặc mediaUrl
+          if (!text?.trim() && !mediaUrl) return;
 
           // Kiểm tra user có trong conversation không
           const conversation = await Conversation.findOne({
@@ -108,31 +122,40 @@ export function initChatSocket(io: Server) {
             return;
           }
 
+          // Đảm bảo socket đã join room (trường hợp conversation mới tạo sau khi connect)
+          joinConversationRoom(conversationId);
+
           // Tạo message
-          const message = await Message.create({
+          const messageData: Record<string, any> = {
             conversationId,
             sender: userId,
-            text: text.trim(),
-            replyTo: replyTo ? new mongoose.Types.ObjectId(replyTo) : undefined,
-          });
+            text: text?.trim() || "",
+          };
+          if (replyTo) messageData.replyTo = new mongoose.Types.ObjectId(replyTo);
+          if (mediaUrl) messageData.mediaUrl = mediaUrl;
+          if (mediaType) messageData.mediaType = mediaType;
+
+          const message = await Message.create(messageData);
 
           // Cập nhật lastMessage của conversation
           await Conversation.findByIdAndUpdate(conversationId, {
             lastMessage: message._id,
+            updatedAt: new Date(),
           });
 
-          // Populate để gửi về client
-          const populated = await Message.findById(message._id).populate([
-            { path: "sender", select: "username avatar" },
-            {
+          // Populate để gửi về client — đảm bảo _id là string
+          const populated = await Message.findById(message._id)
+            .populate("sender", "username avatar _id")
+            .populate({
               path: "replyTo",
-              populate: { path: "sender", select: "username avatar" },
-            },
-          ]);
+              populate: { path: "sender", select: "username avatar _id" },
+            })
+            .lean(); // lean() trả plain object, _id tự convert thành string khi JSON.stringify
 
           // Broadcast tới tất cả members trong room
           io.to(conversationId).emit("message:new", populated);
         } catch (error) {
+          console.error("message:send error:", error);
           socket.emit("error", { message: "Lỗi gửi tin nhắn" });
         }
       }
@@ -198,7 +221,7 @@ export function initChatSocket(io: Server) {
         const message = await Message.findOneAndUpdate(
           { _id: data.messageId, sender: userId },
           { isDeleted: true, text: "Tin nhắn đã bị thu hồi" },
-          { new: true }
+          { returnDocument: 'after' }
         );
 
         if (!message) return;
@@ -239,5 +262,10 @@ export function initChatSocket(io: Server) {
       socket.broadcast.emit("user:offline", { userId });
       console.log(`❌ User ${user.username} disconnected [${socket.id}]`);
     });
+
+    } catch (err) {
+      console.error("❌ Lỗi không bắt được trong socket connection handler:", err);
+      socket.disconnect();
+    }
   });
 }

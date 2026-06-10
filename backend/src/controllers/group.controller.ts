@@ -143,7 +143,7 @@ export const discoverGroups = async (req: AuthRequest, res: Response): Promise<v
         };
 
         if (search && search.trim()) {
-            filter.$text = { $search: search.trim() };
+            filter.groupName = { $regex: search.trim(), $options: "i" };
         }
 
         const [groups, total] = await Promise.all([
@@ -495,19 +495,7 @@ export const getPostsByGroup = async (req: AuthRequest, res: Response): Promise<
 
         res.status(200).json({
             success: true,
-            data: {
-                group: {
-                    _id: group._id,
-                    groupName: group.groupName,
-                    avatarUrl: group.avatarUrl,
-                    coverUrl: group.coverUrl,
-                    description: group.description,
-                    privacy: group.privacy,
-                    memberCount: group.member.length,
-                    isMember,
-                },
-                posts: postsWithDetails,
-            },
+            data: postsWithDetails,
             pagination: {
                 page,
                 limit,
@@ -517,6 +505,204 @@ export const getPostsByGroup = async (req: AuthRequest, res: Response): Promise<
         });
     } catch (error) {
         console.error("getPostsByGroup error:", error);
+        console.log(JSON.stringify({
+            success: true,
+            data: postsWithDetails,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        }, null, 2));
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+// LẤY CHI TIẾT NHÓM
+// GET /api/groups/:groupId
+// =====================================
+export const getGroupDetail = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId)
+            .populate("creatorId", "username avatar")
+            .lean();
+
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        // Nếu nhóm Private, chỉ thành viên mới xem được
+        const isMember = group.member.some((m) => m.userId.toString() === userId);
+        if ((group.privacy as string) === "Private" && !isMember) {
+            res.status(403).json({ success: false, message: "Nhóm riêng tư" });
+            return;
+        }
+
+        const isAdmin = group.member.some(
+            (m) => m.userId.toString() === userId && m.role === "admin"
+        );
+
+        res.status(200).json({
+            success: true,
+            data: {
+                _id: group._id,
+                groupName: group.groupName,
+                description: group.description,
+                avatarUrl: group.avatarUrl,
+                coverUrl: group.coverUrl,
+                privacy: group.privacy,
+                memberCount: group.member.length,
+                isMember,
+                isAdmin,
+                createdAt: group.createdAt,
+            },
+        });
+    } catch (error) {
+        console.error("getGroupDetail error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
+// CẬP NHẬT NHÓM (tên, mô tả, ảnh đại diện) - chỉ admin
+// PATCH /api/groups/:groupId
+// Body: { groupName?, description?, privacy? }  +  file (optional)
+// =====================================
+export const updateGroup = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const member = group.member.find((m) => m.userId.toString() === userId);
+        if (!member || member.role !== "admin") {
+            res.status(403).json({ success: false, message: "Chỉ admin mới được cập nhật nhóm" });
+            return;
+        }
+
+        const { groupName, description, privacy } = req.body;
+
+        if (groupName !== undefined) group.groupName = groupName;
+        if (description !== undefined) group.description = description;
+        if (privacy !== undefined) {
+            if (!["Public", "Private"].includes(privacy)) {
+                res.status(400).json({ success: false, message: "privacy phải là 'Public' hoặc 'Private'" });
+                return;
+            }
+            group.privacy = privacy;
+        }
+
+        // Nếu có upload ảnh mới
+        const file = req.file as (Express.Multer.File & { path?: string }) | undefined;
+        if (file?.path) {
+            group.avatarUrl = file.path;
+        }
+
+        await group.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Cập nhật nhóm thành công",
+            data: {
+                _id: group._id,
+                groupName: group.groupName,
+                description: group.description,
+                avatarUrl: group.avatarUrl,
+                privacy: group.privacy,
+            },
+        });
+    } catch (error) {
+        console.error("updateGroup error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+// =====================================
+// LẤY DANH SÁCH THÀNH VIÊN
+// GET /api/groups/:groupId/members
+// =====================================
+export const getGroupMembers = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId)
+            .populate("member.userId", "username avatar")
+            .lean();
+
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const isMember = group.member.some((m: any) => m.userId._id?.toString() === userId || m.userId.toString() === userId);
+        if ((group.privacy as string) === "Private" && !isMember) {
+            res.status(403).json({ success: false, message: "Không có quyền xem thành viên nhóm riêng tư" });
+            return;
+        }
+
+        const members = group.member.map((m: any) => ({
+            userId: m.userId._id || m.userId,
+            username: m.userId.username,
+            avatar: m.userId.avatar,
+            role: m.role,
+            joinAt: m.joinAt,
+        }));
+
+        res.status(200).json({ success: true, data: members });
+    } catch (error) {
+        console.error("getGroupMembers error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
+// KICK THÀNH VIÊN (chỉ admin)
+// DELETE /api/groups/:groupId/members/:memberId
+// =====================================
+export const kickMember = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const adminId = req.user!.id;
+        const { groupId, memberId } = req.params;
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const requester = group.member.find((m) => m.userId.toString() === adminId);
+        if (!requester || requester.role !== "admin") {
+            res.status(403).json({ success: false, message: "Chỉ admin mới có thể kick thành viên" });
+            return;
+        }
+
+        if (adminId === memberId) {
+            res.status(400).json({ success: false, message: "Không thể tự kick bản thân" });
+            return;
+        }
+
+        const targetMember = group.member.find((m) => m.userId.toString() === memberId);
+        if (!targetMember) {
+            res.status(404).json({ success: false, message: "Thành viên không tồn tại trong nhóm" });
+            return;
+        }
+
+        await Group.findByIdAndUpdate(groupId, {
+            $pull: { member: { userId: new mongoose.Types.ObjectId(memberId) } },
+        });
+
+        res.status(200).json({ success: true, message: "Đã xóa thành viên khỏi nhóm" });
+    } catch (error) {
+        console.error("kickMember error:", error);
         res.status(500).json({ success: false, message: "Lỗi hệ thống" });
     }
 };

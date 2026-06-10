@@ -16,18 +16,30 @@
 
     <item android:title="Tiện ích">
         <menu>
-            <item
-                android:id="@+id/nav_calendar"
-                android:icon="@drawable/ic_calendar"
-                android:title="Lịch" />
+
+<!--            <item-->
+<!--                android:id="@+id/nav_calendar"-->
+<!--                android:icon="@drawable/ic_calendar"-->
+<!--                android:title="Lịch" />-->
+
+
             <item
                 android:id="@+id/nav_group"
                 android:icon="@drawable/ic_group"
                 android:title="Nhóm" />
             <item
-                android:id="@+id/nav_meeting"
+                android:id="@+id/nav_live"
                 android:icon="@drawable/ic_video"
-                android:title="Cuộc họp nhanh" />
+                android:title="Livetream" />
+            <item
+                android:id="@+id/nav_quiz"
+                android:icon="@drawable/ic_quiz"
+                android:title="Tạo quiz" />
+            <item
+                android:id="@+id/nav_pomodoro"
+                android:icon="@drawable/ic_pomodoro"
+                android:title="Pomodoro" />
+
         </menu>
     </item>
 </menu>

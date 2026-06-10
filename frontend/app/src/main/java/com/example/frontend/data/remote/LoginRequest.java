@@ -8,4 +8,12 @@ public class LoginRequest {
         this.email = email;
         this.password = password;
     }
+
+    public static class EmailRequest {
+        private String email;
+
+        public EmailRequest(String email) {
+            this.email = email;
+        }
+    }
 }
