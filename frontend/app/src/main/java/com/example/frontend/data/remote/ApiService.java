@@ -10,6 +10,7 @@ import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.Group;
+import com.example.frontend.data.model.GroupInvitation;
 import com.example.frontend.data.model.LiveModel;
 import com.example.frontend.data.model.LoginResponse;
 import com.example.frontend.data.model.ReactionItem;
@@ -253,6 +254,36 @@ public interface ApiService {
             @Part("privacy") RequestBody privacy,
             @Part MultipartBody.Part avatar
     );
+
+    // Tab 1: Bài viết từ các nhóm đã join
+    @GET("groups/posts")
+    Call<ApiResponse<List<Post>>> getGroupPosts(
+            @Query("page") int page,
+            @Query("limit") int limit
+    );
+
+    // Tab 2: Khám phá nhóm công khai
+    @GET("groups/discover")
+    Call<ApiResponse<List<Group>>> discoverGroups(
+            @Query("search") String search,
+            @Query("page") int page,
+            @Query("limit") int limit
+    );
+
+    // Tab 3: Lời mời
+    @GET("groups/invitations")
+    Call<ApiResponse<List<GroupInvitation>>> getGroupInvitations();
+
+    // Phản hồi lời mời (accept / decline)
+    @PATCH("groups/invitations/{invitationId}")
+    Call<ApiResponse<Void>> respondToInvitation(
+            @Path("invitationId") String invitationId,
+            @Body Map<String, String> body
+    );
+
+    // Tham gia nhóm Public
+    @POST("groups/{groupId}/join")
+    Call<ApiResponse<Void>> joinPublicGroup(@Path("groupId") String groupId);
 
     // Gọi API Lưu / Bỏ lưu bài viết (Toggle)
     @POST("posts/{id}/save")

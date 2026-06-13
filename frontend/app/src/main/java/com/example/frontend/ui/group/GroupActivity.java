@@ -54,7 +54,11 @@ public class GroupActivity extends AppCompatActivity {
     private void showCreateGroupSheet() {
         CreateGroupBottomSheet sheet = CreateGroupBottomSheet.newInstance();
         sheet.setOnGroupCreatedListener(() -> {
-            // TODO: refresh tab "Nhóm của bạn" sau khi tạo thành công
+            Fragment f = getSupportFragmentManager()
+                    .findFragmentByTag("f0"); // ViewPager2 tags fragments as "f{position}"
+            if (f instanceof MyGroupsFragment) {
+                ((MyGroupsFragment) f).refresh();
+            }
         });
         sheet.show(getSupportFragmentManager(), CreateGroupBottomSheet.TAG);
     }
@@ -69,9 +73,9 @@ public class GroupActivity extends AppCompatActivity {
         public Fragment createFragment(int position) {
             switch (position) {
                 case 0: return new MyGroupsFragment();
-                case 1: return PlaceholderFragment.newInstance("Bài viết");
-                case 2: return PlaceholderFragment.newInstance("Khám phá");
-                default: return PlaceholderFragment.newInstance("Lời mời");
+                case 1: return new GroupPostsFragment();
+                case 2: return new DiscoverGroupsFragment();
+                default: return new InvitationsFragment();
             }
         }
     }
