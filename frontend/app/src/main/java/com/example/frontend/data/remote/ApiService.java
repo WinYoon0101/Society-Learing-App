@@ -32,7 +32,6 @@ import com.example.frontend.data.model.Quiz;
 import com.example.frontend.data.model.ReactionRequest;
 import com.example.frontend.data.remote.SubmitQuizRequest;
 import java.util.List;
-import java.util.Map;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -46,9 +45,7 @@ import retrofit2.http.Header;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
-import retrofit2.http.Part;
 import retrofit2.http.Path;
-import retrofit2.http.Query;
 
 public interface ApiService {
     // ====== AUTH ======

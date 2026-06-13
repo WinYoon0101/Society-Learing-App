@@ -20,6 +20,7 @@ import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -28,10 +29,10 @@ import androidx.fragment.app.Fragment;
 
 import com.example.frontend.ui.auth.LoginActivity;
 import com.example.frontend.ui.calendar.CalendarActivity;
+import com.example.frontend.ui.chat.ChatFragment;
 import com.example.frontend.ui.docs.DocsActivity;
 import com.example.frontend.ui.feed.FeedFragment;
 import com.example.frontend.ui.friend.FriendFragment;
-import com.example.frontend.ui.chat.ChatFragment;
 import com.example.frontend.ui.group.GroupActivity;
 import com.example.frontend.ui.library.LibraryFragment;
 import com.example.frontend.ui.live.LiveActivity;
@@ -44,6 +45,13 @@ import com.example.frontend.ui.feed.SavedActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+@SuppressLint("UnsafeOptInUsageError")
 public class HomeActivity extends AppCompatActivity {
 
     private LinearLayout tabHome, tabFriend, tabChat, tabLibrary, tabNotify, tabProfile;
@@ -52,6 +60,7 @@ public class HomeActivity extends AppCompatActivity {
     private ImageView iconSearch, btnOpenMenu;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
+    private BadgeDrawable notifyBadge;
 
 
     private int currentTab = 0; // 0: Home, 1: Friend, 2: Chat, 3: Library, 4: Notify, 5: Profile
@@ -259,6 +268,10 @@ public class HomeActivity extends AppCompatActivity {
         tabNotify.setOnClickListener(v -> selectTab(imgNotify, lineNotify, new NotifyFragment()));
         tabProfile.setOnClickListener(v -> selectTab(imgProfile, lineProfile, new ProfileFragment()));
 
+    private void loadNavHeader() {
+        View headerView = navigationView.getHeaderView(0);
+        ImageView imgNavAvatar = headerView.findViewById(R.id.imgNavAvatar);
+        TextView tvNavName = headerView.findViewById(R.id.tvNavName);
 
         restoreTab(currentTab);
     }
@@ -311,10 +324,14 @@ public class HomeActivity extends AppCompatActivity {
 
         Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
 
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+    private void setupBottomTabs() {
+        tabHome.setOnClickListener(v -> selectTab(imgHome, lineHome, new FeedFragment()));
+        tabFriend.setOnClickListener(v -> selectTab(imgFriend, lineFriend, new FriendFragment()));
+        tabChat.setOnClickListener(v -> selectTab(imgChat, lineChat, new ChatFragment()));
+        tabLibrary.setOnClickListener(v -> selectTab(imgLibrary, lineLibrary, new LibraryFragment()));
+        tabNotify.setOnClickListener(v -> selectTab(imgNotify, lineNotify, new NotifyFragment()));
+        tabProfile.setOnClickListener(v -> selectTab(imgProfile, lineProfile, new ProfileFragment()));
+        selectTab(imgHome, lineHome, new FeedFragment());
     }
 
     private void selectTab(ImageView activeImg, View activeLine, Fragment fragment) {
