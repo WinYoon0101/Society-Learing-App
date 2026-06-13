@@ -16,16 +16,18 @@
         android:paddingVertical="10dp"
         android:gravity="center">
 
-        <ImageView
+        <TextView
             android:id="@+id/btnReactLike"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:src="@drawable/ic_like_color" />
+            android:gravity="center"
+            android:textSize="24sp"
+            android:text="👍" />
 
-        <ImageView
+        <TextView
             android:id="@+id/btnReactLove"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -33,9 +35,11 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:src="@drawable/ic_love" />
+            android:gravity="center"
+            android:textSize="24sp"
+            android:text="❤️" />
 
-        <ImageView
+        <TextView
             android:id="@+id/btnReactHaha"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -43,9 +47,11 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:src="@drawable/ic_haha" />
+            android:gravity="center"
+            android:textSize="24sp"
+            android:text="😆" />
 
-        <ImageView
+        <TextView
             android:id="@+id/btnReactWow"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -53,9 +59,11 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:src="@drawable/ic_wow" />
+            android:gravity="center"
+            android:textSize="24sp"
+            android:text="😮" />
 
-        <ImageView
+        <TextView
             android:id="@+id/btnReactSad"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -63,9 +71,11 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:src="@drawable/ic_sad" />
+            android:gravity="center"
+            android:textSize="24sp"
+            android:text="😢" />
 
-        <ImageView
+        <TextView
             android:id="@+id/btnReactAngry"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -73,7 +83,9 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:src="@drawable/ic_angry" />
+            android:gravity="center"
+            android:textSize="24sp"
+            android:text="😡" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

@@ -41,26 +41,27 @@ public class UserReactionAdapter extends RecyclerView.Adapter<UserReactionAdapte
             holder.tvName.setText(item.getUserId().getUsername());
             Glide.with(context).load(item.getUserId().getAvatar()).placeholder(R.drawable.ic_user).into(holder.imgAvatar);
         }
-        holder.imgIcon.setImageResource(getIcon(item.getType()));
+        holder.imgIcon.setText(getEmoji(item.getType()));
     }
 
     @Override
     public int getItemCount() { return list != null ? list.size() : 0; }
 
-    private int getIcon(String type) {
+    private String getEmoji(String type) {
         switch (type != null ? type : "") {
-            case "Like": return R.drawable.ic_like_color;
-            case "Love": return R.drawable.ic_love;
-            case "Haha": return R.drawable.ic_haha;
-            case "Wow": return R.drawable.ic_wow;
-            case "Sad": return R.drawable.ic_sad;
-            case "Angry": return R.drawable.ic_angry;
-            default: return R.drawable.ic_like_color;
+            case "Like": return "👍";
+            case "Love": return "❤️";
+            case "Haha": return "😆";
+            case "Wow": return "😮";
+            case "Sad": return "😢";
+            case "Angry": return "😡";
+            default: return "👍";
         }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView imgAvatar, imgIcon;
+        ImageView imgAvatar;
+        TextView imgIcon;
         TextView tvName;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);

@@ -1,16 +1,23 @@
 package com.example.frontend.ui.main;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.example.frontend.R;
+import com.example.frontend.data.model.ApiResponse;
+import com.example.frontend.data.model.User;
+import com.example.frontend.data.remote.ApiClient;
+import com.example.frontend.data.remote.ApiService;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -19,13 +26,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
-import com.bumptech.glide.Glide;
-import com.example.frontend.R;
-import com.example.frontend.data.model.ApiResponse;
-import com.example.frontend.data.model.Notification;
-import com.example.frontend.data.model.User;
-import com.example.frontend.data.remote.ApiClient;
-import com.example.frontend.data.remote.ApiService;
+
 import com.example.frontend.ui.auth.LoginActivity;
 import com.example.frontend.ui.calendar.CalendarActivity;
 import com.example.frontend.ui.chat.ChatFragment;
@@ -34,12 +35,13 @@ import com.example.frontend.ui.feed.FeedFragment;
 import com.example.frontend.ui.friend.FriendFragment;
 import com.example.frontend.ui.group.GroupActivity;
 import com.example.frontend.ui.library.LibraryFragment;
-import com.example.frontend.ui.meeting.MeetingActivity;
+import com.example.frontend.ui.live.LiveActivity;
+import com.example.frontend.ui.live.LiveStartActivity;
 import com.example.frontend.ui.notify.NotifyFragment;
+import com.example.frontend.ui.pomodoro.PomodoroActivity;
 import com.example.frontend.ui.profile.ProfileFragment;
-import com.example.frontend.ui.saved.SavedActivity;
-import com.google.android.material.badge.BadgeDrawable;
-import com.google.android.material.badge.BadgeUtils;
+import com.example.frontend.ui.quiz.QuizListActivity;
+import com.example.frontend.ui.feed.SavedActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -60,6 +62,10 @@ public class HomeActivity extends AppCompatActivity {
     private NavigationView navigationView;
     private BadgeDrawable notifyBadge;
 
+
+    private int currentTab = 0; // 0: Home, 1: Friend, 2: Chat, 3: Library, 4: Notify, 5: Profile
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,8 +73,11 @@ public class HomeActivity extends AppCompatActivity {
 
         initViews();
         setupDrawer();
-        setupBottomTabs();
-        setupNotifyBadge();
+
+        setupBottomTabs(savedInstanceState);
+
+
+        iconSearch.setOnClickListener(v -> startActivity(new Intent(this, com.example.frontend.ui.search.SearchActivity.class)));
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -82,12 +91,6 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
         });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        checkUnreadNotifications();
     }
 
     private void initViews() {
@@ -120,9 +123,13 @@ public class HomeActivity extends AppCompatActivity {
 
     private void setupDrawer() {
         btnOpenMenu.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+
+        // Load thông tin user vào nav_header
         loadNavHeader();
 
+
         MaterialButton btnNavLogout = navigationView.findViewById(R.id.btnNavLogout);
+
         if (btnNavLogout != null) {
             btnNavLogout.setOnClickListener(v -> {
                 drawerLayout.closeDrawer(GravityCompat.START);
@@ -132,67 +139,190 @@ public class HomeActivity extends AppCompatActivity {
 
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
-            Intent intent = null;
-            if (id == R.id.nav_saved) intent = new Intent(this, SavedActivity.class);
-            else if (id == R.id.nav_docs) intent = new Intent(this, DocsActivity.class);
-            else if (id == R.id.nav_calendar) intent = new Intent(this, CalendarActivity.class);
-            else if (id == R.id.nav_group) intent = new Intent(this, GroupActivity.class);
-            else if (id == R.id.nav_meeting) intent = new Intent(this, MeetingActivity.class);
-
-            if (intent != null) startActivity(intent);
             drawerLayout.closeDrawer(GravityCompat.START);
+
+            new Handler().postDelayed(() -> {
+                Intent intent = null;
+                if (id == R.id.nav_saved) intent = new Intent(this, SavedActivity.class);
+                else if (id == R.id.nav_docs) intent = new Intent(this, DocsActivity.class);
+
+//                else if (id == R.id.nav_calendar) intent = new Intent(this, CalendarActivity.class);
+
+
+                else if (id == R.id.nav_group) intent = new Intent(this, GroupActivity.class);
+                else if (id == R.id.nav_live) intent = new Intent(this, LiveStartActivity.class);
+                else if (id == R.id.nav_quiz) intent = new Intent(this, QuizListActivity.class);
+                else if (id == R.id.nav_pomodoro) intent = new Intent(this, PomodoroActivity.class);
+
+                if (intent != null) {
+                    startActivity(intent);
+                }
+            }, 150);
+
             return true;
         });
     }
+
+    private void loadNavHeader() {
+        // Lấy header view từ NavigationView
+        View headerView = navigationView.getHeaderView(0);
+        if (headerView == null) return;
+
+        // Ánh xạ thêm TextView cho Email
+        ImageView imgNavAvatar = headerView.findViewById(R.id.imgNavAvatar);
+        TextView tvNavName = headerView.findViewById(R.id.tvNavName);
+        TextView tvNavEmail = headerView.findViewById(R.id.tvNavEmail); // Thêm dòng này
+
+        View.OnClickListener openProfileTab = v -> {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            new Handler().postDelayed(() -> selectTab(imgProfile, lineProfile, new ProfileFragment()), 150);
+        };
+
+        if (imgNavAvatar != null) {
+            imgNavAvatar.setOnClickListener(openProfileTab);
+        }
+        if (tvNavName != null) {
+            tvNavName.setOnClickListener(openProfileTab);
+        }
+        if (tvNavEmail != null) {
+            tvNavEmail.setOnClickListener(openProfileTab);
+        }
+
+        // Gọi API lấy profile người dùng đang đăng nhập
+        ApiService api = ApiClient.getApiService(this);
+        api.getMyProfile().enqueue(new retrofit2.Callback<ApiResponse<User>>() {
+            @Override
+            public void onResponse(retrofit2.Call<ApiResponse<User>> call,
+                                   retrofit2.Response<ApiResponse<User>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    User user = response.body().getData();
+                    if (user == null) return;
+
+                    // 1. Hiển thị Username
+                    if (tvNavName != null && user.getUsername() != null) {
+                        tvNavName.setText(user.getUsername());
+                    }
+
+                    // 2. Hiển thị Email (Mới bổ sung)
+                    if (tvNavEmail != null && user.getEmail() != null) {
+                        tvNavEmail.setText(user.getEmail());
+                    } else if (tvNavEmail != null) {
+                        // Hiển thị MSSV làm fallback nếu không có email
+                        tvNavEmail.setText("MSSV: " + user.getId());
+                    }
+
+                    // 3. Load avatar bằng Glide
+                    if (imgNavAvatar != null && user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+                        Glide.with(HomeActivity.this)
+                                .load(user.getAvatar())
+                                .placeholder(R.drawable.ic_profile)
+                                .error(R.drawable.ic_profile)
+                                .transition(DrawableTransitionOptions.withCrossFade())
+                                .circleCrop() // Dùng circleCrop để bo tròn đẹp hơn centerCrop
+                                .into(imgNavAvatar);
+                    }
+                } else {
+                    Log.w("HomeActivity", "Không lấy được thông tin user cho nav header");
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<ApiResponse<User>> call, Throwable t) {
+                Log.e("HomeActivity", "Lỗi khi load nav header: " + t.getMessage());
+            }
+        });
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("CURRENT_TAB", currentTab);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        int selectTabExtra = intent.getIntExtra("SELECT_TAB", -1);
+        if (selectTabExtra != -1) {
+            restoreTab(selectTabExtra);
+        }
+    }
+
+    private void setupBottomTabs(Bundle savedInstanceState) {
+        int selectTabExtra = getIntent().getIntExtra("SELECT_TAB", -1);
+        if (selectTabExtra != -1) {
+            currentTab = selectTabExtra;
+        } else if (savedInstanceState != null) {
+            currentTab = savedInstanceState.getInt("CURRENT_TAB", 0);
+        } else {
+            currentTab = 0;
+        }
+
+
+        tabHome.setOnClickListener(v -> selectTab(imgHome, lineHome, new FeedFragment()));
+        tabFriend.setOnClickListener(v -> selectTab(imgFriend, lineFriend, new FriendFragment()));
+        tabChat.setOnClickListener(v -> selectTab(imgChat, lineChat, new ChatFragment()));
+        tabLibrary.setOnClickListener(v -> selectTab(imgLibrary, lineLibrary, new LibraryFragment()));
+        tabNotify.setOnClickListener(v -> selectTab(imgNotify, lineNotify, new NotifyFragment()));
+        tabProfile.setOnClickListener(v -> selectTab(imgProfile, lineProfile, new ProfileFragment()));
 
     private void loadNavHeader() {
         View headerView = navigationView.getHeaderView(0);
         ImageView imgNavAvatar = headerView.findViewById(R.id.imgNavAvatar);
         TextView tvNavName = headerView.findViewById(R.id.tvNavName);
 
-        ApiService api = ApiClient.getApiService(this);
-        api.getMyProfile().enqueue(new Callback<ApiResponse<User>>() {
-            @Override
-            public void onResponse(@NonNull Call<ApiResponse<User>> call, @NonNull Response<ApiResponse<User>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    User user = response.body().getData();
-                    tvNavName.setText(user.getUsername());
-                    Glide.with(HomeActivity.this).load(user.getAvatar()).placeholder(R.drawable.ic_profile).into(imgNavAvatar);
-                }
-            }
-            @Override
-            public void onFailure(@NonNull Call<ApiResponse<User>> call, @NonNull Throwable t) { Log.e("HomeActivity", "Lỗi load header"); }
-        });
+        restoreTab(currentTab);
     }
 
-    private void setupNotifyBadge() {
-        imgNotify.post(() -> {
-            notifyBadge = BadgeDrawable.create(this);
-            notifyBadge.setVisible(false);
-            BadgeUtils.attachBadgeDrawable(notifyBadge, imgNotify);
-        });
+    private void restoreTab(int tab) {
+        switch (tab) {
+            case 0:
+                selectTab(imgHome, lineHome, new FeedFragment());
+                break;
+            case 1:
+                selectTab(imgFriend, lineFriend, new FriendFragment());
+                break;
+            case 2:
+                selectTab(imgChat, lineChat, new ChatFragment());
+                break;
+            case 3:
+                selectTab(imgLibrary, lineLibrary, new LibraryFragment());
+                break;
+            case 4:
+                selectTab(imgNotify, lineNotify, new NotifyFragment());
+                break;
+            case 5:
+                selectTab(imgProfile, lineProfile, new ProfileFragment());
+                break;
+            default:
+                selectTab(imgHome, lineHome, new FeedFragment());
+                break;
+        }
+
     }
 
-    private void checkUnreadNotifications() {
-        ApiService api = ApiClient.getApiService(this);
-        api.getNotifications().enqueue(new Callback<ApiResponse<List<Notification>>>() {
-            @Override
-            public void onResponse(@NonNull Call<ApiResponse<List<Notification>>> call, @NonNull Response<ApiResponse<List<Notification>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    int unreadCount = 0;
-                    if (response.body().getData() != null) {
-                        for (Notification n : response.body().getData()) if (!n.isRead()) unreadCount++;
-                    }
-                    if (notifyBadge != null) {
-                        notifyBadge.setVisible(unreadCount > 0);
-                        if (unreadCount > 0) notifyBadge.setNumber(unreadCount);
-                    }
-                }
-            }
-            @Override
-            public void onFailure(@NonNull Call<ApiResponse<List<Notification>>> call, @NonNull Throwable t) { }
-        });
-    }
+    private void performLogout() {
+        // Ngắt kết nối socket
+        try {
+            com.example.frontend.data.socket.ChatSocketManager.INSTANCE.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // SharedPreferences
+        SharedPreferences pref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+
+        // chỉ xóa session
+        editor.remove("JWT_TOKEN");
+        editor.remove("USER_ID");
+        editor.putBoolean("IS_LOGGED_IN", false);
+
+        editor.apply();
+
+        Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
 
     private void setupBottomTabs() {
         tabHome.setOnClickListener(v -> selectTab(imgHome, lineHome, new FeedFragment()));
@@ -208,24 +338,27 @@ public class HomeActivity extends AppCompatActivity {
         resetTabs();
         activeImg.setSelected(true);
         activeLine.setVisibility(View.VISIBLE);
-        if (fragment instanceof NotifyFragment && notifyBadge != null) notifyBadge.setVisible(false);
+        activeImg.animate().scaleX(1.1f).scaleY(1.1f).setDuration(150);
+
+        if (activeImg == imgHome) currentTab = 0;
+        else if (activeImg == imgFriend) currentTab = 1;
+        else if (activeImg == imgChat) currentTab = 2;
+        else if (activeImg == imgLibrary) currentTab = 3;
+        else if (activeImg == imgNotify) currentTab = 4;
+        else if (activeImg == imgProfile) currentTab = 5;
+
+
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
     }
 
     private void resetTabs() {
-        imgHome.setSelected(false); imgFriend.setSelected(false); imgChat.setSelected(false);
-        imgLibrary.setSelected(false); imgNotify.setSelected(false); imgProfile.setSelected(false);
-        lineHome.setVisibility(View.INVISIBLE); lineFriend.setVisibility(View.INVISIBLE);
-        lineChat.setVisibility(View.INVISIBLE); lineLibrary.setVisibility(View.INVISIBLE);
-        lineNotify.setVisibility(View.INVISIBLE); lineProfile.setVisibility(View.INVISIBLE);
-    }
-
-    private void performLogout() {
-        SharedPreferences pref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
-        pref.edit().clear().apply();
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+        ImageView[] imgs = {imgHome, imgFriend, imgChat, imgLibrary, imgNotify, imgProfile};
+        View[] lines = {lineHome, lineFriend, lineChat, lineLibrary, lineNotify, lineProfile};
+        for (int i = 0; i < imgs.length; i++) {
+            imgs[i].setSelected(false);
+            imgs[i].setScaleX(1f);
+            imgs[i].setScaleY(1f);
+            lines[i].setVisibility(View.INVISIBLE);
+        }
     }
 }

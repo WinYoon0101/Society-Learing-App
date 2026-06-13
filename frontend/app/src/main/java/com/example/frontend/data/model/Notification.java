@@ -6,7 +6,6 @@ public class Notification {
     @SerializedName("_id")
     private String id;
 
-    // PHẢI SỬA: Backend trả về 'sender', không phải 'senderId'
     @SerializedName("sender")
     private User sender;
 
@@ -16,7 +15,7 @@ public class Notification {
     @SerializedName("targetId")
     private String targetId;
 
-    // BỔ SUNG: Phải có để lấy nội dung thông báo
+ 
     @SerializedName("content")
     private String content;
 

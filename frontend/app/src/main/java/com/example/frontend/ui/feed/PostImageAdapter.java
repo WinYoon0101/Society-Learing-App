@@ -38,6 +38,16 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Imag
                 .load(url)
                 .placeholder(R.drawable.bg_card) // Màu nền xám chờ load ảnh
                 .into(holder.imgSliderItem);
+        holder.imgSliderItem.setOnClickListener(v -> {
+            ImageView fullImage = new ImageView(context);
+            fullImage.setAdjustViewBounds(true);
+            fullImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            Glide.with(context).load(url).into(fullImage);
+            new androidx.appcompat.app.AlertDialog.Builder(context)
+                    .setView(fullImage)
+                    .setPositiveButton("Đóng", null)
+                    .show();
+        });
     }
 
     @Override

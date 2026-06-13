@@ -41,6 +41,8 @@ const PostSchema: Schema = new Schema<IPost>(
             default: "Public",
             enum: ['Public', 'Private','Friends'],
         },
+        // Tagged users in the post
+        tags: [{ type: Schema.Types.ObjectId, ref: 'User' }],
         countReaction:{
             type: Number,
         },

@@ -10,7 +10,9 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Comment;
 import com.example.frontend.data.model.CommentRequest;
+import com.example.frontend.data.model.User;
 import com.example.frontend.data.repository.CommentRepository;
+import android.content.Context;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,9 +101,36 @@ public class PostDetailViewModel extends AndroidViewModel {
         repository.createComment(token, request).enqueue(new Callback<ApiResponse<Comment>>() {
             @Override
             public void onResponse(Call<ApiResponse<Comment>> call, Response<ApiResponse<Comment>> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     actionSuccessLiveData.setValue(true); // Báo hiệu đăng thành công để View xóa ô nhập
-                    fetchComments(postId); // Lấy lại danh sách mới
+
+                    Comment created = response.body().getData();
+
+                    // Nếu backend trả về comment nhưng không populate user thông tin (avatar/username),
+                    // dùng dữ liệu của user hiện tại từ SharedPreferences để hiển thị ngay.
+                    if (created != null && (created.getUserId() == null || created.getUserId().getAvatar() == null)) {
+                        Context ctx = getApplication().getApplicationContext();
+                        String myId = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("USER_ID", null);
+                        String myName = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("USERNAME", null);
+                        String myAvatar = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("USER_AVATAR", null);
+                        if (created.getUserId() == null) {
+                            created.setUserId(new User(myId, myName, myAvatar));
+                        } else if (created.getUserId().getAvatar() == null) {
+                            // replace avatar/username if missing
+                            User u = created.getUserId();
+                            User replaced = new User(u.getId(), u.getUsername() != null ? u.getUsername() : myName, myAvatar);
+                            created.setUserId(replaced);
+                        }
+                    }
+
+                    // Thêm comment mới vào danh sách hiện tại (optimistic update)
+                    List<Comment> current = commentsLiveData.getValue();
+                    if (current == null) current = new ArrayList<>();
+                    if (created != null) current.add(created);
+                    commentsLiveData.setValue(current);
+                    commentCountLiveData.setValue(current.size());
+
+                    // Không gọi fetchComments ngay để tránh trường hợp backend trả thiếu thông tin
                 } else {
                     try {
                         String errorBody = response.errorBody().string();

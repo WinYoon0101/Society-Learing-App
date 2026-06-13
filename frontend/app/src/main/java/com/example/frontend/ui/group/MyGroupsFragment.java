@@ -1,5 +1,6 @@
 package com.example.frontend.ui.group;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -46,14 +47,17 @@ public class MyGroupsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         swipeRefresh = view.findViewById(R.id.swipeRefresh);
-        rv = view.findViewById(R.id.rvMyGroups);
-        tvEmpty = view.findViewById(R.id.tvEmpty);
-        btnCreate = view.findViewById(R.id.btnCreateGroup);
+        rv           = view.findViewById(R.id.rvMyGroups);
+        tvEmpty      = view.findViewById(R.id.tvEmpty);
+        btnCreate    = view.findViewById(R.id.btnCreateGroup);
 
-        adapter = new GroupAdapter(group ->
-                Toast.makeText(requireContext(),
-                        "Mở nhóm: " + group.getGroupName(),
-                        Toast.LENGTH_SHORT).show());
+        // Click vào nhóm → mở GroupDetailActivity
+        adapter = new GroupAdapter(group -> {
+            Intent i = new Intent(requireContext(), GroupDetailActivity.class);
+            i.putExtra(GroupDetailActivity.EXTRA_GROUP_ID, group.getId());
+            i.putExtra(GroupDetailActivity.EXTRA_GROUP_NAME, group.getGroupName());
+            startActivity(i);
+        });
 
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
         rv.setAdapter(adapter);
@@ -72,13 +76,19 @@ public class MyGroupsFragment extends Fragment {
         loadGroups();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Reload khi quay lại từ GroupDetail (sau khi join / edit)
+        loadGroups();
+    }
+
     private void loadGroups() {
         repository.getMyGroups(liveData);
     }
 
     private void renderState(Result<List<Group>> result) {
         if (result == null) return;
-
         switch (result.status) {
             case LOADING:
                 if (adapter.getItemCount() == 0) swipeRefresh.setRefreshing(true);
@@ -95,9 +105,7 @@ public class MyGroupsFragment extends Fragment {
                 Toast.makeText(requireContext(),
                         result.message != null ? result.message : "Có lỗi xảy ra",
                         Toast.LENGTH_SHORT).show();
-                if (adapter.getItemCount() == 0) {
-                    tvEmpty.setVisibility(View.VISIBLE);
-                }
+                if (adapter.getItemCount() == 0) tvEmpty.setVisibility(View.VISIBLE);
                 break;
         }
     }

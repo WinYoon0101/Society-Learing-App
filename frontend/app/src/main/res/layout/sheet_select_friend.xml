@@ -36,11 +36,13 @@
 
         <ImageButton
             android:id="@+id/btnSelectFriendClose"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+
+            android:layout_width="16dp"
+            android:layout_height="16dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close"
-            android:tint="#3D594B"
+            android:tint="#10B981"
+
             android:contentDescription="Đóng" />
     </LinearLayout>
 

@@ -12,6 +12,19 @@ import commentRoutes from "./comment.routes";
 import reactionRoutes from "./reaction.routes";
 import notificationRoutes from "./notification.routes"; 
 
+import chatRoutes from "./chat.routes";
+
+import quizRoutes from "./quiz.routes";
+
+import liveRoutes from "./live.routes";
+import commentRoutes from "./comment.routes"; 
+import reactionRoutes from "./reaction.routes";
+import groupRoutes from "./group.routes";
+import notificationRoutes from "./notification.routes";
+
+
+import storyRoutes from "./story.routes";
+
 const router = Router();
 
 router.use("/auth", authRoutes);

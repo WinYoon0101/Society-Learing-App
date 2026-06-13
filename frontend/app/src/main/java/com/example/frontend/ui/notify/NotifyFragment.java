@@ -1,11 +1,10 @@
 package com.example.frontend.ui.notify;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -13,99 +12,183 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.bumptech.glide.Glide;
 import com.example.frontend.R;
-import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Notification;
+import com.example.frontend.data.model.NotificationListResponse;
 import com.example.frontend.data.remote.ApiClient;
-import com.example.frontend.ui.feed.PostDetailActivity;
+import com.example.frontend.data.remote.ApiService;
+import com.google.android.material.button.MaterialButton;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
+import de.hdodenhof.circleimageview.CircleImageView;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class NotifyFragment extends Fragment {
 
+    private SwipeRefreshLayout swipeRefresh;
     private RecyclerView rvNotifications;
+    private TextView tvEmpty;
+    private MaterialButton btnMarkAllRead;
+
     private NotificationAdapter adapter;
+    private ApiService apiService;
 
-    @Nullable
+    @Nullable @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_notify, container, false);
+    }
+
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // 1. Ánh xạ layout
-        View view = inflater.inflate(R.layout.fragment_notify, container, false);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        rvNotifications = view.findViewById(R.id.rvNotifications);
-        rvNotifications.setLayoutManager(new LinearLayoutManager(getContext()));
+        swipeRefresh     = view.findViewById(R.id.swipeRefresh);
+        rvNotifications  = view.findViewById(R.id.rvNotifications);
+        tvEmpty          = view.findViewById(R.id.tvEmpty);
+        btnMarkAllRead   = view.findViewById(R.id.btnMarkAllRead);
 
-        // 2. Khởi tạo Adapter và gắn sự kiện khi Click vào 1 thông báo
-        adapter = new NotificationAdapter(getContext(), notification -> {
-
-            // Gọi API báo cho Backend là "Tui đã đọc cái này rồi!"
-            markAsRead(notification.getId());
-
-            // Chuyển sang màn hình xem bài viết
-            // Kiểm tra xem đích đến là Bài viết hay Comment để gắn ID cho chuẩn
-            if (notification.getTargetId() != null) {
-                Intent intent = new Intent(getContext(), PostDetailActivity.class);
-                intent.putExtra("POST_ID", notification.getTargetId());
-                startActivity(intent);
-            }
-        });
-
+        apiService = ApiClient.getApiService(requireContext());
+        adapter    = new NotificationAdapter();
+        rvNotifications.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvNotifications.setAdapter(adapter);
 
-        // 3. Tải dữ liệu lần đầu tiên
-        loadNotifications();
+        swipeRefresh.setOnRefreshListener(this::loadNotifications);
+        btnMarkAllRead.setOnClickListener(v -> markAllRead());
 
-        return view;
-    }
-
-    // Mỗi khi vuốt qua vuốt lại tab Thông Báo, tự động làm mới danh sách
-    @Override
-    public void onResume() {
-        super.onResume();
         loadNotifications();
     }
 
-    // Hàm gọi API lấy danh sách thông báo về
     private void loadNotifications() {
-        // ĐÃ SỬA: Truyền getContext() vào getApiService()
-        ApiClient.getApiService(getContext()).getNotifications().enqueue(new Callback<ApiResponse<List<Notification>>>() {
+        swipeRefresh.setRefreshing(true);
+        apiService.getNotifications(1, 50).enqueue(new Callback<NotificationListResponse>() {
             @Override
-            public void onResponse(Call<ApiResponse<List<Notification>>> call, Response<ApiResponse<List<Notification>>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<Notification> notiList = response.body().getData();
-                    if (notiList != null) {
-                        adapter.updateData(notiList); // Đổ dữ liệu vào giao diện
-                    }
+            public void onResponse(Call<NotificationListResponse> call,
+                                   Response<NotificationListResponse> response) {
+                swipeRefresh.setRefreshing(false);
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    List<Notification> list = response.body().getData();
+                    adapter.submit(list);
+                    boolean empty = list == null || list.isEmpty();
+                    tvEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
+                    rvNotifications.setVisibility(empty ? View.GONE : View.VISIBLE);
                 } else {
-                    Toast.makeText(getContext(), "Lỗi tải thông báo!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Không tải được thông báo", Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
-            public void onFailure(Call<ApiResponse<List<Notification>>> call, Throwable t) {
-                Log.e("NotifyFragment", "Lỗi mạng: " + t.getMessage());
+            public void onFailure(Call<NotificationListResponse> call, Throwable t) {
+                swipeRefresh.setRefreshing(false);
+                Toast.makeText(requireContext(), "Lỗi kết nối", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // Hàm gọi API đánh dấu đã đọc
-    private void markAsRead(String notiId) {
-        // ĐÃ SỬA: Truyền getContext() vào getApiService()
-        ApiClient.getApiService(getContext()).markNotificationAsRead(notiId).enqueue(new Callback<ApiResponse<Notification>>() {
+    private void markAllRead() {
+        apiService.markAllNotificationsRead().enqueue(new Callback<com.example.frontend.data.model.ApiResponse<Object>>() {
             @Override
-            public void onResponse(Call<ApiResponse<Notification>> call, Response<ApiResponse<Notification>> response) {
-                // Thành công: không cần làm gì vì bên Adapter lúc click nó đã đổi màu chữ/mất chấm đỏ rồi
+            public void onResponse(Call<com.example.frontend.data.model.ApiResponse<Object>> call,
+                                   Response<com.example.frontend.data.model.ApiResponse<Object>> response) {
+                if (response.isSuccessful()) {
+                    adapter.markAllRead();
+                    Toast.makeText(requireContext(), "Đã đánh dấu đọc tất cả", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<com.example.frontend.data.model.ApiResponse<Object>> call, Throwable t) {}
+        });
+    }
+
+    // ─── Adapter ──────────────────────────────────────────────────────────────
+    class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.VH> {
+        private final List<Notification> items = new ArrayList<>();
+
+        void submit(List<Notification> data) {
+            items.clear();
+            if (data != null) items.addAll(data);
+            notifyDataSetChanged();
+        }
+
+        void markAllRead() {
+            for (int i = 0; i < items.size(); i++) notifyItemChanged(i);
+        }
+
+        @NonNull @Override
+        public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_notification, parent, false);
+            return new VH(v);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull VH h, int pos) {
+            Notification n = items.get(pos);
+            h.tvMessage.setText(n.getMessage());
+            h.tvTime.setText(formatTime(n.getCreatedAt()));
+            h.dotUnread.setVisibility(n.isRead() ? View.GONE : View.VISIBLE);
+            h.itemView.setBackgroundColor(n.isRead() ? 0xFFFFFFFF : 0xFFECFDF5);
+
+            if (n.getSender() != null && n.getSender().getAvatar() != null
+                    && !n.getSender().getAvatar().isEmpty()) {
+                Glide.with(h.imgAvatar).load(n.getSender().getAvatar())
+                        .placeholder(R.drawable.ic_user).into(h.imgAvatar);
+            } else {
+                h.imgAvatar.setImageResource(R.drawable.ic_user);
             }
 
-            @Override
-            public void onFailure(Call<ApiResponse<Notification>> call, Throwable t) {
-                Log.e("NotifyFragment", "Lỗi đánh dấu đã đọc: " + t.getMessage());
+            h.itemView.setOnClickListener(v -> {
+                if (!n.isRead()) {
+                    apiService.markNotificationRead(n.getId()).enqueue(new Callback<com.example.frontend.data.model.ApiResponse<Object>>() {
+                        @Override public void onResponse(Call<com.example.frontend.data.model.ApiResponse<Object>> call, Response<com.example.frontend.data.model.ApiResponse<Object>> r) {}
+                        @Override public void onFailure(Call<com.example.frontend.data.model.ApiResponse<Object>> call, Throwable t) {}
+                    });
+                    h.dotUnread.setVisibility(View.GONE);
+                    h.itemView.setBackgroundColor(0xFFFFFFFF);
+                }
+            });
+        }
+
+        @Override public int getItemCount() { return items.size(); }
+
+        class VH extends RecyclerView.ViewHolder {
+            CircleImageView imgAvatar;
+            TextView tvMessage, tvTime;
+            View dotUnread;
+            VH(@NonNull View v) {
+                super(v);
+                imgAvatar  = v.findViewById(R.id.imgSenderAvatar);
+                tvMessage  = v.findViewById(R.id.tvMessage);
+                tvTime     = v.findViewById(R.id.tvTime);
+                dotUnread  = v.findViewById(R.id.dotUnread);
             }
-        });
+        }
+    }
+
+    private String formatTime(String iso) {
+        if (iso == null) return "";
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date date = sdf.parse(iso);
+            long diff = (System.currentTimeMillis() - date.getTime()) / 1000;
+            if (diff < 60)   return diff + "s trước";
+            if (diff < 3600) return (diff / 60) + " phút trước";
+            if (diff < 86400)return (diff / 3600) + " giờ trước";
+            return (diff / 86400) + " ngày trước";
+        } catch (ParseException e) {
+            return "";
+        }
     }
 }

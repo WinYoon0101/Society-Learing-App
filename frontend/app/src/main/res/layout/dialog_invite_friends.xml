@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Chọn bạn bè để mời (chạm để chọn)"
+        android:textSize="13sp"
+        android:textColor="#6B7280"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFriendPick"
+        android:layout_width="match_parent"
+        android:layout_height="320dp"
+        android:clipToPadding="false"/>
+
+</LinearLayout>
