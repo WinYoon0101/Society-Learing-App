@@ -27,7 +27,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_user" /> </androidx.cardview.widget.CardView>
+                android:src="@drawable/ic_user" />
+        </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
             android:layout_width="18dp"
@@ -38,12 +39,14 @@
             app:cardElevation="0dp"
             app:cardBackgroundColor="#FFFFFF">
 
-            <ImageView
+            <TextView
                 android:id="@+id/imgReactionBadge"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="2dp"
-                android:src="@drawable/ic_like_color" /> </androidx.cardview.widget.CardView>
+                android:gravity="center"
+                android:textSize="10sp"
+                android:text="👍" />
+        </androidx.cardview.widget.CardView>
 
     </RelativeLayout>
 
