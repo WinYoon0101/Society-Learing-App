@@ -17,11 +17,8 @@ public class Post {
     
     @SerializedName("groupId")
     private String groupId;  // null nếu bài home/profile, có giá trị nếu bài trong nhóm
-    
-    private String createdAt;
 
-    @SerializedName("groupId")
-    private PostGroup groupId;
+    private String createdAt;
 
     private int countComment;
     private int countReaction;
@@ -50,9 +47,6 @@ public class Post {
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
-
-    public PostGroup getGroupId() { return groupId; }
-    public void setGroupId(PostGroup groupId) { this.groupId = groupId; }
 
     public int getcountComment() { return countComment; }
     public void setcountComment(int countComment) { this.countComment = countComment; }
