@@ -6,15 +6,13 @@ import documentRoutes from "./document.routes";
 import mediaRoutes from "./media.routes";
 import userRoutes from "./user.routes";
 import postRoutes from "./post.routes";
-
 import chatRoutes from "./chat.routes";
-
 import quizRoutes from "./quiz.routes";
-
-// 1. THÊM DÒNG IMPORT NÀY
-import commentRoutes from "./comment.routes"; // (Tên file bên trong ./ có thể khác tùy bạn đặt nhé, vd: comment.routes)
+import commentRoutes from "./comment.routes"; 
 import reactionRoutes from "./reaction.routes";
 
+// 1. ĐÃ THÊM: Import file route của Notification
+import notificationRoutes from "./notification.routes"; 
 
 const router = Router();
 
@@ -39,10 +37,16 @@ router.use('/posts', postRoutes);
 // Chat routes
 router.use('/chat', chatRoutes);
 
+// Comment routes
 router.use("/comments", commentRoutes); 
+
+// Quiz routes
 router.use('/quiz', quizRoutes);
 
+// Reaction routes
 router.use("/reactions", reactionRoutes);
 
+// 2. ĐÃ THÊM: Khai báo đường dẫn cho Notification
+router.use("/notifications", notificationRoutes);
 
 export default router;

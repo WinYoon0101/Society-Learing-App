@@ -1,48 +1,25 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Schema, Document } from 'mongoose';
 
 export interface INotification extends Document {
-    receiverId: mongoose.Types.ObjectId;
-    senderId: mongoose.Types.ObjectId;
-    targetId: mongoose.Types.ObjectId;
-    targetType: string;
-    type: string;
-    isRead: boolean;
+    recipient: mongoose.Types.ObjectId;  // ID người nhận thông báo
+    sender: mongoose.Types.ObjectId;     // ID người gửi (người thả tim/comment)
+    type: string;                        // Loại: 'post_reaction', 'post_comment', 'comment_reply'
+    targetId: mongoose.Types.ObjectId;   // ID của Bài viết (Để ấn vào thông báo là nhảy vào xem bài đó)
+    content: string;                     // Nội dung: "đã bình luận về bài viết của bạn"
+    isRead: boolean;                     // Đã đọc chưa?
+    createdAt: Date;
 }
 
-const NotificationSchema: Schema = new Schema<INotification>(
+const NotificationSchema: Schema = new Schema(
     {
-        receiverId: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-        },
-        senderId: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-        },
-        targetId: {
-            type: Schema.Types.ObjectId,
-            required: true, 
-        },
-        targetType: {
-            type: String,
-            required: true,
-        },
-        type: {
-            type: String,
-            required: true,
-        },
-        isRead: {
-            type: Boolean,
-            default: false,
-        },
+        recipient: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        sender: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        type: { type: String, required: true },
+        targetId: { type: Schema.Types.ObjectId, required: true },
+        content: { type: String, required: true },
+        isRead: { type: Boolean, default: false }
     },
-    {
-        timestamps: true, 
-    }
+    { timestamps: true }
 );
 
-NotificationSchema.index({ receiverId: 1, createdAt: -1 });
-
-export default mongoose.model<INotification>("Notification", NotificationSchema);
+export default mongoose.model<INotification>('Notification', NotificationSchema);
