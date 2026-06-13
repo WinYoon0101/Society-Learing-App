@@ -43,9 +43,11 @@ public class GroupMembersActivity extends AppCompatActivity {
 
     public static final String EXTRA_GROUP_ID = "groupId";
     public static final String EXTRA_IS_ADMIN = "isAdmin";
+    public static final String EXTRA_OPEN_INVITE = "openInvite";
 
     private String groupId;
     private boolean isAdmin;
+    private boolean pendingOpenInvite;
     private String myUserId;
 
     private RecyclerView rv;
@@ -66,6 +68,7 @@ public class GroupMembersActivity extends AppCompatActivity {
 
         groupId = getIntent().getStringExtra(EXTRA_GROUP_ID);
         isAdmin = getIntent().getBooleanExtra(EXTRA_IS_ADMIN, false);
+        pendingOpenInvite = getIntent().getBooleanExtra(EXTRA_OPEN_INVITE, false);
         if (groupId == null) { finish(); return; }
 
         SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
@@ -95,6 +98,10 @@ public class GroupMembersActivity extends AppCompatActivity {
             if (r.status == Result.Status.SUCCESS && r.data != null) {
                 currentMembers = r.data;
                 adapter.submit(r.data);
+                if (pendingOpenInvite) {
+                    pendingOpenInvite = false;
+                    openInviteDialog();
+                }
             } else if (r.status == Result.Status.ERROR) {
                 Toast.makeText(this, r.message, Toast.LENGTH_SHORT).show();
             }

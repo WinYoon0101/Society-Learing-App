@@ -45,10 +45,12 @@ public class GroupDetailActivity extends AppCompatActivity {
 
     private String groupId;
 
-    private CircleImageView imgAvatar;
-    private TextView tvName, tvMeta, tvDescription, tvMemberCount;
-    private Button btnJoin, btnPost, btnMembers;
-    private ImageButton btnEdit, btnBack;
+    private ImageView imgCover;
+    private CircleImageView imgAvatar, imgMyAvatar;
+    private TextView tvToolbarName, tvName, tvSubtitle, tvDescription, tvComposerHint;
+    private Button btnJoin, btnInvite;
+    private ImageButton btnBack, btnMore, btnSearch;
+    private View layoutComposer, composerRow, chipFile, chipPhoto, chipFeeling;
     private SwipeRefreshLayout swipeRefresh;
     private RecyclerView rv;
 
@@ -79,31 +81,27 @@ public class GroupDetailActivity extends AppCompatActivity {
 
         btnBack.setOnClickListener(v -> finish());
 
-        btnEdit.setOnClickListener(v -> {
-            if (currentDetail == null) return;
-            Intent i = new Intent(this, EditGroupActivity.class);
-            i.putExtra(EditGroupActivity.EXTRA_GROUP_ID, groupId);
-            i.putExtra(EditGroupActivity.EXTRA_GROUP_NAME, currentDetail.getGroupName());
-            i.putExtra(EditGroupActivity.EXTRA_DESCRIPTION, currentDetail.getDescription());
-            i.putExtra(EditGroupActivity.EXTRA_PRIVACY, currentDetail.getPrivacy());
-            i.putExtra(EditGroupActivity.EXTRA_AVATAR_URL, currentDetail.getAvatarUrl());
-            startActivityForResult(i, 100);
-        });
+        btnMore.setOnClickListener(v -> showOptionsSheet());
+
+        btnSearch.setOnClickListener(v ->
+                Toast.makeText(this, "Tìm kiếm trong nhóm sắp ra mắt", Toast.LENGTH_SHORT).show());
 
         btnJoin.setOnClickListener(v -> repository.joinGroup(groupId, joinLive));
 
-        btnPost.setOnClickListener(v -> {
+        // "Mời" → mở màn hình thành viên và bật hộp thoại mời luôn
+        btnInvite.setOnClickListener(v -> openMembers(true));
+
+        // Composer → tạo bài viết trong nhóm
+        View.OnClickListener openComposer = v -> {
             Intent i = new Intent(this, com.example.frontend.ui.feed.CreatePostActivity.class);
             i.putExtra("groupId", groupId);
             startActivityForResult(i, 200);
-        });
-
-        btnMembers.setOnClickListener(v -> {
-            Intent i = new Intent(this, GroupMembersActivity.class);
-            i.putExtra(GroupMembersActivity.EXTRA_GROUP_ID, groupId);
-            i.putExtra(GroupMembersActivity.EXTRA_IS_ADMIN, currentDetail != null && currentDetail.isAdmin());
-            startActivity(i);
-        });
+        };
+        composerRow.setOnClickListener(openComposer);
+        tvComposerHint.setOnClickListener(openComposer);
+        chipFile.setOnClickListener(openComposer);
+        chipPhoto.setOnClickListener(openComposer);
+        chipFeeling.setOnClickListener(openComposer);
 
         // Reaction listener — gọi API thực sự
         ApiService apiService = ApiClient.getApiService(this);
@@ -150,29 +148,108 @@ public class GroupDetailActivity extends AppCompatActivity {
     }
 
     private void bindViews() {
-        btnBack       = findViewById(R.id.btnBack);
-        btnEdit       = findViewById(R.id.btnEdit);
-        imgAvatar     = findViewById(R.id.imgGroupAvatar);
+        btnBack        = findViewById(R.id.btnBack);
+        btnMore        = findViewById(R.id.btnMore);
+        btnSearch      = findViewById(R.id.btnSearch);
+        imgCover       = findViewById(R.id.imgCover);
+        imgAvatar      = findViewById(R.id.imgGroupAvatar);
+        imgMyAvatar    = findViewById(R.id.imgMyAvatar);
 
-        tvName        = findViewById(R.id.tvGroupName);
-        tvMeta        = findViewById(R.id.tvMeta);
-        tvDescription = findViewById(R.id.tvGroupDescription);
-        tvMemberCount = findViewById(R.id.tvMemberCount);
+        tvToolbarName  = findViewById(R.id.tvToolbarName);
+        tvName         = findViewById(R.id.tvGroupName);
+        tvSubtitle     = findViewById(R.id.tvSubtitle);
+        tvDescription  = findViewById(R.id.tvGroupDescription);
+        tvComposerHint = findViewById(R.id.tvComposerHint);
 
-        btnJoin       = findViewById(R.id.btnJoin);
-        btnPost       = findViewById(R.id.btnPost);
-        btnMembers    = findViewById(R.id.btnMembers);
-        swipeRefresh  = findViewById(R.id.swipeRefresh);
-        rv            = findViewById(R.id.rvGroupPosts);
+        btnJoin        = findViewById(R.id.btnJoin);
+        btnInvite      = findViewById(R.id.btnInvite);
+        layoutComposer = findViewById(R.id.layoutComposer);
+        composerRow    = findViewById(R.id.composerRow);
+        chipFile       = findViewById(R.id.chipFile);
+        chipPhoto      = findViewById(R.id.chipPhoto);
+        chipFeeling    = findViewById(R.id.chipFeeling);
+
+        swipeRefresh   = findViewById(R.id.swipeRefresh);
+        rv             = findViewById(R.id.rvGroupPosts);
 
         postAdapter = new GroupPostAdapter();
         rv.setLayoutManager(new LinearLayoutManager(this));
         rv.setAdapter(postAdapter);
 
+        // Avatar của user hiện tại cho composer
+        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        String myAvatar = prefs.getString("USER_AVATAR", "");
+        if (myAvatar != null && !myAvatar.isEmpty()) {
+            Glide.with(this).load(myAvatar).placeholder(R.drawable.ic_user).into(imgMyAvatar);
+        }
+
         btnJoin.setVisibility(View.GONE);
-        btnPost.setVisibility(View.GONE);
-        btnEdit.setVisibility(View.GONE);
-        btnMembers.setVisibility(View.GONE);
+        btnInvite.setVisibility(View.GONE);
+        btnMore.setVisibility(View.GONE);
+        layoutComposer.setVisibility(View.GONE);
+    }
+
+    private void showOptionsSheet() {
+        boolean admin = currentDetail != null && currentDetail.isAdmin();
+        GroupOptionsBottomSheet sheet = GroupOptionsBottomSheet.newInstance(admin);
+        sheet.setOnOptionSelectedListener(this::handleOption);
+        sheet.show(getSupportFragmentManager(), "groupOptions");
+    }
+
+    private void handleOption(int optionId) {
+        switch (optionId) {
+            case GroupOptionsBottomSheet.OPT_MEMBERS:
+                openMembers(false);
+                break;
+            case GroupOptionsBottomSheet.OPT_SETTINGS:
+                openSettings();
+                break;
+            case GroupOptionsBottomSheet.OPT_LEAVE:
+                confirmAction("Rời nhóm", "Bạn có chắc muốn rời khỏi nhóm này?",
+                        "Tính năng rời nhóm đang được phát triển");
+                break;
+            case GroupOptionsBottomSheet.OPT_DELETE:
+                confirmAction("Xóa nhóm", "Bạn có chắc muốn xóa nhóm này? Hành động không thể hoàn tác.",
+                        "Tính năng xóa nhóm đang được phát triển");
+                break;
+            case GroupOptionsBottomSheet.OPT_MANAGE_CONTENT:
+            case GroupOptionsBottomSheet.OPT_MANAGE_NOTIF:
+            case GroupOptionsBottomSheet.OPT_APPROVE_POSTS:
+            case GroupOptionsBottomSheet.OPT_APPROVE_MEMBERS:
+            default:
+                Toast.makeText(this, "Tính năng đang được phát triển", Toast.LENGTH_SHORT).show();
+                break;
+        }
+    }
+
+    private void openMembers(boolean openInvite) {
+        Intent i = new Intent(this, GroupMembersActivity.class);
+        i.putExtra(GroupMembersActivity.EXTRA_GROUP_ID, groupId);
+        i.putExtra(GroupMembersActivity.EXTRA_IS_ADMIN,
+                currentDetail != null && currentDetail.isAdmin());
+        if (openInvite) i.putExtra(GroupMembersActivity.EXTRA_OPEN_INVITE, true);
+        startActivity(i);
+    }
+
+    private void openSettings() {
+        if (currentDetail == null) return;
+        Intent i = new Intent(this, EditGroupActivity.class);
+        i.putExtra(EditGroupActivity.EXTRA_GROUP_ID, groupId);
+        i.putExtra(EditGroupActivity.EXTRA_GROUP_NAME, currentDetail.getGroupName());
+        i.putExtra(EditGroupActivity.EXTRA_DESCRIPTION, currentDetail.getDescription());
+        i.putExtra(EditGroupActivity.EXTRA_PRIVACY, currentDetail.getPrivacy());
+        i.putExtra(EditGroupActivity.EXTRA_AVATAR_URL, currentDetail.getAvatarUrl());
+        startActivityForResult(i, 100);
+    }
+
+    private void confirmAction(String title, String message, String pendingMessage) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("Đồng ý", (d, w) ->
+                        Toast.makeText(this, pendingMessage, Toast.LENGTH_SHORT).show())
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
     private void loadAll() {
@@ -221,11 +298,27 @@ public class GroupDetailActivity extends AppCompatActivity {
         currentDetail = d;
 
         tvName.setText(d.getGroupName());
-        tvDescription.setText(d.getDescription() != null && !d.getDescription().isEmpty()
-                ? d.getDescription() : "Không có mô tả");
-        tvMeta.setText("Public".equals(d.getPrivacy()) ? "🔓 Công khai" : "🔒 Riêng tư");
-        tvMemberCount.setText(d.getMemberCount() + " thành viên");
+        tvToolbarName.setText(d.getGroupName());
 
+        String privacyLabel = "Public".equals(d.getPrivacy()) ? "🌐 Công khai" : "🔒 Riêng tư";
+        tvSubtitle.setText(privacyLabel + " · " + d.getMemberCount() + " thành viên");
+
+        if (d.getDescription() != null && !d.getDescription().isEmpty()) {
+            tvDescription.setVisibility(View.VISIBLE);
+            tvDescription.setText(d.getDescription());
+        } else {
+            tvDescription.setVisibility(View.GONE);
+        }
+
+        // Ảnh bìa
+        if (d.getCoverUrl() != null && !d.getCoverUrl().isEmpty()) {
+            Glide.with(this).load(d.getCoverUrl())
+                    .placeholder(R.drawable.bg_group_cover_default).into(imgCover);
+        } else {
+            imgCover.setImageResource(R.drawable.bg_group_cover_default);
+        }
+
+        // Avatar nhóm
         if (d.getAvatarUrl() != null && !d.getAvatarUrl().isEmpty()) {
             Glide.with(this).load(d.getAvatarUrl())
                     .placeholder(R.drawable.ic_group).into(imgAvatar);
@@ -235,14 +328,14 @@ public class GroupDetailActivity extends AppCompatActivity {
 
         if (d.isMember()) {
             btnJoin.setVisibility(View.GONE);
-            btnPost.setVisibility(View.VISIBLE);
-            btnMembers.setVisibility(View.VISIBLE);
+            btnInvite.setVisibility(View.VISIBLE);
+            layoutComposer.setVisibility(View.VISIBLE);
+            btnMore.setVisibility(View.VISIBLE);
         } else {
             btnJoin.setVisibility("Public".equals(d.getPrivacy()) ? View.VISIBLE : View.GONE);
-            btnPost.setVisibility(View.GONE);
-            btnMembers.setVisibility(View.GONE);
+            btnInvite.setVisibility(View.GONE);
+            layoutComposer.setVisibility(View.GONE);
+            btnMore.setVisibility(View.GONE);
         }
-
-        btnEdit.setVisibility(d.isAdmin() ? View.VISIBLE : View.GONE);
     }
 }

@@ -60,7 +60,7 @@ public class DiscoverGroupAdapter extends RecyclerView.Adapter<DiscoverGroupAdap
                 g.getDescription() != null && !g.getDescription().isEmpty()
                         ? g.getDescription() : "Không có mô tả");
         h.tvMeta.setText(
-                ("Public".equals(g.getPrivacy()) ? "🔓 Công khai" : "🔒 Riêng tư")
+                ("Public".equals(g.getPrivacy()) ? "🌐 Công khai" : "🔒 Riêng tư")
                         + "  •  " + g.getMemberCount() + " thành viên");
 
         if (g.getAvatarUrl() != null && !g.getAvatarUrl().isEmpty()) {
