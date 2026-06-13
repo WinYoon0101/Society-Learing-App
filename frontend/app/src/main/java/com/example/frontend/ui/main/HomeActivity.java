@@ -1,5 +1,6 @@
 package com.example.frontend.ui.main;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -11,27 +12,28 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
-import com.example.frontend.R;
-import com.example.frontend.data.model.ApiResponse;
-import com.example.frontend.data.model.User;
-import com.example.frontend.data.remote.ApiClient;
-import com.example.frontend.data.remote.ApiService;
-
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
-
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.example.frontend.R;
+import com.example.frontend.data.model.ApiResponse;
+import com.example.frontend.data.model.Notification;
+import com.example.frontend.data.model.User;
+import com.example.frontend.data.remote.ApiClient;
+import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.ui.auth.LoginActivity;
 import com.example.frontend.ui.calendar.CalendarActivity;
+import com.example.frontend.ui.chat.ChatFragment;
 import com.example.frontend.ui.docs.DocsActivity;
 import com.example.frontend.ui.feed.FeedFragment;
+import com.example.frontend.ui.feed.SavedActivity;
 import com.example.frontend.ui.friend.FriendFragment;
-import com.example.frontend.ui.chat.ChatFragment;
 import com.example.frontend.ui.group.GroupActivity;
 import com.example.frontend.ui.library.LibraryFragment;
 import com.example.frontend.ui.meeting.MeetingActivity;
@@ -39,10 +41,18 @@ import com.example.frontend.ui.notify.NotifyFragment;
 import com.example.frontend.ui.pomodoro.PomodoroActivity;
 import com.example.frontend.ui.profile.ProfileFragment;
 import com.example.frontend.ui.quiz.QuizListActivity;
-import com.example.frontend.ui.feed.SavedActivity;
+import com.google.android.material.badge.BadgeDrawable;
+import com.google.android.material.badge.BadgeUtils;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+@SuppressLint("UnsafeOptInUsageError")
 public class HomeActivity extends AppCompatActivity {
 
     private LinearLayout tabHome, tabFriend, tabChat, tabLibrary, tabNotify, tabProfile;
@@ -52,6 +62,9 @@ public class HomeActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
 
+    // Biến quản lý chấm đỏ thông báo
+    private BadgeDrawable notifyBadge;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +73,9 @@ public class HomeActivity extends AppCompatActivity {
         initViews();
         setupDrawer();
         setupBottomTabs();
+
+        // Khởi tạo hình ảnh chấm đỏ cho tab thông báo
+        setupNotifyBadge();
 
         iconSearch.setOnClickListener(v -> Toast.makeText(this, "Mở tìm kiếm...", Toast.LENGTH_SHORT).show());
 
@@ -73,6 +89,56 @@ public class HomeActivity extends AppCompatActivity {
                     getOnBackPressedDispatcher().onBackPressed();
                     setEnabled(true);
                 }
+            }
+        });
+    }
+
+    // Tự động kiểm tra thông báo mỗi khi người dùng mở lại màn hình Home
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkUnreadNotifications();
+    }
+
+    private void setupNotifyBadge() {
+        imgNotify.post(() -> {
+            notifyBadge = BadgeDrawable.create(this);
+            notifyBadge.setVisible(false); // Ban đầu ẩn đi
+            BadgeUtils.attachBadgeDrawable(notifyBadge, imgNotify);
+        });
+    }
+
+    // ĐÃ FIX: Đồng bộ chuẩn class ApiResponse<List<Notification>>
+    private void checkUnreadNotifications() {
+        ApiService api = ApiClient.getApiService(this);
+        api.getNotifications().enqueue(new Callback<ApiResponse<List<Notification>>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<List<Notification>>> call,
+                                   @NonNull Response<ApiResponse<List<Notification>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    int unreadCount = 0;
+                    if (response.body().getData() != null) {
+                        // Đếm những thông báo chưa được đọc (isRead = false)
+                        for (Notification n : response.body().getData()) {
+                            if (!n.isRead()) unreadCount++;
+                        }
+                    }
+
+                    // Hiển thị số đếm lên UI
+                    if (notifyBadge != null) {
+                        if (unreadCount > 0) {
+                            notifyBadge.setVisible(true);
+                            notifyBadge.setNumber(unreadCount);
+                        } else {
+                            notifyBadge.setVisible(false);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<List<Notification>>> call, @NonNull Throwable t) {
+                Log.e("HomeActivity", "Lỗi đếm chấm đỏ thông báo: " + t.getMessage());
             }
         });
     }
@@ -108,12 +174,8 @@ public class HomeActivity extends AppCompatActivity {
     private void setupDrawer() {
         btnOpenMenu.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
 
-        // Load thông tin user vào nav_header
         loadNavHeader();
 
-        // CHỖ SỬA QUAN TRỌNG:
-        // Vì btnNavLogout nằm trực tiếp trong NavigationView (trong FrameLayout cuối cùng),
-        // chứ không nằm trong file header (nav_header), nên ta tìm trực tiếp từ navigationView.
         MaterialButton btnNavLogout = navigationView.findViewById(R.id.btnNavLogout);
 
         if (btnNavLogout != null) {
@@ -147,29 +209,25 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void loadNavHeader() {
-        // Lấy header view từ NavigationView
         View headerView = navigationView.getHeaderView(0);
         if (headerView == null) return;
 
         ImageView imgNavAvatar = headerView.findViewById(R.id.imgNavAvatar);
         TextView tvNavName = headerView.findViewById(R.id.tvNavName);
 
-        // Gọi API lấy profile người dùng đang đăng nhập
         ApiService api = ApiClient.getApiService(this);
-        api.getMyProfile().enqueue(new retrofit2.Callback<ApiResponse<User>>() {
+        api.getMyProfile().enqueue(new Callback<ApiResponse<User>>() {
             @Override
-            public void onResponse(retrofit2.Call<ApiResponse<User>> call,
-                                   retrofit2.Response<ApiResponse<User>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<User>> call,
+                                   @NonNull Response<ApiResponse<User>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     User user = response.body().getData();
                     if (user == null) return;
 
-                    // Hiển thị username
                     if (tvNavName != null && user.getUsername() != null) {
                         tvNavName.setText(user.getUsername());
                     }
 
-                    // Load avatar bằng Glide
                     if (imgNavAvatar != null && user.getAvatar() != null && !user.getAvatar().isEmpty()) {
                         Glide.with(HomeActivity.this)
                                 .load(user.getAvatar())
@@ -185,14 +243,13 @@ public class HomeActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(retrofit2.Call<ApiResponse<User>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<User>> call, @NonNull Throwable t) {
                 Log.e("HomeActivity", "Lỗi khi load nav header: " + t.getMessage());
             }
         });
     }
 
     private void setupBottomTabs() {
-        // Mặc định chọn tab Home khi mới vào
         selectTab(imgHome, lineHome, new FeedFragment());
 
         tabHome.setOnClickListener(v -> selectTab(imgHome, lineHome, new FeedFragment()));
@@ -204,18 +261,15 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void performLogout() {
-        // Ngắt kết nối socket
         try {
             com.example.frontend.data.socket.ChatSocketManager.INSTANCE.disconnect();
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e("HomeActivity", "Lỗi disconnect socket: " + e.getMessage());
         }
 
-        // SharedPreferences
         SharedPreferences pref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
 
-        // chỉ xóa session
         editor.remove("JWT_TOKEN");
         editor.remove("USER_ID");
         editor.putBoolean("IS_LOGGED_IN", false);
@@ -235,6 +289,12 @@ public class HomeActivity extends AppCompatActivity {
         activeImg.setSelected(true);
         activeLine.setVisibility(View.VISIBLE);
         activeImg.animate().scaleX(1.1f).scaleY(1.1f).setDuration(150);
+
+        // Ẩn chấm đỏ ngay khi chuyển vào Tab Thông báo
+        if (fragment instanceof NotifyFragment && notifyBadge != null) {
+            notifyBadge.setVisible(false);
+        }
+
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
     }
 

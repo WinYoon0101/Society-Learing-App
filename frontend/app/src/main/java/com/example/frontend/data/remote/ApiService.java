@@ -1,4 +1,6 @@
 package com.example.frontend.data.remote;
+import com.example.frontend.data.model.Notification;
+import java.util.List;
 
 import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.AvatarResponse;
@@ -243,5 +245,15 @@ public interface ApiService {
     Call<ApiResponse<List<Post>>> getSavedPosts(
             @Header("Authorization") String token
     );
+    // 1. Lấy danh sách thông báo của người dùng
+    @GET("notifications")
+    Call<ApiResponse<List<Notification>>> getNotifications();
+
+    @PUT("notifications/{id}/read")
+    Call<ApiResponse<Notification>> markNotificationAsRead(@Path("id") String id);
+
+    @PUT("notifications/read-all")
+    Call<ApiResponse<Object>> markAllNotificationsAsRead();
+
 }
 
