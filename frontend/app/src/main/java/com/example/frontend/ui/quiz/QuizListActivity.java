@@ -2,6 +2,7 @@ package com.example.frontend.ui.quiz;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.Toast;
 
@@ -15,6 +16,7 @@ import com.example.frontend.data.model.Quiz;
 import com.example.frontend.data.repository.QuizRepository;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -33,7 +35,6 @@ public class QuizListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_quiz_list);
 
         initViews();
-        loadData();
     }
 
     private void initViews() {
@@ -44,6 +45,10 @@ public class QuizListActivity extends AppCompatActivity {
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         rvQuizList.setLayoutManager(new GridLayoutManager(this, 2));
+        rvQuizList.setHasFixedSize(true);
+        if (rvQuizList.getItemDecorationCount() == 0) {
+            rvQuizList.addItemDecoration(new GridSpacingItemDecoration(2, dpToPx(8), true));
+        }
 
         adapter = new QuizListAdapter(quiz -> {
             Intent intent = new Intent(this, QuizActivity.class);
@@ -69,7 +74,8 @@ public class QuizListActivity extends AppCompatActivity {
                 if (progressBar != null) progressBar.setVisibility(View.GONE);
 
                 if (response.isSuccessful() && response.body() != null) {
-                    adapter.setData(response.body().getData());
+                    List<Quiz> data = response.body().getData();
+                    adapter.setData(data != null ? data : new ArrayList<>());
                 } else {
                     Toast.makeText(QuizListActivity.this, "Lỗi: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
@@ -87,5 +93,13 @@ public class QuizListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadData(); // Cập nhật lại danh sách khi vừa tạo Quiz mới xong
+    }
+
+    private int dpToPx(int dp) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                dp,
+                getResources().getDisplayMetrics()
+        );
     }
 }

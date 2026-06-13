@@ -7,6 +7,7 @@ import com.example.frontend.data.model.Quiz;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.data.remote.QuizRequest;
+import com.example.frontend.data.remote.SubmitQuizRequest;
 
 import java.util.List;
 
@@ -26,5 +27,10 @@ public class QuizRepository {
 
     public void getMyQuizzes(Callback<ApiResponse<List<Quiz>>> callback) {
         apiService.getMyQuizzes().enqueue(callback);
+    }
+
+    public void submitQuiz(String quizId, List<String> answers, Callback<ApiResponse<Object>> callback) {
+        SubmitQuizRequest request = new SubmitQuizRequest(quizId, answers);
+        apiService.submitQuiz(request).enqueue(callback);
     }
 }

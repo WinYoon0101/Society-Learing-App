@@ -1,16 +1,12 @@
 import { Request, Response } from 'express';
 import Notification from '../models/notification.model';
 
-// Interface nhận diện req.user từ middleware JWT
 interface AuthRequest extends Request {
     user?: {
         id: string;
     };
 }
 
-/**
- * 1. Lấy danh sách thông báo
- */
 export const getNotifications = async (req: AuthRequest, res: Response): Promise<Response | void> => {
     try {
         const userId = req.user?.id;
@@ -33,9 +29,6 @@ export const getNotifications = async (req: AuthRequest, res: Response): Promise
     }
 };
 
-/**
- * 2. Đánh dấu một thông báo là đã đọc
- */
 export const markAsRead = async (req: AuthRequest, res: Response): Promise<Response | void> => {
     try {
         const notification = await Notification.findOneAndUpdate(
@@ -51,9 +44,6 @@ export const markAsRead = async (req: AuthRequest, res: Response): Promise<Respo
     }
 };
 
-/**
- * 3. Đánh dấu tất cả đã đọc
- */
 export const markAllAsRead = async (req: AuthRequest, res: Response): Promise<Response | void> => {
     try {
         await Notification.updateMany({ recipient: req.user?.id, isRead: false }, { isRead: true });
@@ -63,9 +53,6 @@ export const markAllAsRead = async (req: AuthRequest, res: Response): Promise<Re
     }
 };
 
-/**
- * 4. Xóa thông báo
- */
 export const deleteNotification = async (req: AuthRequest, res: Response): Promise<Response | void> => {
     try {
         const result = await Notification.findOneAndDelete({ _id: req.params.id, recipient: req.user?.id });

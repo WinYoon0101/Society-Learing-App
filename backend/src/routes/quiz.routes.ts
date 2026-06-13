@@ -1,10 +1,8 @@
 import express from "express";
-import { getUserQuizzes, generateAndSaveQuiz } from "../controllers/quiz.controller";
-import { authenticate } from "../middlewares/auth.middleware";
+import { generateQuiz } from "../controllers/quiz.controller";
 
 const router = express.Router();
 
-router.post("/generate-quiz", authenticate, generateAndSaveQuiz);
-router.get("/my-quizzes", authenticate, getUserQuizzes);
+router.post("/generate-quiz", generateQuiz);
 
 export default router;

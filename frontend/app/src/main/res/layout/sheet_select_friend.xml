@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#FFFFFF"
+    android:paddingBottom="16dp">
+
+    <!-- Drag handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:background="#D0D6CC" />
+
+    <!-- Header: title + close -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Chọn bạn để nhắn tin"
+            android:textColor="#3D594B"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnSelectFriendClose"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_close"
+            android:tint="#3D594B"
+            android:contentDescription="Đóng" />
+    </LinearLayout>
+
+    <!-- Search bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="4dp"
+        android:paddingHorizontal="12dp"
+        android:background="@drawable/bg_message_input">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_search"
+            android:tint="#8A9E94"
+            android:contentDescription="Tìm" />
+
+        <EditText
+            android:id="@+id/etSearchFriend"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@android:color/transparent"
+            android:hint="Tìm bạn bè..."
+            android:textSize="14sp"
+            android:textColor="#333333"
+            android:textColorHint="#9AA8A1"
+            android:maxLines="1"
+            android:inputType="text"
+            android:importantForAutofill="no" />
+    </LinearLayout>
+
+    <!-- Section label -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="6dp"
+        android:text="BẠN BÈ"
+        android:textColor="#8A9E94"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.1" />
+
+    <!-- Friend list -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFriendsPick"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="360dp"
+        android:nestedScrollingEnabled="true"
+        android:visibility="gone"
+        tools:listitem="@layout/item_friend_pick"
+        tools:visibility="visible" />
+
+    <!-- Empty state (visible until BE friend list API available) -->
+    <LinearLayout
+        android:id="@+id/layoutEmptyFriendPick"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingVertical="32dp">
+
+        <ImageView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:src="@drawable/ic_friend"
+            android:tint="#C7D0C9"
+            android:alpha="0.7"
+            android:contentDescription="Empty" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Danh sách bạn bè sẽ hiển thị ở đây"
+            android:textColor="#8A9E94"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+</LinearLayout>

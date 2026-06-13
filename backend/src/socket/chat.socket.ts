@@ -84,11 +84,6 @@ export function initChatSocket(io: Server) {
       socket.join(conv._id.toString());
     });
 
-    // Helper: join room cho conversation mới tạo
-    const joinConversationRoom = (conversationId: string) => {
-      socket.join(conversationId);
-    };
-
     // ─── GỬI TIN NHẮN ───────────────────────────────────────────────
     socket.on(
       "message:send",
@@ -113,9 +108,6 @@ export function initChatSocket(io: Server) {
             return;
           }
 
-          // Đảm bảo socket đã join room (trường hợp conversation mới tạo sau khi connect)
-          joinConversationRoom(conversationId);
-
           // Tạo message
           const message = await Message.create({
             conversationId,
@@ -127,22 +119,20 @@ export function initChatSocket(io: Server) {
           // Cập nhật lastMessage của conversation
           await Conversation.findByIdAndUpdate(conversationId, {
             lastMessage: message._id,
-            updatedAt: new Date(),
           });
 
-          // Populate để gửi về client — đảm bảo _id là string
-          const populated = await Message.findById(message._id)
-            .populate("sender", "username avatar _id")
-            .populate({
+          // Populate để gửi về client
+          const populated = await Message.findById(message._id).populate([
+            { path: "sender", select: "username avatar" },
+            {
               path: "replyTo",
-              populate: { path: "sender", select: "username avatar _id" },
-            })
-            .lean(); // lean() trả plain object, _id tự convert thành string khi JSON.stringify
+              populate: { path: "sender", select: "username avatar" },
+            },
+          ]);
 
           // Broadcast tới tất cả members trong room
           io.to(conversationId).emit("message:new", populated);
         } catch (error) {
-          console.error("message:send error:", error);
           socket.emit("error", { message: "Lỗi gửi tin nhắn" });
         }
       }

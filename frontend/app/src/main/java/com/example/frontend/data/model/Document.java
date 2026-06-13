@@ -1,9 +1,8 @@
 package com.example.frontend.data.model;
 
-import java.io.Serializable;
 import java.util.Objects;
 
-public class Document implements Serializable {
+public class Document {
     private String _id;
     private String title;
     private String description;
@@ -130,16 +129,16 @@ public class Document implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         Document document = (Document) o;
 
+        // Sửa tên biến cho đúng với khai báo ở trên
         return numberView == document.numberView &&
                 numberDownload == document.numberDownload &&
-                Objects.equals(_id, document._id) &&
-                Objects.equals(title, document.title) &&
-                Objects.equals(subject, document.subject) &&
-                Objects.equals(description, document.description);
+                Objects.equals(_id, document._id) && // Dùng Objects.equals để tránh null
+                Objects.equals(title, document.title);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(_id, title, subject, description, numberView, numberDownload);
+        // Sửa tên biến ở đây luôn
+        return Objects.hash(_id, title, numberView, numberDownload);
     }
 }

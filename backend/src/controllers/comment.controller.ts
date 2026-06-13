@@ -1,122 +1,116 @@
-import { Response } from "express";
-import { AuthRequest } from "../middlewares/auth.middleware";
-import Comment from "../models/comment.model";
-import Post from "../models/post.model";
-import Notification from "../models/notification.model";
+import { Request, Response } from 'express';
+import Comment from '../models/comment.model'; // Đảm bảo đường dẫn này đúng với model của bạn
 
-// API gửi bình luận
-export const createComment = async (req: AuthRequest, res: Response): Promise<any> => {
+// Interface nhận diện req.user từ middleware auth
+interface AuthRequest extends Request {
+    user?: {
+        id: string;
+    };
+}
+
+/**
+ * 1. Viết comment mới
+ */
+export const createComment = async (req: AuthRequest, res: Response): Promise<Response | void> => {
     try {
-        const { postId, content, parentId } = req.body; 
+        const { postId, content, parentId } = req.body;
         const userId = req.user?.id;
 
         if (!userId) {
-            return res.status(401).json({ success: false, message: "Vui lòng đăng nhập" });
+            return res.status(401).json({ message: 'Không tìm thấy thông tin người dùng' });
         }
 
-        const post = await Post.findById(postId);
-        if (!post) {
-            return res.status(404).json({ success: false, message: "Bài viết không tồn tại" });
-        }
-
-        // XÁC ĐỊNH NGƯỜI NHẬN ---
-        let recipientId = post.authorId.toString(); 
-        let targetId = postId;
-        
-        if (parentId) {
-            const parentComment = await Comment.findById(parentId);
-            if (parentComment) {
-                recipientId = parentComment.userId.toString();
-                targetId = parentId; 
-            }
-        }
-
-        // 2. Lưu bình luận
         const newComment = new Comment({
-            postId: postId,
-            userId: userId,
+            post: postId, // Lưu ý: Đổi thành tên trường đúng trong model của bạn (vd: postId)
+            author: userId, // Lưu ý: Đổi thành tên trường đúng trong model của bạn (vd: userId)
             content: content,
-            parentId: parentId || null 
+            parentComment: parentId || null // Dành cho tính năng reply sau này
         });
+
         await newComment.save();
-        await newComment.populate("userId", "username avatar avatarUrl");
 
-        // 3. TẠO THÔNG BÁO (Chuẩn theo Model mới của bạn)
-        if (userId !== recipientId) { 
-            await Notification.create({
-                recipient: recipientId, // Khớp với model
-                sender: userId,         // Khớp với model
-                type: "post_comment",   // Khớp với kiểu bạn đã định nghĩa
-                targetId: targetId,     
-                content: "đã bình luận về bài viết của bạn", // BẮT BUỘC CÓ
-                isRead: false
-            }).catch(err => console.error("Lỗi lưu thông báo:", err));
-        }
+        // Populate thông tin người dùng để trả về frontend có sẵn avatar/tên hiển thị luôn
+        await newComment.populate('author', 'username avatar');
 
-        return res.status(201).json({ success: true, data: newComment });
-
+        return res.status(201).json({
+            success: true,
+            message: 'Đã thêm bình luận',
+            data: newComment
+        });
     } catch (error) {
-        console.error("Lỗi tạo bình luận:", error);
-        return res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+        console.error('Lỗi createComment:', error);
+        return res.status(500).json({ message: 'Lỗi Server' });
     }
 };
 
-// API lấy bình luận (Xếp cây)
-export const getCommentsByPost = async (req: AuthRequest, res: Response): Promise<any> => {
+/**
+ * 2. Lấy danh sách comment của một bài viết (Có phân trang)
+ */
+export const getCommentsByPost = async (req: Request, res: Response): Promise<Response | void> => {
     try {
-        const postId = req.params.postId;
-        const comments = await Comment.find({ postId: postId })
-            .sort({ createdAt: 1 }) 
-            .populate("userId", "username avatar avatarUrl")
-            .lean(); 
+        const { postId } = req.params;
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
 
-        const commentMap: any = {};
-        const rootComments: any[] = [];
+        // Chỉ lấy các comment gốc (không lấy reply lẫn vào)
+        const query = { post: postId, parentComment: null };
 
-        comments.forEach((comment: any) => {
-            comment.replies = [];
-            commentMap[comment._id.toString()] = comment;
-        });
+        const comments = await Comment.find(query)
+            .populate('author', 'username avatar')
+            .sort({ createdAt: -1 }) // Mới nhất lên đầu
+            .skip(skip)
+            .limit(limit);
 
-        comments.forEach((comment: any) => {
-            if (comment.parentId) {
-                const parentString = comment.parentId.toString();
-                if (commentMap[parentString]) {
-                    commentMap[parentString].replies.push(comment);
-                }
-            } else {
-                rootComments.push(comment);
+        const total = await Comment.countDocuments(query);
+
+        return res.status(200).json({
+            success: true,
+            data: comments,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
             }
         });
-
-        return res.status(200).json({ success: true, data: rootComments });
     } catch (error) {
-        console.error("Lỗi lấy bình luận:", error);
-        return res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+        console.error('Lỗi getCommentsByPost:', error);
+        return res.status(500).json({ message: 'Lỗi Server' });
     }
 };
 
-// API xóa bình luận
-export const deleteComment = async (req: AuthRequest, res: Response): Promise<any> => {
+/**
+ * 3. Xóa comment
+ */
+export const deleteComment = async (req: AuthRequest, res: Response): Promise<Response | void> => {
     try {
-        const { commentId } = req.params;
+        const commentId = req.params.id;
         const userId = req.user?.id;
 
-        const comment = await Comment.findById(commentId);
-        if (!comment || comment.userId.toString() !== userId) {
-            return res.status(404).json({ success: false, message: "Không tìm thấy hoặc không có quyền" });
+        if (!userId) {
+            return res.status(401).json({ message: 'Không tìm thấy thông tin người dùng' });
         }
 
-        // Xóa thông báo liên quan
-        await Notification.deleteOne({ 
-            sender: userId, 
-            targetId: comment.parentId || comment.postId, 
-            type: "post_comment" 
+        // Tìm và xóa: Chỉ xóa nếu comment này do chính user đó tạo ra
+        const deletedComment = await Comment.findOneAndDelete({
+            _id: commentId,
+            author: userId 
         });
 
-        await comment.deleteOne(); 
-        return res.status(200).json({ success: true, message: "Xóa thành công" });
+        if (!deletedComment) {
+            return res.status(403).json({ message: 'Không tìm thấy bình luận hoặc bạn không có quyền xóa' });
+        }
+
+        // Tùy chọn: Xóa luôn các reply của comment này (nếu có)
+        // await Comment.deleteMany({ parentComment: commentId });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Đã xóa bình luận'
+        });
     } catch (error) {
-        return res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+        console.error('Lỗi deleteComment:', error);
+        return res.status(500).json({ message: 'Lỗi Server' });
     }
 };

@@ -12,23 +12,21 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.frontend.R;
 import com.example.frontend.data.model.Question;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Locale;
 
 public class QuizAdapter extends RecyclerView.Adapter<QuizAdapter.ViewHolder> {
     private List<Question> list = new ArrayList<>();
-    private Set<Integer> answeredPositions = new HashSet<>(); // Lưu những câu đã làm
-    private int correctCount = 0;
+    private List<String> userAnswers = new ArrayList<>();
 
     public void setData(List<Question> list) {
-        this.list = list;
-        this.answeredPositions.clear();
-        this.correctCount = 0;
+        this.list = (list != null) ? list : Collections.emptyList();
+        this.userAnswers = new ArrayList<>();
+        for (int i = 0; i < this.list.size(); i++) this.userAnswers.add("");
         notifyDataSetChanged();
     }
 
-    public int getCorrectCount() { return correctCount; }
     public int getTotalQuestions() { return list.size(); }
 
     @NonNull
@@ -42,63 +40,61 @@ public class QuizAdapter extends RecyclerView.Adapter<QuizAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Question q = list.get(position);
-        holder.tvQuestion.setText("Câu " + (position + 1) + ": " + q.question);
-        holder.rbA.setText(q.A);
-        holder.rbB.setText(q.B);
-        holder.rbC.setText(q.C);
-        holder.rbD.setText(q.D);
+        holder.tvQuestion.setText(
+                holder.itemView.getContext().getString(
+                        R.string.question_title_format,
+                        position + 1,
+                        safeText(q.question)
+                )
+        );
+        holder.rbA.setText(safeText(q.A));
+        holder.rbB.setText(safeText(q.B));
+        holder.rbC.setText(safeText(q.C));
+        holder.rbD.setText(safeText(q.D));
 
         // Reset trạng thái View khi scroll
         holder.rgOptions.setOnCheckedChangeListener(null);
         holder.rgOptions.clearCheck();
-        resetUI(holder);
 
-        // Nếu câu này đã làm rồi
-        if (answeredPositions.contains(position)) {
-            lockAndShow(holder, q.correct);
-        } else {
-            // Logic chọn phát biết luôn
-            holder.rgOptions.setOnCheckedChangeListener((group, checkedId) -> {
-                answeredPositions.add(position);
-                String selected = "";
-                if (checkedId == R.id.rbA) selected = "A";
-                else if (checkedId == R.id.rbB) selected = "B";
-                else if (checkedId == R.id.rbC) selected = "C";
-                else if (checkedId == R.id.rbD) selected = "D";
-
-                if (selected.equals(q.correct)) {
-                    correctCount++;
-                    // Hiệu ứng xanh nếu đúng (Tùy chọn: dùng TextView feedback nếu có)
-                }
-                lockAndShow(holder, q.correct);
-            });
+        // Nếu đã có câu trả lời lưu sẵn cho vị trí này thì khôi phục lựa chọn
+        String saved = position < userAnswers.size() ? userAnswers.get(position) : "";
+        if (!saved.isEmpty()) {
+            if (saved.equals("A")) holder.rbA.setChecked(true);
+            else if (saved.equals("B")) holder.rbB.setChecked(true);
+            else if (saved.equals("C")) holder.rbC.setChecked(true);
+            else if (saved.equals("D")) holder.rbD.setChecked(true);
         }
+
+        // Logic chọn chỉ lưu đáp án, chưa chấm điểm
+        holder.rgOptions.setOnCheckedChangeListener((group, checkedId) -> {
+            String selected = "";
+            if (checkedId == R.id.rbA) selected = "A";
+            else if (checkedId == R.id.rbB) selected = "B";
+            else if (checkedId == R.id.rbC) selected = "C";
+            else if (checkedId == R.id.rbD) selected = "D";
+
+            // Lưu lại câu trả lời của người dùng
+            if (position < userAnswers.size()) userAnswers.set(position, selected);
+        });
     }
 
-    private void lockAndShow(ViewHolder holder, String correct) {
-        for (int i = 0; i < holder.rgOptions.getChildCount(); i++) {
-            RadioButton rb = (RadioButton) holder.rgOptions.getChildAt(i);
-            rb.setEnabled(false); // Khóa không cho chọn lại
-            String tag = (i == 0) ? "A" : (i == 1) ? "B" : (i == 2) ? "C" : "D";
-            if (tag.equals(correct)) {
-                rb.setTextColor(Color.parseColor("#10B981"));
-                if (!rb.getText().toString().contains("✔")) { // Kiểm tra nếu chưa có dấu ✔ thì mới thêm
-                    rb.setText(rb.getText() + " ✔");
-                }
-            }
+    private String normalizeAnswer(String answer) {
+        if (answer == null) {
+            return "";
         }
+        return answer.trim().toUpperCase(Locale.ROOT);
     }
 
-    private void resetUI(ViewHolder holder) {
-        for (int i = 0; i < holder.rgOptions.getChildCount(); i++) {
-            RadioButton rb = (RadioButton) holder.rgOptions.getChildAt(i);
-            rb.setEnabled(true);
-            rb.setTextColor(Color.BLACK);
-        }
+    private String safeText(String value) {
+        return value != null ? value : "";
     }
 
     @Override
     public int getItemCount() { return list.size(); }
+
+    public List<String> getUserAnswers() {
+        return new ArrayList<>(userAnswers);
+    }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvQuestion;
