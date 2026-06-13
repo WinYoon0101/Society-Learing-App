@@ -1,6 +1,5 @@
 package com.example.frontend.ui.group;
 
-import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,29 +20,28 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class DiscoverGroupAdapter extends RecyclerView.Adapter<DiscoverGroupAdapter.VH> {
 
-    public interface OnJoinListener {
-        void onJoin(Group group, int position);
+    public interface OnJoinClickListener {
+        void onJoin(Group group);
     }
 
     private final List<Group> items = new ArrayList<>();
-    private OnJoinListener joinListener;
+    private final OnJoinClickListener listener;
 
-    public void setOnJoinListener(OnJoinListener listener) {
-        this.joinListener = listener;
+    public DiscoverGroupAdapter(OnJoinClickListener listener) {
+        this.listener = listener;
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     public void submit(List<Group> data) {
         items.clear();
         if (data != null) items.addAll(data);
         notifyDataSetChanged();
     }
 
-    public void removeAt(int position) {
-        if (position >= 0 && position < items.size()) {
-            items.remove(position);
-            notifyItemRemoved(position);
-        }
+    public void appendAll(List<Group> data) {
+        if (data == null) return;
+        int start = items.size();
+        items.addAll(data);
+        notifyItemRangeInserted(start, data.size());
     }
 
     @NonNull
@@ -57,28 +55,23 @@ public class DiscoverGroupAdapter extends RecyclerView.Adapter<DiscoverGroupAdap
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
         Group g = items.get(position);
-        h.tvGroupName.setText(g.getGroupName());
-        h.tvMemberCount.setText(g.getMemberCount() + " thành viên");
-
-        if (g.getDescription() != null && !g.getDescription().isEmpty()) {
-            h.tvDescription.setVisibility(View.VISIBLE);
-            h.tvDescription.setText(g.getDescription());
-        } else {
-            h.tvDescription.setVisibility(View.GONE);
-        }
+        h.tvName.setText(g.getGroupName());
+        h.tvDescription.setText(
+                g.getDescription() != null && !g.getDescription().isEmpty()
+                        ? g.getDescription() : "Không có mô tả");
+        h.tvMeta.setText(
+                ("Public".equals(g.getPrivacy()) ? "🔓 Công khai" : "🔒 Riêng tư")
+                        + "  •  " + g.getMemberCount() + " thành viên");
 
         if (g.getAvatarUrl() != null && !g.getAvatarUrl().isEmpty()) {
-            Glide.with(h.imgAvatar.getContext())
-                    .load(g.getAvatarUrl())
-                    .placeholder(R.drawable.ic_group)
-                    .error(R.drawable.ic_group)
-                    .into(h.imgAvatar);
+            Glide.with(h.imgAvatar.getContext()).load(g.getAvatarUrl())
+                    .placeholder(R.drawable.ic_group).into(h.imgAvatar);
         } else {
             h.imgAvatar.setImageResource(R.drawable.ic_group);
         }
 
         h.btnJoin.setOnClickListener(v -> {
-            if (joinListener != null) joinListener.onJoin(g, h.getAdapterPosition());
+            if (listener != null) listener.onJoin(g);
         });
     }
 
@@ -87,16 +80,16 @@ public class DiscoverGroupAdapter extends RecyclerView.Adapter<DiscoverGroupAdap
 
     static class VH extends RecyclerView.ViewHolder {
         CircleImageView imgAvatar;
-        TextView tvGroupName, tvMemberCount, tvDescription;
+        TextView tvName, tvDescription, tvMeta;
         Button btnJoin;
 
         VH(@NonNull View v) {
             super(v);
-            imgAvatar = v.findViewById(R.id.imgGroupAvatar);
-            tvGroupName = v.findViewById(R.id.tvGroupName);
-            tvMemberCount = v.findViewById(R.id.tvMemberCount);
-            tvDescription = v.findViewById(R.id.tvDescription);
-            btnJoin = v.findViewById(R.id.btnJoin);
+            imgAvatar     = v.findViewById(R.id.imgGroupAvatar);
+            tvName        = v.findViewById(R.id.tvGroupName);
+            tvDescription = v.findViewById(R.id.tvGroupDescription);
+            tvMeta        = v.findViewById(R.id.tvGroupMeta);
+            btnJoin       = v.findViewById(R.id.btnJoin);
         }
     }
 }

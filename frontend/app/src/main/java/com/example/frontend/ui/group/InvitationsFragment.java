@@ -1,5 +1,4 @@
 package com.example.frontend.ui.group;
-
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,15 +21,18 @@ import com.example.frontend.utils.Result;
 
 import java.util.List;
 
+/**
+ * Tab "Lời mời" – danh sách lời mời tham gia nhóm đang chờ xử lý.
+ */
 public class InvitationsFragment extends Fragment {
 
     private SwipeRefreshLayout swipeRefresh;
     private RecyclerView rv;
     private TextView tvEmpty;
+
     private InvitationAdapter adapter;
     private GroupRepository repository;
     private final MutableLiveData<Result<List<GroupInvitation>>> liveData = new MutableLiveData<>();
-    private final MutableLiveData<Result<Void>> respondLiveData = new MutableLiveData<>();
 
     @Nullable
     @Override
@@ -45,30 +47,28 @@ public class InvitationsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         swipeRefresh = view.findViewById(R.id.swipeRefresh);
-        rv = view.findViewById(R.id.rvInvitations);
-        tvEmpty = view.findViewById(R.id.tvEmpty);
+        rv           = view.findViewById(R.id.rvInvitations);
+        tvEmpty      = view.findViewById(R.id.tvEmpty);
 
-        adapter = new InvitationAdapter();
-        adapter.setOnRespondListener(new InvitationAdapter.OnRespondListener() {
+        repository = new GroupRepository(requireContext());
+
+        adapter = new InvitationAdapter(new InvitationAdapter.OnRespondListener() {
             @Override
-            public void onAccept(GroupInvitation inv, int position) {
-                respond(inv.getId(), "accept", position,
-                        "Đã tham gia nhóm " + (inv.getGroup() != null ? inv.getGroup().getGroupName() : ""));
+            public void onAccept(GroupInvitation invitation) {
+                respond(invitation.getId(), "accept");
             }
-
             @Override
-            public void onDecline(GroupInvitation inv, int position) {
-                respond(inv.getId(), "decline", position, "Đã từ chối lời mời");
+            public void onDecline(GroupInvitation invitation) {
+                respond(invitation.getId(), "decline");
             }
         });
 
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
         rv.setAdapter(adapter);
 
-        repository = new GroupRepository(requireContext());
-        liveData.observe(getViewLifecycleOwner(), this::render);
-
         swipeRefresh.setOnRefreshListener(this::load);
+        liveData.observe(getViewLifecycleOwner(), this::renderState);
+
         load();
     }
 
@@ -76,45 +76,43 @@ public class InvitationsFragment extends Fragment {
         repository.getInvitations(liveData);
     }
 
-    private void render(Result<List<GroupInvitation>> result) {
+    private void respond(String invitationId, String action) {
+        MutableLiveData<Result<Object>> respondLive = new MutableLiveData<>();
+        respondLive.observe(getViewLifecycleOwner(), r -> {
+            if (r == null) return;
+            if (r.status == Result.Status.SUCCESS) {
+                String msg = "accept".equals(action) ? "Đã tham gia nhóm!" : "Đã từ chối lời mời";
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                load(); // reload list
+            } else if (r.status == Result.Status.ERROR) {
+                Toast.makeText(requireContext(),
+                        r.message != null ? r.message : "Có lỗi xảy ra",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+        repository.respondToInvitation(invitationId, action, respondLive);
+    }
+
+    private void renderState(Result<List<GroupInvitation>> result) {
         if (result == null) return;
         switch (result.status) {
             case LOADING:
-                if (adapter.getItemCount() == 0) swipeRefresh.setRefreshing(true);
+                swipeRefresh.setRefreshing(true);
                 break;
             case SUCCESS:
                 swipeRefresh.setRefreshing(false);
-                adapter.submit(result.data);
-                updateEmptyState();
+                List<GroupInvitation> data = result.data;
+                adapter.submit(data);
+                tvEmpty.setVisibility(
+                        (data == null || data.isEmpty()) ? View.VISIBLE : View.GONE);
                 break;
             case ERROR:
                 swipeRefresh.setRefreshing(false);
                 Toast.makeText(requireContext(),
                         result.message != null ? result.message : "Có lỗi xảy ra",
                         Toast.LENGTH_SHORT).show();
-                updateEmptyState();
+                tvEmpty.setVisibility(adapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
                 break;
         }
-    }
-
-    private void respond(String invitationId, String action, int position, String successMsg) {
-        MutableLiveData<Result<Void>> live = new MutableLiveData<>();
-        live.observe(getViewLifecycleOwner(), result -> {
-            if (result == null) return;
-            if (result.status == Result.Status.SUCCESS) {
-                adapter.removeAt(position);
-                updateEmptyState();
-                Toast.makeText(requireContext(), successMsg, Toast.LENGTH_SHORT).show();
-            } else if (result.status == Result.Status.ERROR) {
-                Toast.makeText(requireContext(),
-                        result.message != null ? result.message : "Thao tác thất bại",
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-        repository.respondToInvitation(invitationId, action, live);
-    }
-
-    private void updateEmptyState() {
-        tvEmpty.setVisibility(adapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
     }
 }

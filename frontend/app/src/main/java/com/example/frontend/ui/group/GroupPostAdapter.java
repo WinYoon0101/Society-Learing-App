@@ -1,8 +1,9 @@
 package com.example.frontend.ui.group;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,126 +13,103 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
-import com.example.frontend.data.model.Post;
+import com.example.frontend.data.model.GroupPost;
 import com.example.frontend.ui.feed.PostDetailActivity;
 import com.example.frontend.ui.feed.PostImageAdapter;
+import com.example.frontend.ui.feed.ReactionListBottomSheet;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-
-import de.hdodenhof.circleimageview.CircleImageView;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class GroupPostAdapter extends RecyclerView.Adapter<GroupPostAdapter.VH> {
 
     public interface OnReactionListener {
-        void onReactClick(String targetId, String type);
+        void onReactClick(String postId, String type);
     }
 
-    private final List<Post> items = new ArrayList<>();
-    private final Context context;
+    private final List<GroupPost> items = new ArrayList<>();
     private OnReactionListener reactionListener;
-
-    public GroupPostAdapter(Context context) {
-        this.context = context;
-    }
 
     public void setOnReactionListener(OnReactionListener listener) {
         this.reactionListener = listener;
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    public void submit(List<Post> data) {
+    public void submit(List<GroupPost> data) {
         items.clear();
         if (data != null) items.addAll(data);
         notifyDataSetChanged();
     }
 
+    public void appendAll(List<GroupPost> data) {
+        if (data == null) return;
+        int start = items.size();
+        items.addAll(data);
+        notifyItemRangeInserted(start, data.size());
+    }
+
     @NonNull
     @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(context).inflate(R.layout.item_group_post, parent, false);
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_group_post, parent, false);
         return new VH(v);
     }
 
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
-        Post post = items.get(position);
+        GroupPost p = items.get(position);
 
-        // Group header
-        if (post.getGroupId() != null) {
-            h.tvGroupName.setText(post.getGroupId().getGroupName());
-            Glide.with(context)
-                    .load(post.getGroupId().getAvatarUrl())
-                    .placeholder(R.drawable.ic_group)
-                    .error(R.drawable.ic_group)
-                    .into(h.imgGroupAvatar);
+        // Avatar & tên tác giả
+        if (p.getAuthorId() != null) {
+            h.tvAuthor.setText(p.getAuthorId().getUsername());
+            if (p.getAuthorId().getAvatar() != null && !p.getAuthorId().getAvatar().isEmpty()) {
+                Glide.with(h.imgAvatar.getContext())
+                        .load(p.getAuthorId().getAvatar())
+                        .placeholder(R.drawable.ic_user)
+                        .into(h.imgAvatar);
+            } else {
+                h.imgAvatar.setImageResource(R.drawable.ic_user);
+            }
+        }
+
+        // Tên nhóm
+        if (p.getGroupId() != null && p.getGroupId().getGroupName() != null) {
+            h.tvGroupName.setText(p.getGroupId().getGroupName());
+            h.tvGroupName.setVisibility(View.VISIBLE);
         } else {
-            h.layoutGroupHeader.setVisibility(View.GONE);
+            h.tvGroupName.setVisibility(View.GONE);
         }
 
-        // Author
-        if (post.getAuthorId() != null) {
-            h.tvAuthorName.setText(post.getAuthorId().getUsername());
-            Glide.with(context)
-                    .load(post.getAuthorId().getAvatar())
-                    .placeholder(R.drawable.ic_user)
-                    .error(R.drawable.ic_user)
-                    .into(h.imgAvatar);
-        }
+        // Thời gian
+        h.tvTime.setText(formatTime(p.getCreatedAt()));
 
-        h.tvContent.setText(post.getContent());
+        // Nội dung
+        h.tvContent.setText(p.getContent());
+        h.tvContent.setVisibility(
+                p.getContent() != null && !p.getContent().isEmpty() ? View.VISIBLE : View.GONE);
 
-        // Images
-        if (post.getImages() != null && !post.getImages().isEmpty()) {
+        // Ảnh
+        if (p.getImages() != null && !p.getImages().isEmpty()) {
             h.rvPostImages.setVisibility(View.VISIBLE);
-            PostImageAdapter imageAdapter = new PostImageAdapter(context, post.getImages());
+            PostImageAdapter imageAdapter = new PostImageAdapter(h.rvPostImages.getContext(), p.getImages());
             h.rvPostImages.setAdapter(imageAdapter);
         } else {
             h.rvPostImages.setVisibility(View.GONE);
         }
 
-        // Comment count
-        if (h.tvCommentCount != null) {
-            h.tvCommentCount.setText(String.valueOf(post.getcountComment()));
-        }
-
-        // Reactions
-        bindReactions(h, post);
-
-        // Like button
-        bindLikeButton(h, post);
-
-        // Comment button → open PostDetail
-        h.btnComment.setOnClickListener(v -> {
-            Intent intent = new Intent(context, PostDetailActivity.class);
-            intent.putExtra("POST_ID", post.getId());
-            intent.putExtra("POST_CONTENT", post.getContent());
-            if (post.getAuthorId() != null) {
-                intent.putExtra("AUTHOR_NAME", post.getAuthorId().getUsername());
-                intent.putExtra("AUTHOR_AVATAR", post.getAuthorId().getAvatar());
-            }
-            if (post.getImages() != null) {
-                intent.putStringArrayListExtra("POST_IMAGES", new ArrayList<>(post.getImages()));
-            }
-            intent.putExtra("COMMENT_COUNT", post.getcountComment());
-            intent.putExtra("REACTION_COUNT", post.getcountReaction());
-            intent.putExtra("MY_REACTION", post.getMyReaction());
-            if (post.getTopReactions() != null) {
-                intent.putStringArrayListExtra("TOP_REACTIONS", new ArrayList<>(post.getTopReactions()));
-            }
-            context.startActivity(intent);
-        });
-    }
-
-    private void bindReactions(VH h, Post post) {
-        int reactCount = post.getcountReaction();
-        List<String> topReactions = post.getTopReactions();
+        // --- Top reactions ---
+        int reactCount = p.getCountReaction();
+        List<String> topReactions = p.getTopReactions();
 
         if (reactCount > 0) {
             h.layoutTopReactions.setVisibility(View.VISIBLE);
@@ -140,136 +118,193 @@ public class GroupPostAdapter extends RecyclerView.Adapter<GroupPostAdapter.VH> 
             h.imgReact2.setVisibility(View.GONE);
             if (topReactions != null && !topReactions.isEmpty()) {
                 h.imgReact1.setVisibility(View.VISIBLE);
-                h.imgReact1.setImageResource(reactionIcon(topReactions.get(0)));
+                h.imgReact1.setText(getEmojiForReaction(topReactions.get(0)));
                 if (topReactions.size() > 1) {
                     h.imgReact2.setVisibility(View.VISIBLE);
-                    h.imgReact2.setImageResource(reactionIcon(topReactions.get(1)));
+                    h.imgReact2.setText(getEmojiForReaction(topReactions.get(1)));
                 }
             }
         } else {
             h.layoutTopReactions.setVisibility(View.GONE);
         }
-    }
 
-    private void bindLikeButton(VH h, Post post) {
-        String current = post.getMyReaction();
-        h.imgLike.setImageResource(reactionIcon(current));
-        h.tvLikeLabel.setText(current != null ? current : "Thích");
-
-        h.btnLikeContainer.setOnClickListener(v -> {
-            String next = post.getMyReaction() != null ? null : "Like";
-            applyReaction(h, post, next);
+        h.layoutTopReactions.setOnClickListener(v -> {
+            Context ctx = v.getContext();
+            if (ctx instanceof AppCompatActivity) {
+                ReactionListBottomSheet sheet = ReactionListBottomSheet.newInstance(p.getId());
+                sheet.show(((AppCompatActivity) ctx).getSupportFragmentManager(), "ReactionSheet");
+            }
         });
 
-        h.btnLikeContainer.setOnLongClickListener(v -> {
-            View popupView = LayoutInflater.from(context).inflate(R.layout.item_feed_reaction_popup, null);
-            PopupWindow pw = new PopupWindow(popupView,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT, true);
-            pw.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        // --- Reaction button ---
+        String currentReaction = p.getMyReaction();
+        h.imgLike.setText(getEmojiForReaction(currentReaction));
+        h.tvLikeLabel.setText(currentReaction != null ? currentReaction : "Thích");
 
-            int[] emojis = {R.id.btnReactLike, R.id.btnReactLove, R.id.btnReactHaha,
-                    R.id.btnReactWow, R.id.btnReactSad, R.id.btnReactAngry};
-            String[] types = {"Like", "Love", "Haha", "Wow", "Sad", "Angry"};
-            for (int i = 0; i < emojis.length; i++) {
-                final String type = types[i];
-                popupView.findViewById(emojis[i]).setOnClickListener(ev -> {
-                    applyReaction(h, post, type);
-                    pw.dismiss();
-                });
-            }
+        h.btnLike.setOnClickListener(v -> {
+            String newType = (p.getMyReaction() != null) ? null : "Like";
+            handleReactionUpdate(h, p, newType);
+        });
+
+        h.btnLike.setOnLongClickListener(v -> {
+            View popupView = LayoutInflater.from(v.getContext())
+                    .inflate(R.layout.item_feed_reaction_popup, null);
+            PopupWindow pw = new PopupWindow(popupView,
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+            pw.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+
+            TextView btnReactLike = popupView.findViewById(R.id.btnReactLike);
+            TextView btnReactLove = popupView.findViewById(R.id.btnReactLove);
+            TextView btnReactHaha = popupView.findViewById(R.id.btnReactHaha);
+            TextView btnReactWow = popupView.findViewById(R.id.btnReactWow);
+            TextView btnReactSad = popupView.findViewById(R.id.btnReactSad);
+            TextView btnReactAngry = popupView.findViewById(R.id.btnReactAngry);
+
+            btnReactLike.setOnClickListener(x -> { handleReactionUpdate(h, p, "Like"); pw.dismiss(); });
+            btnReactLove.setOnClickListener(x -> { handleReactionUpdate(h, p, "Love"); pw.dismiss(); });
+            btnReactHaha.setOnClickListener(x -> { handleReactionUpdate(h, p, "Haha"); pw.dismiss(); });
+            btnReactWow.setOnClickListener(x ->  { handleReactionUpdate(h, p, "Wow");  pw.dismiss(); });
+            btnReactSad.setOnClickListener(x ->  { handleReactionUpdate(h, p, "Sad");  pw.dismiss(); });
+            btnReactAngry.setOnClickListener(x ->{ handleReactionUpdate(h, p, "Angry");pw.dismiss(); });
+
             pw.showAsDropDown(v, 0, -v.getHeight() - 140);
             return true;
         });
+
+        // --- Comment button ---
+        h.btnComment.setOnClickListener(v -> {
+            Context ctx = v.getContext();
+            Intent intent = new Intent(ctx, PostDetailActivity.class);
+            intent.putExtra("POST_ID", p.getId());
+            intent.putExtra("POST_CONTENT", p.getContent());
+            if (p.getAuthorId() != null) {
+                intent.putExtra("AUTHOR_NAME", p.getAuthorId().getUsername());
+                intent.putExtra("AUTHOR_AVATAR", p.getAuthorId().getAvatar());
+            }
+            if (p.getImages() != null) {
+                intent.putStringArrayListExtra("POST_IMAGES", new ArrayList<>(p.getImages()));
+            }
+            intent.putExtra("COMMENT_COUNT", p.getCountComment());
+            intent.putExtra("REACTION_COUNT", p.getCountReaction());
+            intent.putExtra("MY_REACTION", p.getMyReaction());
+            if (p.getTopReactions() != null) {
+                intent.putStringArrayListExtra("TOP_REACTIONS", new ArrayList<>(p.getTopReactions()));
+            }
+            ctx.startActivity(intent);
+        });
+
+        h.tvCommentCount.setText(String.valueOf(p.getCountComment()));
     }
 
-    private void applyReaction(VH h, Post post, String next) {
-        String old = post.getMyReaction();
-        int count = post.getcountReaction();
-        List<String> tops = post.getTopReactions() != null ? new ArrayList<>(post.getTopReactions()) : new ArrayList<>();
+    private void handleReactionUpdate(VH h, GroupPost p, String newType) {
+        String oldType = p.getMyReaction();
+        int count = p.getCountReaction();
+        List<String> top = p.getTopReactions();
+        if (top == null) top = new ArrayList<>();
 
-        if (old == null && next != null) {
+        if (oldType == null && newType != null) {
             count++;
-            if (!tops.contains(next)) tops.add(0, next);
-        } else if (old != null && next == null) {
-            count = Math.max(0, count - 1);
-            if (count == 0) tops.clear(); else tops.remove(old);
-        } else if (old != null && !old.equals(next)) {
-            tops.remove(old);
-            if (!tops.contains(next)) tops.add(0, next);
+            if (!top.contains(newType)) top.add(0, newType);
+        } else if (oldType != null && newType == null) {
+            count--;
+            if (count <= 0) top.clear();
+            else top.remove(oldType);
+        } else if (oldType != null && !oldType.equals(newType)) {
+            top.remove(oldType);
+            if (!top.contains(newType)) top.add(0, newType);
         }
-        if (tops.size() > 2) tops = new ArrayList<>(tops.subList(0, 2));
+        if (top.size() > 2) top = new ArrayList<>(top.subList(0, 2));
 
-        post.setMyReaction(next);
-        post.setcountReaction(count);
-        post.setTopReactions(tops);
+        p.setMyReaction(newType);
+        p.setCountReaction(count);
+        p.setTopReactions(top);
 
-        h.imgLike.setImageResource(reactionIcon(next));
-        h.tvLikeLabel.setText(next != null ? next : "Thích");
-        bindReactions(h, post);
+        h.imgLike.setText(getEmojiForReaction(newType));
+        h.tvLikeLabel.setText(newType != null ? newType : "Thích");
+
+        if (count > 0) {
+            h.layoutTopReactions.setVisibility(View.VISIBLE);
+            h.tvReactionCount.setText(String.valueOf(count));
+            h.imgReact1.setVisibility(View.GONE);
+            h.imgReact2.setVisibility(View.GONE);
+            if (!top.isEmpty()) {
+                h.imgReact1.setVisibility(View.VISIBLE);
+                h.imgReact1.setText(getEmojiForReaction(top.get(0)));
+                if (top.size() > 1) {
+                    h.imgReact2.setVisibility(View.VISIBLE);
+                    h.imgReact2.setText(getEmojiForReaction(top.get(1)));
+                }
+            }
+        } else {
+            h.layoutTopReactions.setVisibility(View.GONE);
+        }
 
         if (reactionListener != null) {
-            String send = next != null ? next : old;
-            reactionListener.onReactClick(post.getId(), send);
+            String toSend = newType != null ? newType : oldType;
+            reactionListener.onReactClick(p.getId(), toSend);
         }
     }
 
-    private int reactionIcon(String type) {
-        if (type == null) return R.drawable.ic_like;
+    private String getEmojiForReaction(String type) {
+        if (type == null) return "👍";
         switch (type) {
-            case "Like":  return R.drawable.ic_like_color;
-            case "Love":  return R.drawable.ic_love;
-            case "Haha":  return R.drawable.ic_haha;
-            case "Wow":   return R.drawable.ic_wow;
-            case "Sad":   return R.drawable.ic_sad;
-            case "Angry": return R.drawable.ic_angry;
-            default:      return R.drawable.ic_like;
+            case "Like":  return "👍";
+            case "Love":  return "❤️";
+            case "Haha":  return "😆";
+            case "Wow":   return "😮";
+            case "Sad":   return "😢";
+            case "Angry": return "😡";
+            default:      return "👍";
         }
     }
 
     @Override
     public int getItemCount() { return items.size(); }
 
-    static class VH extends RecyclerView.ViewHolder {
-        View layoutGroupHeader;
-        CircleImageView imgGroupAvatar;
-        TextView tvGroupName;
+    private String formatTime(String iso) {
+        if (iso == null || iso.isEmpty()) return "";
+        try {
+            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
+            fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+            long ts = fmt.parse(iso).getTime();
+            return DateUtils.getRelativeTimeSpanString(ts, System.currentTimeMillis(),
+                    DateUtils.MINUTE_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE).toString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
 
-        ImageView imgAvatar;
-        TextView tvAuthorName, tvContent, tvCommentCount, tvLikeLabel;
+    static class VH extends RecyclerView.ViewHolder {
+        de.hdodenhof.circleimageview.CircleImageView imgAvatar;
+        TextView tvAuthor, tvGroupName, tvTime, tvContent, tvReactionCount, tvCommentCount, tvLikeLabel;
         RecyclerView rvPostImages;
-        LinearLayout layoutTopReactions, btnLikeContainer;
-        ImageView imgReact1, imgReact2, imgLike;
-        TextView tvReactionCount;
-        View btnComment;
+        LinearLayout layoutTopReactions, btnLike, btnComment;
+        TextView imgReact1, imgReact2, imgLike;
 
         VH(@NonNull View v) {
             super(v);
-            layoutGroupHeader = v.findViewById(R.id.layoutGroupHeader);
-            imgGroupAvatar = v.findViewById(R.id.imgGroupAvatar);
-            tvGroupName = v.findViewById(R.id.tvGroupName);
-
-            imgAvatar = v.findViewById(R.id.imgAvatar);
-            tvAuthorName = v.findViewById(R.id.tvAuthorName);
-            tvContent = v.findViewById(R.id.tvContent);
-            tvCommentCount = v.findViewById(R.id.tvCommentCount);
-            tvLikeLabel = v.findViewById(R.id.tvLikeCount);
-            imgLike = v.findViewById(R.id.imgLike);
-
-            rvPostImages = v.findViewById(R.id.rvPostImages);
-            rvPostImages.setLayoutManager(new LinearLayoutManager(
-                    v.getContext(), LinearLayoutManager.HORIZONTAL, false));
+            imgAvatar         = v.findViewById(R.id.imgAvatar);
+            tvAuthor          = v.findViewById(R.id.tvAuthorName);
+            tvGroupName       = v.findViewById(R.id.tvGroupName);
+            tvTime            = v.findViewById(R.id.tvTime);
+            tvContent         = v.findViewById(R.id.tvContent);
+            rvPostImages      = v.findViewById(R.id.rvPostImages);
+            rvPostImages.setLayoutManager(new LinearLayoutManager(v.getContext(),
+                    LinearLayoutManager.HORIZONTAL, false));
             rvPostImages.setOnFlingListener(null);
-            PagerSnapHelper snap = new PagerSnapHelper();
-            snap.attachToRecyclerView(rvPostImages);
+            new PagerSnapHelper().attachToRecyclerView(rvPostImages);
 
             layoutTopReactions = v.findViewById(R.id.layoutTopReactions);
-            tvReactionCount = v.findViewById(R.id.tvReactionCount);
-            imgReact1 = v.findViewById(R.id.imgReact1);
-            imgReact2 = v.findViewById(R.id.imgReact2);
+            tvReactionCount    = v.findViewById(R.id.tvReactionCount);
+            imgReact1          = v.findViewById(R.id.imgReact1);
+            imgReact2          = v.findViewById(R.id.imgReact2);
 
-            btnLikeContainer = v.findViewById(R.id.btnLike);
+            btnLike    = v.findViewById(R.id.btnLike);
+            imgLike    = v.findViewById(R.id.imgLike);
+            tvLikeLabel= v.findViewById(R.id.tvLikeCount);
             btnComment = v.findViewById(R.id.btnComment);
+            tvCommentCount = v.findViewById(R.id.tvCommentCount);
         }
     }
 }

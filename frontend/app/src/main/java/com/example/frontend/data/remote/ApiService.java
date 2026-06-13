@@ -10,9 +10,17 @@ import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.Group;
+import com.example.frontend.data.model.GroupDetail;
 import com.example.frontend.data.model.GroupInvitation;
+import com.example.frontend.data.model.GroupMember;
+import com.example.frontend.data.model.GroupPost;
 import com.example.frontend.data.model.LiveModel;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.data.model.Story;
+import com.example.frontend.data.model.StoryGroup;
+import com.example.frontend.data.model.NotificationListResponse;
+import com.example.frontend.data.model.Notification;
+import com.example.frontend.data.model.PagedResponse;
 import com.example.frontend.data.model.ReactionItem;
 import com.example.frontend.data.model.UpdateProfile;
 import com.example.frontend.data.model.User;
@@ -22,7 +30,7 @@ import com.example.frontend.data.model.Message;
 import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.Quiz;
 import com.example.frontend.data.model.ReactionRequest;
-
+import com.example.frontend.data.remote.SubmitQuizRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +43,6 @@ import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.Header;
-import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -44,18 +51,21 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
+    // ====== AUTH ======
     @POST("auth/login")
-        // Endpoint đăng nhập
     Call<ApiResponse<LoginResponse>> login(@Body LoginRequest request);
 
     @POST("auth/register")
     Call<ApiResponse<LoginResponse>> register(@Body RegisterRequest request);
 
+    @POST("auth/send-otp")
+    Call<ApiResponse> sendOtp(@Body EmailRequest request);
+
     @POST("auth/google-login")
     Call<ApiResponse<LoginResponse>> googleLogin(@Body GoogleLoginRequest request);
 
-    @POST("auth/send-otp")
-    Call<ApiResponse> sendOtp(@Body EmailRequest request);
+    @POST("auth/facebook-login")
+    Call<ApiResponse<LoginResponse>> facebookLogin(@Body FacebookLoginRequest request);
 
     @POST("auth/verify-otp")
     Call<ApiResponse> verifyOtp(@Body OtpRequest request);
@@ -63,33 +73,57 @@ public interface ApiService {
     @POST("auth/reset-password")
     Call<ApiResponse> resetPassword(@Body ResetPasswordRequest request);
 
-    // Lấy danh sách gợi ý kết bạn
+    // ====== FRIENDS ======
     @GET("friends/suggestions")
     Call<ApiResponse<List<Friend>>> getFriendSuggestions();
 
-    // 1. Lấy danh sách bạn bè
     @GET("friends")
     Call<ApiResponse<List<Friend>>> getFriends();
 
-    // 2. Lấy danh sách lời mời kết bạn (Pending)
     @GET("friends/pending")
     Call<ApiResponse<List<Friend>>> getPendingRequests();
 
-    // 3. Gửi lời mời kết bạn
     @POST("friends/request/{id}")
     Call<ApiResponse<Object>> sendFriendRequest(@Path("id") String userId);
 
-    // 4. Chấp nhận lời mời
     @PUT("friends/accept/{id}")
     Call<ApiResponse<Object>> acceptFriendRequest(@Path("id") String userId);
 
-    // 5. Từ chối lời mời
     @DELETE("friends/decline/{id}")
     Call<ApiResponse<Object>> declineFriendRequest(@Path("id") String userId);
 
-    // 6. Huỷ kết bạn
     @DELETE("friends/remove/{id}")
     Call<ApiResponse<Object>> removeFriend(@Path("id") String userId);
+
+    // ====== STORIES ======
+    @GET("stories")
+    Call<ApiResponse<List<StoryGroup>>> getFeedStories();
+
+    @Multipart
+    @POST("stories")
+    Call<ApiResponse<Story>> createStory(
+            @Part MultipartBody.Part file,
+            @Part("caption") RequestBody caption);
+
+    @GET("stories/{storyId}")
+    Call<ApiResponse<Story>> viewStory(@Path("storyId") String storyId);
+
+    @DELETE("stories/{storyId}")
+    Call<ApiResponse<Object>> deleteStory(@Path("storyId") String storyId);
+
+    // ====== NOTIFICATIONS ======
+    @GET("notifications")
+    Call<NotificationListResponse> getNotifications(@Query("page") int page, @Query("limit") int limit);
+
+    @PUT("notifications/{id}/read")
+    Call<ApiResponse<Object>> markNotificationRead(@Path("id") String id);
+
+    @PUT("notifications/mark-all-read")
+    Call<ApiResponse<Object>> markAllNotificationsRead();
+
+    // ====== USER ======
+    @GET("user/search")
+    Call<ApiResponse<List<User>>> searchUsers(@Query("q") String query);
 
     @GET("user/profile")
     Call<ApiResponse<User>> getMyProfile();
@@ -104,15 +138,11 @@ public interface ApiService {
     @Multipart
     @PUT("user/cover")
     Call<ApiResponse<CoverResponse>> uploadCover(@Part MultipartBody.Part file);
-    //TÀI LIỆU
 
+    // ====== DOCUMENTS ======
     @GET("documents/me/list")
-    Call<ApiResponse<DocumentListData>> getMyDocuments(
-            @Query("page") int page,
-            @Query("limit") int limit
-    );
+    Call<ApiResponse<DocumentListData>> getMyDocuments(@Query("page") int page, @Query("limit") int limit);
 
-    // 1. Lấy danh sách tài liệu công khai
     @GET("documents")
     Call<ApiResponse<DocumentListData>> getDocuments(
             @Query("page") int page,
@@ -121,14 +151,15 @@ public interface ApiService {
             @Query("sortBy") String sortBy
     );
 
-    // 2. Tạo tài liệu mới
+    @GET("media/me")
+    Call<ApiResponse<List<Media>>> getMyMedia(@Query("fileType") String fileType);
 
-    //Tải file lên Cloudinary thông qua Route Media để lấy mediaId rồi mới tạo Document
+
     @Multipart
+
     @POST("media/upload/document")
-    // Đổi từ /single thành /document cho giống backend
     Call<ApiResponse<Media>> uploadSingleFile(
-            @Part MultipartBody.Part file, // Giữ nguyên "media" ở đây nếu code Activity gửi "media"
+            @Part MultipartBody.Part file,
             @Part("sourceType") RequestBody sourceType,
             @Part("targetId") RequestBody targetId
     );
@@ -136,35 +167,25 @@ public interface ApiService {
     @POST("documents")
     Call<ApiResponse<Document>> createDocument(@Body Map<String, Object> body);
 
-
-    // 3. Lưu/Bỏ lưu tài liệu
     @POST("documents/{id}/save")
     Call<ApiResponse<Map<String, Boolean>>> toggleSave(@Path("id") String id);
 
-    // 4. Lấy tài liệu đã lưu
     @GET("documents/me/saved")
-    Call<ApiResponse<DocumentListData>> getSavedDocuments(
-            @Query("page") int page,
-            @Query("limit") int limit
-    );
+    Call<ApiResponse<DocumentListData>> getSavedDocuments(@Query("page") int page, @Query("limit") int limit);
 
-    // 5. Xóa tài liệu
     @DELETE("documents/{id}")
     Call<ApiResponse<Void>> deleteDocument(@Path("id") String id);
 
-    // 6. Tăng lượt tải về
     @POST("documents/{id}/download")
     Call<ApiResponse<Object>> incrementDownload(@Path("id") String id);
 
-    // 7. Cập nhật tài liệu (PATCH)
     @PATCH("documents/{id}")
     Call<ApiResponse<Document>> updateDocument(@Path("id") String id, @Body Map<String, Object> updates);
 
-    // 8. Lấy chi tiết tài liệu theo ID
     @GET("documents/{id}")
     Call<ApiResponse<Document>> getDocumentById(@Path("id") String id);
 
-    // CHAT
+    // ====== CHAT ======
     @GET("chat/conversations")
     Call<ApiResponse<List<Conversation>>> getConversations();
 
@@ -177,10 +198,13 @@ public interface ApiService {
     @POST("chat/messages")
     Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);
 
+    // ====== POSTS ======
+
+    @GET("posts/user/{userId}")
+    Call<ApiResponse<List<Post>>> getPostsByUser(@Path("userId") String userId);
+
     @GET("posts/feed")
     Call<ApiResponse<List<Post>>> getAllPosts();
-
-
 
     @Multipart
     @POST("posts/create")
@@ -188,6 +212,8 @@ public interface ApiService {
             @Part("content") RequestBody content,
             @Part("privacy") RequestBody privacy,
             @Part("groupId") RequestBody groupId,
+            @Part("tags") RequestBody tags,
+            @Part("initialReaction") RequestBody initialReaction,
             @Part List<MultipartBody.Part> images
     );
 
@@ -196,16 +222,20 @@ public interface ApiService {
             @Header("Authorization") String token,
             @Path("id") String postId
     );
-    // Quiz
-    @POST("quiz/generate-quiz")
-    //
-    Call<ApiResponse<Quiz>> generateQuiz(@Body QuizRequest request);
 
-    @GET("quiz/my-quizzes")
-    Call<ApiResponse<List<Quiz>>> getMyQuizzes();
+    @GET("posts/me")
+    Call<ApiResponse<List<Post>>> getMyPosts();
 
+    @POST("posts/{id}/save")
+    Call<ApiResponse<Object>> toggleSavePost(
+            @Header("Authorization") String token,
+            @Path("id") String postId
+    );
 
-    // 1. Lấy danh sách (Nó sẽ trả về List các Comment gốc)
+    @GET("posts/my/saved")
+    Call<ApiResponse<List<Post>>> getSavedPosts(@Header("Authorization") String token);
+
+    // ====== COMMENTS ======
     @GET("/api/comments/post/{postId}")
     Call<ApiResponse<List<Comment>>> getComments(@Path("postId") String postId);
 
@@ -215,13 +245,30 @@ public interface ApiService {
             @Body CommentRequest body
     );
 
-    // 3. Xóa bình luận
     @DELETE("/api/comments/{commentId}")
     Call<ApiResponse<Object>> deleteComment(
             @Header("Authorization") String token,
             @Path("commentId") String commentId
     );
 
+    // ====== REACTIONS ======
+    @GET("reactions/{targetId}")
+    Call<ApiResponse<List<ReactionItem>>> getReactionsOfPost(@Path("targetId") String targetId);
+
+    @POST("reactions/toggle")
+    Call<ApiResponse<Object>> toggleReaction(@Body ReactionRequest request);
+
+    // ====== QUIZ ======
+    @POST("quiz/generate-quiz")
+    Call<ApiResponse<Quiz>> generateQuiz(@Body QuizRequest request);
+
+    @GET("quiz/my-quizzes")
+    Call<ApiResponse<List<Quiz>>> getMyQuizzes();
+
+    @POST("quiz/submit")
+    Call<ApiResponse<Object>> submitQuiz(@Body SubmitQuizRequest request);
+
+    // ====== MEDIA ======
     @Multipart
     @POST("media/upload")
     Call<ApiResponse<List<Media>>> uploadChatMedia(
@@ -230,22 +277,42 @@ public interface ApiService {
             @Part("targetId") RequestBody targetId
     );
 
-    // Gọi API lấy danh sách thả cảm xúc (Nếu bạn có khai báo)
-    @GET("reactions/{targetId}")
-    Call<ApiResponse<List<ReactionItem>>> getReactionsOfPost(@Path("targetId") String targetId);
-
-    // Gọi API thả/thu hồi cảm xúc (Sửa ResponseBody thành ApiResponse<Object> luôn nhé)
-    @POST("reactions/toggle")
-    Call<ApiResponse<Object>> toggleReaction(@Body ReactionRequest request);
-
-    //Lấy bài viết cá nhân
-    @GET("posts/me")
-    Call<ApiResponse<List<Post>>> getMyPosts();
-
     // ====== GROUPS ======
+    // Tab "Nhóm của bạn"
     @GET("groups/my")
     Call<ApiResponse<List<Group>>> getMyGroups();
 
+    // Tab "Bài viết" - tất cả bài từ nhóm đang tham gia
+    @GET("groups/posts")
+    Call<ApiResponse<List<GroupPost>>> getGroupFeedPosts(
+            @Query("page") int page,
+            @Query("limit") int limit
+    );
+
+    // Tab "Khám phá"
+    @GET("groups/discover")
+    Call<ApiResponse<List<Group>>> discoverGroups(
+            @Query("search") String search,
+            @Query("page") int page,
+            @Query("limit") int limit
+    );
+
+    // Tab "Lời mời"
+    @GET("groups/invitations")
+    Call<ApiResponse<List<GroupInvitation>>> getGroupInvitations();
+
+    // Phản hồi lời mời: body = { "action": "accept" | "decline" }
+    @PATCH("groups/invitations/{invitationId}")
+    Call<ApiResponse<Object>> respondToInvitation(
+            @Path("invitationId") String invitationId,
+            @Body Map<String, String> body
+    );
+
+    // Gửi lời mời: body = { groupId, inviteeId }
+    @POST("groups/invitations")
+    Call<ApiResponse<Object>> sendGroupInvitation(@Body Map<String, String> body);
+
+    // Tạo nhóm
     @Multipart
     @POST("groups")
     Call<ApiResponse<Group>> createGroup(
@@ -255,49 +322,45 @@ public interface ApiService {
             @Part MultipartBody.Part avatar
     );
 
-    // Tab 1: Bài viết từ các nhóm đã join
-    @GET("groups/posts")
-    Call<ApiResponse<List<Post>>> getGroupPosts(
-            @Query("page") int page,
-            @Query("limit") int limit
+    // Chi tiết nhóm
+    @GET("groups/{groupId}")
+    Call<ApiResponse<GroupDetail>> getGroupDetail(@Path("groupId") String groupId);
+
+    // Cập nhật nhóm (tên, mô tả, ảnh) - chỉ admin
+    @Multipart
+    @PATCH("groups/{groupId}")
+    Call<ApiResponse<GroupDetail>> updateGroup(
+            @Path("groupId") String groupId,
+            @Part("groupName") RequestBody groupName,
+            @Part("description") RequestBody description,
+            @Part("privacy") RequestBody privacy,
+            @Part MultipartBody.Part avatar
     );
 
-    // Tab 2: Khám phá nhóm công khai
-    @GET("groups/discover")
-    Call<ApiResponse<List<Group>>> discoverGroups(
-            @Query("search") String search,
-            @Query("page") int page,
-            @Query("limit") int limit
-    );
-
-    // Tab 3: Lời mời
-    @GET("groups/invitations")
-    Call<ApiResponse<List<GroupInvitation>>> getGroupInvitations();
-
-    // Phản hồi lời mời (accept / decline)
-    @PATCH("groups/invitations/{invitationId}")
-    Call<ApiResponse<Void>> respondToInvitation(
-            @Path("invitationId") String invitationId,
-            @Body Map<String, String> body
-    );
-
-    // Tham gia nhóm Public
+    // Tham gia nhóm public
     @POST("groups/{groupId}/join")
-    Call<ApiResponse<Void>> joinPublicGroup(@Path("groupId") String groupId);
+    Call<ApiResponse<Object>> joinGroup(@Path("groupId") String groupId);
 
-    // Gọi API Lưu / Bỏ lưu bài viết (Toggle)
-    @POST("posts/{id}/save")
-    Call<ApiResponse<Object>> toggleSavePost(
-            @Header("Authorization") String token,
-            @Path("id") String postId
+    // Bài viết của 1 nhóm cụ thể
+    @GET("groups/{groupId}/posts")
+    Call<ApiResponse<List<GroupPost>>> getPostsByGroup(
+            @Path("groupId") String groupId,
+            @Query("page") int page,
+            @Query("limit") int limit
     );
 
-    // Lấy danh sách Bài viết đã lưu của User
-    @GET("posts/my/saved")
-    Call<ApiResponse<List<Post>>> getSavedPosts(
-            @Header("Authorization") String token
+    // Lấy danh sách thành viên nhóm
+    @GET("groups/{groupId}/members")
+    Call<ApiResponse<List<GroupMember>>> getGroupMembers(@Path("groupId") String groupId);
+
+    // Kick thành viên (admin only)
+    @DELETE("groups/{groupId}/members/{memberId}")
+    Call<ApiResponse<Object>> kickMember(
+            @Path("groupId") String groupId,
+            @Path("memberId") String memberId
     );
 
+    // ====== LIVE ======
     @POST("live/start")
     Call<ApiResponse<LiveModel>> startLive(@Body LiveRequest request);
 
@@ -307,4 +370,3 @@ public interface ApiService {
     @PUT("live/end/{liveId}")
     Call<ApiResponse<Void>> endLive(@Path("liveId") String liveId);
 }
-

@@ -54,14 +54,34 @@ export const getOrCreateConversation = async (
         ],
         $size: 2,
       },
-    }).populate("members", "username avatar isActive");
+    })
+    .populate("members", "username avatar isActive")
+    .populate({
+      path: "lastMessage",
+      populate: {
+        path: "sender",
+        select: "username avatar _id",
+      },
+    });
 
     if (!conversation) {
       conversation = await Conversation.create({
         members: [userId, targetUserId],
       });
-      conversation = await conversation.populate("members", "username avatar isActive");
-    }
+        conversation = await conversation.populate([
+          {
+            path: "members",
+            select: "username avatar isActive",
+          },
+          {
+            path: "lastMessage",
+            populate: {
+              path: "sender",
+              select: "username avatar _id",
+            },
+          },
+        ]);
+ }
 
     res.json({ success: true, data: conversation });
   } catch (error) {

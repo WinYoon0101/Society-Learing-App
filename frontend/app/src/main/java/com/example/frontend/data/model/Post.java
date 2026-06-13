@@ -14,6 +14,10 @@ public class Post {
     private List<String> images;
 
     private User authorId;
+    
+    @SerializedName("groupId")
+    private String groupId;  // null nếu bài home/profile, có giá trị nếu bài trong nhóm
+    
     private String createdAt;
 
     @SerializedName("groupId")
@@ -40,6 +44,9 @@ public class Post {
 
     public User getAuthorId() { return authorId; }
     public void setAuthorId(User authorId) { this.authorId = authorId; }
+    
+    public String getGroupId() { return groupId; }
+    public void setGroupId(String groupId) { this.groupId = groupId; }
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }

@@ -5,18 +5,26 @@ import com.google.gson.annotations.SerializedName;
 public class GroupInvitation {
     @SerializedName("_id")
     private String id;
-
     @SerializedName("group")
-    private PostGroup group;
-
+    private Group group;
     @SerializedName("inviter")
     private User inviter;
-
     @SerializedName("createdAt")
     private String createdAt;
 
-    public String getId() { return id; }
-    public PostGroup getGroup() { return group; }
-    public User getInviter() { return inviter; }
-    public String getCreatedAt() { return createdAt; }
+    public String getId() {
+        return id;
+    }
+
+    public Group getGroup() {
+        return group;
+    }
+
+    public User getInviter() {
+        return inviter;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
 }

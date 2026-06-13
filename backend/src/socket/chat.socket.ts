@@ -62,27 +62,33 @@ async function authenticateSocket(
 
 export function initChatSocket(io: Server) {
   io.on("connection", async (socket: Socket) => {
-    const user = await authenticateSocket(socket);
+    try {
+      const user = await authenticateSocket(socket);
 
-    if (!user) {
-      socket.emit("error", { message: "Xác thực thất bại" });
-      socket.disconnect();
-      return;
-    }
+      if (!user) {
+        socket.emit("error", { message: "Xác thực thất bại" });
+        socket.disconnect();
+        return;
+      }
 
-    const userId = user.id;
-    addOnlineUser(userId, socket.id);
+      const userId = user.id;
+      addOnlineUser(userId, socket.id);
 
-    // Thông báo cho bạn bè biết user online
-    socket.broadcast.emit("user:online", { userId });
+      // Thông báo cho bạn bè biết user online
+      socket.broadcast.emit("user:online", { userId });
 
-    console.log(`✅ User ${user.username} connected [${socket.id}]`);
+      console.log(`✅ User ${user.username} connected [${socket.id}]`);
 
-    // Join vào các room conversation của user
-    const conversations = await Conversation.find({ members: userId });
-    conversations.forEach((conv) => {
-      socket.join(conv._id.toString());
-    });
+      // Join vào các room conversation của user
+      try {
+        const conversations = await Conversation.find({ members: userId });
+        conversations.forEach((conv) => {
+          socket.join(conv._id.toString());
+        });
+      } catch (convErr) {
+        console.error(`⚠️ Lỗi join conversation rooms cho ${user.username}:`, convErr);
+        // Không disconnect - chỉ bỏ qua bước join rooms
+      }
 
     // Helper: join room cho conversation mới tạo
     const joinConversationRoom = (conversationId: string) => {
@@ -215,7 +221,7 @@ export function initChatSocket(io: Server) {
         const message = await Message.findOneAndUpdate(
           { _id: data.messageId, sender: userId },
           { isDeleted: true, text: "Tin nhắn đã bị thu hồi" },
-          { new: true }
+          { returnDocument: 'after' }
         );
 
         if (!message) return;
@@ -256,5 +262,10 @@ export function initChatSocket(io: Server) {
       socket.broadcast.emit("user:offline", { userId });
       console.log(`❌ User ${user.username} disconnected [${socket.id}]`);
     });
+
+    } catch (err) {
+      console.error("❌ Lỗi không bắt được trong socket connection handler:", err);
+      socket.disconnect();
+    }
   });
 }

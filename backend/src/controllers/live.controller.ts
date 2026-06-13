@@ -20,7 +20,7 @@ export const startLive = async (req: Request, res: Response) => {
                 new: true,    
                 runValidators: true 
             }
-        ).populate("hostId", "username avatar email"); // QUAN TRỌNG: Phải có dòng này
+        ).populate("hostId", "username avatar email"); 
 
       
         res.status(201).json({ success: true, data: liveSession });

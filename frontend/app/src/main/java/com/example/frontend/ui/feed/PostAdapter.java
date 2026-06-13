@@ -87,8 +87,28 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         if (post.getAuthorId() != null) {
             holder.tvUserName.setText(post.getAuthorId().getUsername());
             Glide.with(context).load(post.getAuthorId().getAvatar()).placeholder(R.drawable.ic_user).into(holder.imgAvatar);
+            
+            View.OnClickListener goToProfile = v -> {
+                if (post.getAuthorId().getId() != null) {
+                    Intent intent = new Intent(context, com.example.frontend.ui.profile.FriendProfileActivity.class);
+                    intent.putExtra("FRIEND_ID", post.getAuthorId().getId());
+                    intent.putExtra("FRIEND_NAME", post.getAuthorId().getUsername());
+                    intent.putExtra("FRIEND_AVATAR", post.getAuthorId().getAvatar());
+                    context.startActivity(intent);
+                }
+            };
+            holder.imgAvatar.setOnClickListener(goToProfile);
+            holder.tvUserName.setOnClickListener(goToProfile);
         } else {
             holder.tvUserName.setText("Người dùng ẩn danh");
+            holder.imgAvatar.setOnClickListener(null);
+            holder.tvUserName.setOnClickListener(null);
+        }
+
+        if (post.getCreatedAt() != null) {
+            holder.tvTime.setText(formatTime(post.getCreatedAt()));
+        } else {
+            holder.tvTime.setText("Vừa xong");
         }
 
         // ==========================================
@@ -162,11 +182,11 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
             if (topReactions != null && !topReactions.isEmpty()) {
                 holder.imgReact1.setVisibility(View.VISIBLE);
-                holder.imgReact1.setImageResource(getIconForReaction(topReactions.get(0)));
+                holder.imgReact1.setText(getEmojiForReaction(topReactions.get(0)));
 
                 if (topReactions.size() > 1) {
                     holder.imgReact2.setVisibility(View.VISIBLE);
-                    holder.imgReact2.setImageResource(getIconForReaction(topReactions.get(1)));
+                    holder.imgReact2.setText(getEmojiForReaction(topReactions.get(1)));
                 }
             }
         } else {
@@ -210,7 +230,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         if (holder.btnLikeContainer != null) {
             String currentReaction = post.getMyReaction();
-            holder.imgLikeIcon.setImageResource(getIconForReaction(currentReaction));
+            holder.imgLikeIcon.setText(getEmojiForReaction(currentReaction));
 
             if (currentReaction != null) {
                 holder.tvLikeLabel.setText(currentReaction);
@@ -228,12 +248,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 PopupWindow popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
                 popupWindow.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
 
-                ImageView btnReactLike = popupView.findViewById(R.id.btnReactLike);
-                ImageView btnReactLove = popupView.findViewById(R.id.btnReactLove);
-                ImageView btnReactHaha = popupView.findViewById(R.id.btnReactHaha);
-                ImageView btnReactWow = popupView.findViewById(R.id.btnReactWow);
-                ImageView btnReactSad = popupView.findViewById(R.id.btnReactSad);
-                ImageView btnReactAngry = popupView.findViewById(R.id.btnReactAngry);
+                TextView btnReactLike = popupView.findViewById(R.id.btnReactLike);
+                TextView btnReactLove = popupView.findViewById(R.id.btnReactLove);
+                TextView btnReactHaha = popupView.findViewById(R.id.btnReactHaha);
+                TextView btnReactWow = popupView.findViewById(R.id.btnReactWow);
+                TextView btnReactSad = popupView.findViewById(R.id.btnReactSad);
+                TextView btnReactAngry = popupView.findViewById(R.id.btnReactAngry);
 
                 btnReactLike.setOnClickListener(view -> { handleReactionUpdate(holder, post, "Like"); popupWindow.dismiss(); });
                 btnReactLove.setOnClickListener(view -> { handleReactionUpdate(holder, post, "Love"); popupWindow.dismiss(); });
@@ -283,7 +303,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         post.setcountReaction(currentCount);
         post.setTopReactions(topReactions);
 
-        holder.imgLikeIcon.setImageResource(getIconForReaction(newReactionType));
+        holder.imgLikeIcon.setText(getEmojiForReaction(newReactionType));
         if (newReactionType != null) holder.tvLikeLabel.setText(newReactionType);
         else holder.tvLikeLabel.setText("Thích");
 
@@ -296,10 +316,10 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
             if (!topReactions.isEmpty()) {
                 holder.imgReact1.setVisibility(View.VISIBLE);
-                holder.imgReact1.setImageResource(getIconForReaction(topReactions.get(0)));
+                holder.imgReact1.setText(getEmojiForReaction(topReactions.get(0)));
                 if (topReactions.size() > 1) {
                     holder.imgReact2.setVisibility(View.VISIBLE);
-                    holder.imgReact2.setImageResource(getIconForReaction(topReactions.get(1)));
+                    holder.imgReact2.setText(getEmojiForReaction(topReactions.get(1)));
                 }
             }
         } else {
@@ -312,21 +332,45 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         }
     }
 
-    private int getIconForReaction(String type) {
-        if (type == null) return R.drawable.ic_like;
+    private String getEmojiForReaction(String type) {
+        if (type == null) return "👍";
         switch (type) {
-            case "Like": return R.drawable.ic_like_color;
-            case "Love": return R.drawable.ic_love;
-            case "Haha": return R.drawable.ic_haha;
-            case "Wow":  return R.drawable.ic_wow;
-            case "Sad":  return R.drawable.ic_sad;
-            case "Angry":return R.drawable.ic_angry;
-            default: return R.drawable.ic_like;
+            case "Like": return "👍";
+            case "Love": return "❤️";
+            case "Haha": return "😆";
+            case "Wow":  return "😮";
+            case "Sad":  return "😢";
+            case "Angry":return "😡";
+            default: return "👍";
+        }
+    }
+
+    private String formatTime(String dateString) {
+        if (dateString == null || dateString.isEmpty()) return "Vừa xong";
+        try {
+            java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+            format.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            java.util.Date date = format.parse(dateString);
+            if (date == null) return "Vừa xong";
+
+            long diffMs = System.currentTimeMillis() - date.getTime();
+            long minutes = diffMs / (60 * 1000);
+            long hours = diffMs / (60 * 60 * 1000);
+            long days = hours / 24;
+
+            if (minutes < 1) return "Vừa xong";
+            if (minutes < 60) return minutes + " phút trước";
+            if (hours < 24) return hours + " giờ trước";
+            if (days < 7) return days + " ngày trước";
+            
+            return new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(date);
+        } catch (Exception e) {
+            return "Vừa xong";
         }
     }
 
     public static class PostViewHolder extends RecyclerView.ViewHolder {
-        TextView tvUserName, tvContent, tvCommentCount;
+        TextView tvUserName, tvContent, tvCommentCount, tvTime;
         ImageView imgAvatar;
         View btnComment;
 
@@ -336,15 +380,16 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         LinearLayout layoutTopReactions;
         TextView tvReactionCount;
-        ImageView imgReact1, imgReact2;
+        TextView imgReact1, imgReact2;
 
         LinearLayout btnLikeContainer;
-        ImageView imgLikeIcon;
+        TextView imgLikeIcon;
         TextView tvLikeLabel;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
             tvUserName = itemView.findViewById(R.id.tvAuthorName);
+            tvTime = itemView.findViewById(R.id.tvTime);
             tvContent = itemView.findViewById(R.id.tvContent);
             imgAvatar = itemView.findViewById(R.id.imgAvatar);
 

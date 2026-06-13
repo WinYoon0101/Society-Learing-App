@@ -7,11 +7,13 @@ import {
   JWT_REFRESH_SECRET,
   JWT_EXPIRES_IN,
   JWT_REFRESH_EXPIRES_IN,
+  GOOGLE_CLIENT_ID,
 } from "../config/env";
 import { AuthRequest } from "../middlewares/auth.middleware";
+import axios from "axios";
+import { FACEBOOK_APP_ID, FACEBOOK_APP_SECRET } from "../config/env";
 
 // ===== GOOGLE CLIENT =====
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // ===== TOKEN =====
@@ -95,6 +97,98 @@ export const googleLogin = async (req: Request, res: Response) => {
     return res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : "Google login failed", // Trả về lỗi thật để debug
+    });
+  }
+};
+/**
+<<<<<<< HEAD
+ Dang nhap fb
+=======
+Dang nhap fb
+>>>>>>> 2c8bafa87f91d43cde9bb86ad3b9bbb19595be6b
+ */
+export const facebookLogin = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { accessToken: fbAccessToken } = req.body;
+
+    if (!fbAccessToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing Facebook access token",
+      });
+    }
+
+    // GET FACEBOOK USER INFO
+    const fbResponse = await axios.get(
+      "https://graph.facebook.com/me",
+      {
+        params: {
+          fields: "id,name,email,picture",
+          access_token: fbAccessToken,
+        },
+      }
+    );
+
+    const fbUser = fbResponse.data;
+
+    if (!fbUser.email) {
+      return res.status(400).json({
+        success: false,
+        message: "Facebook account has no email",
+      });
+    }
+
+
+    // TÌM USER CHỈ BẰNG EMAIL
+    let user = await User.findOne({
+      email: fbUser.email.toLowerCase(),
+    });
+
+    // NẾU CHƯA CÓ USER THÌ TẠO MỚI (KHÔNG CÓ facebookId)
+
+    if (!user) {
+      user = await User.create({
+        username: fbUser.name,
+        email: fbUser.email.toLowerCase(),
+
+        avatar: fbUser.picture?.data?.url,
+        isVerified: true,
+      });
+
+    }
+
+    // GENERATE TOKENS
+    const { accessToken, refreshToken } = generateTokens({
+      id: user._id.toString(),
+      email: user.email,
+      username: user.username,
+    });
+
+    // SAVE REFRESH TOKEN
+    await User.updateOne(
+      { _id: user._id },
+      { refreshToken }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Facebook login success",
+      data: {
+        user: sanitizeUser(user),
+        accessToken,
+        refreshToken,
+      },
+    });
+
+  } catch (error: any) {
+    console.error("Facebook login error:", error?.response?.data || error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Facebook login failed",
     });
   }
 };

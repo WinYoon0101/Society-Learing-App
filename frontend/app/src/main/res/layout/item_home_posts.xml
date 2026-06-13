@@ -99,19 +99,21 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
 
-                <ImageView
+                <TextView
                     android:id="@+id/imgReact2"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_marginStart="14dp"
-                    android:src="@drawable/ic_haha"
+                    android:gravity="center"
+                    android:textSize="14sp"
                     android:visibility="gone" />
 
-                <ImageView
+                <TextView
                     android:id="@+id/imgReact1"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/ic_love" />
+                    android:gravity="center"
+                    android:textSize="14sp" />
             </FrameLayout>
 
             <TextView
@@ -152,11 +154,13 @@
                 android:paddingVertical="10dp"
                 android:paddingEnd="16dp">
 
-                <ImageView
+                <TextView
                     android:id="@+id/imgLike"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/ic_like" />
+                    android:gravity="center"
+                    android:textSize="14sp"
+                    android:text="👍" />
 
                 <TextView
                     android:id="@+id/tvLikeCount"

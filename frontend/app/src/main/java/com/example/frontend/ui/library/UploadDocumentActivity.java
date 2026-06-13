@@ -9,6 +9,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
+
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,6 +59,19 @@ public class UploadDocumentActivity extends AppCompatActivity {
 
         btnClose.setOnClickListener(v -> finish());
 
+
+        // Khởi tạo Select Box cho Môn học
+        AutoCompleteTextView etSubject = findViewById(R.id.etSubject);
+        String[] subjects = {"CNTT/IT", "Kinh tế", "Khoa học", "Luật"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                subjects
+        );
+        etSubject.setAdapter(adapter);
+        etSubject.setText(subjects[0], false);
+
+
         // 1. Bộ chọn File
         ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -79,10 +96,22 @@ public class UploadDocumentActivity extends AppCompatActivity {
     private void startUploadFlow() {
         // 1. Kiểm tra đầu vào
         String title = ((EditText)findViewById(R.id.etTitle)).getText().toString().trim();
+
+        AutoCompleteTextView etSubject = findViewById(R.id.etSubject);
+        String selectedSubject = etSubject.getText().toString().trim();
+
+
         if (selectedFileUri == null || title.isEmpty()) {
             Toast.makeText(this, "Vui lòng nhập tiêu đề và chọn file!", Toast.LENGTH_SHORT).show();
             return;
         }
+
+
+        if (selectedSubject.isEmpty()) {
+            Toast.makeText(this, "Vui lòng chọn môn học!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
 
         // 2. Lấy USER_ID thật từ máy (Tránh dùng ID dummy làm server từ chối)
         SharedPreferences sharedPref = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
@@ -101,11 +130,26 @@ public class UploadDocumentActivity extends AppCompatActivity {
         File file = uriToFile(selectedFileUri);
         if (file == null) {
             btnUpload.setEnabled(true);
+
+            Toast.makeText(this, "Lỗi: Không đọc được file!", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // Xác định MIME type an toàn
+        String mimeType = getContentResolver().getType(selectedFileUri);
+        if (mimeType == null) {
+            String extension = MimeTypeMap.getFileExtensionFromUrl(selectedFileUri.toString());
+            if (extension != null && !extension.isEmpty()) {
+                mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+            }
+        }
+        if (mimeType == null) {
+            mimeType = "application/octet-stream";
+        }
+
         RequestBody requestFile = RequestBody.create(
-                MediaType.parse(getContentResolver().getType(selectedFileUri)),
+                MediaType.parse(mimeType),
+
                 file
         );
         MultipartBody.Part body = MultipartBody.Part.createFormData("media", file.getName(), requestFile);
@@ -139,12 +183,23 @@ public class UploadDocumentActivity extends AppCompatActivity {
 
     private void createDocumentRecord(String mediaId) {
         String title = ((EditText)findViewById(R.id.etTitle)).getText().toString().trim();
-        String subject = ((EditText)findViewById(R.id.etSubject)).getText().toString().trim();
+
+        AutoCompleteTextView etSubject = findViewById(R.id.etSubject);
+        String selectedSubject = etSubject.getText().toString().trim();
+
+        // Map "CNTT/IT" sang "IT" để khớp với chip/tab IT của LibraryFragment
+        String subjectValue = selectedSubject;
+        if ("CNTT/IT".equals(selectedSubject)) {
+            subjectValue = "IT";
+        }
+
 
         Map<String, Object> docData = new HashMap<>();
         docData.put("mediaId", mediaId);
         docData.put("title", title);
-        docData.put("subject", subject);
+
+        docData.put("subject", subjectValue);
+
         docData.put("visibility", "public");
 
         Log.d("UPLOAD_FLOW", "Bắt đầu bước 2: Tạo Document...");
@@ -160,6 +215,9 @@ public class UploadDocumentActivity extends AppCompatActivity {
                     finish();
                 } else {
                     Log.e("UPLOAD_FLOW", "Lỗi bước 2: " + response.code());
+
+                    Toast.makeText(UploadDocumentActivity.this, "Lỗi tạo tài liệu: " + response.code(), Toast.LENGTH_SHORT).show();
+
                 }
             }
 
@@ -167,20 +225,42 @@ public class UploadDocumentActivity extends AppCompatActivity {
             public void onFailure(Call call, Throwable t) {
                 btnUpload.setEnabled(true);
                 Log.e("UPLOAD_FLOW", "Thất bại bước 2: " + t.getMessage());
+
+                Toast.makeText(UploadDocumentActivity.this, "Thất bại khi lưu tài liệu: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+
             }
         });
     }
 
     private File uriToFile(Uri uri) {
         try {
-            // 1. Lấy đuôi file thật từ Uri (ví dụ: pdf, docx)
-            String extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(getContentResolver().getType(uri));
-            if (extension == null) extension = "pdf"; // Mặc định là pdf nếu không nhận diện được
 
-            // 2. Tạo file tạm CÓ ĐUÔI FILE (Rất quan trọng)
+            // Lấy đuôi file thật từ Uri
+            String extension = null;
+            String mimeType = getContentResolver().getType(uri);
+            if (mimeType != null) {
+                extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType);
+            }
+            if (extension == null) {
+                // Thử lấy extension từ uri path
+                String path = uri.getPath();
+                if (path != null) {
+                    int lastDot = path.lastIndexOf('.');
+                    if (lastDot != -1) {
+                        extension = path.substring(lastDot + 1);
+                    }
+                }
+            }
+            if (extension == null || extension.isEmpty()) {
+                extension = "pdf"; // Mặc định là pdf nếu không nhận diện được
+            }
+
+            // Tạo file tạm CÓ ĐUÔI FILE (Rất quan trọng)
             File file = new File(getCacheDir(), "upload_file_" + System.currentTimeMillis() + "." + extension);
 
             InputStream inputStream = getContentResolver().openInputStream(uri);
+            if (inputStream == null) return null;
+
             FileOutputStream outputStream = new FileOutputStream(file);
             byte[] buffer = new byte[1024];
             int read;
@@ -188,8 +268,13 @@ public class UploadDocumentActivity extends AppCompatActivity {
                 outputStream.write(buffer, 0, read);
             }
             outputStream.flush();
-            return file; // Bây giờ file gửi lên server sẽ có tên như: upload_file_123.pdf
+
+            outputStream.close();
+            inputStream.close();
+            return file;
         } catch (Exception e) {
+            Log.e("UPLOAD_FLOW", "Lỗi chuyển đổi URI sang File: " + e.getMessage());
+
             return null;
         }
     }

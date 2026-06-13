@@ -6,8 +6,10 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Group;
+import com.example.frontend.data.model.GroupDetail;
 import com.example.frontend.data.model.GroupInvitation;
-import com.example.frontend.data.model.Post;
+import com.example.frontend.data.model.GroupMember;
+import com.example.frontend.data.model.GroupPost;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.utils.Result;
@@ -32,174 +34,216 @@ public class GroupRepository {
         this.apiService = ApiClient.getApiService(context);
     }
 
-    // Tạo nhóm mới — avatarFile có thể null nếu người dùng không chọn ảnh
-    public void createGroup(String groupName, String privacy,
-                            File avatarFile,
-                            MutableLiveData<Result<Group>> resultLiveData) {
-        resultLiveData.postValue(Result.loading());
-
-        RequestBody nameBody = RequestBody.create(MediaType.parse("text/plain"), groupName);
-        RequestBody descBody = RequestBody.create(MediaType.parse("text/plain"), "");
-        RequestBody privacyBody = RequestBody.create(MediaType.parse("text/plain"), privacy);
-
+    public void createGroup(String groupName, String privacy, File avatarFile,
+                            MutableLiveData<Result<Group>> liveData) {
+        liveData.postValue(Result.loading());
+        RequestBody nameBody = body(groupName);
+        RequestBody descBody = body("");
+        RequestBody privacyBody = body(privacy);
         MultipartBody.Part avatarPart = null;
         if (avatarFile != null && avatarFile.exists()) {
-            RequestBody fileBody = RequestBody.create(
-                    MediaType.parse("image/*"), avatarFile);
-            avatarPart = MultipartBody.Part.createFormData("images", avatarFile.getName(), fileBody);
+            RequestBody fileBody = RequestBody.create(MediaType.parse("image/*"), avatarFile);
+            avatarPart = MultipartBody.Part.createFormData("file", avatarFile.getName(), fileBody);
         }
-
         apiService.createGroup(nameBody, descBody, privacyBody, avatarPart)
                 .enqueue(new Callback<ApiResponse<Group>>() {
-                    @Override
-                    public void onResponse(Call<ApiResponse<Group>> call,
-                                           Response<ApiResponse<Group>> response) {
-                        if (response.isSuccessful()
-                                && response.body() != null
-                                && response.body().isSuccess()) {
-                            resultLiveData.postValue(Result.success(response.body().getData()));
-                        } else {
-                            String msg = (response.body() != null && response.body().getMessage() != null)
-                                    ? response.body().getMessage()
-                                    : "Tạo nhóm thất bại";
-                            resultLiveData.postValue(Result.error(msg));
-                        }
+                    @Override public void onResponse(Call<ApiResponse<Group>> call, Response<ApiResponse<Group>> r) {
+                        if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                        else liveData.postValue(Result.error(msg(r, "Tạo nhóm thất bại")));
                     }
-
-                    @Override
-                    public void onFailure(Call<ApiResponse<Group>> call, Throwable t) {
-                        resultLiveData.postValue(Result.error(t.getMessage()));
+                    @Override public void onFailure(Call<ApiResponse<Group>> call, Throwable t) {
+                        liveData.postValue(Result.error(t.getMessage()));
                     }
                 });
     }
 
-    // Tab "Bài viết"
-    public void getGroupPosts(int page, int limit, MutableLiveData<Result<List<Post>>> liveData) {
+    public void getMyGroups(MutableLiveData<Result<List<Group>>> liveData) {
         liveData.postValue(Result.loading());
-        apiService.getGroupPosts(page, limit).enqueue(new Callback<ApiResponse<List<Post>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Post>>> call, Response<ApiResponse<List<Post>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    liveData.postValue(Result.success(response.body().getData()));
-                } else {
-                    String msg = response.body() != null ? response.body().getMessage() : "Không tải được bài viết";
-                    liveData.postValue(Result.error(msg));
-                }
+        apiService.getMyGroups().enqueue(new Callback<ApiResponse<List<Group>>>() {
+            @Override public void onResponse(Call<ApiResponse<List<Group>>> call, Response<ApiResponse<List<Group>>> r) {
+                if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                else liveData.postValue(Result.error(msg(r, "Không tải được danh sách nhóm"), null));
             }
-            @Override
-            public void onFailure(Call<ApiResponse<List<Post>>> call, Throwable t) {
-                liveData.postValue(Result.error(t.getMessage()));
+            @Override public void onFailure(Call<ApiResponse<List<Group>>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage(), null));
             }
         });
     }
 
-    // Tab "Khám phá"
-    public void discoverGroups(String search, int page, int limit, MutableLiveData<Result<List<Group>>> liveData) {
+    public void getGroupFeedPosts(int page, int limit, MutableLiveData<Result<List<GroupPost>>> liveData) {
         liveData.postValue(Result.loading());
-        String q = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
-        apiService.discoverGroups(q, page, limit).enqueue(new Callback<ApiResponse<List<Group>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Group>>> call, Response<ApiResponse<List<Group>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    liveData.postValue(Result.success(response.body().getData()));
-                } else {
-                    String msg = response.body() != null ? response.body().getMessage() : "Không tải được nhóm";
-                    liveData.postValue(Result.error(msg));
-                }
+        apiService.getGroupFeedPosts(page, limit).enqueue(new Callback<ApiResponse<List<GroupPost>>>() {
+            @Override public void onResponse(Call<ApiResponse<List<GroupPost>>> call, Response<ApiResponse<List<GroupPost>>> r) {
+                if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                else liveData.postValue(Result.error(msg(r, "Không tải được bài viết"), null));
             }
-            @Override
-            public void onFailure(Call<ApiResponse<List<Group>>> call, Throwable t) {
-                liveData.postValue(Result.error(t.getMessage()));
+            @Override public void onFailure(Call<ApiResponse<List<GroupPost>>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage(), null));
             }
         });
     }
 
-    // Tham gia nhóm Public
-    public void joinGroup(String groupId, MutableLiveData<Result<Void>> liveData) {
+    public void discoverGroups(String search, int page, int limit,
+                               MutableLiveData<Result<List<Group>>> liveData) {
         liveData.postValue(Result.loading());
-        apiService.joinPublicGroup(groupId).enqueue(new Callback<ApiResponse<Void>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    liveData.postValue(Result.success(null));
-                } else {
-                    String msg = response.body() != null ? response.body().getMessage() : "Tham gia nhóm thất bại";
-                    liveData.postValue(Result.error(msg));
-                }
+        apiService.discoverGroups(search, page, limit).enqueue(new Callback<ApiResponse<List<Group>>>() {
+            @Override public void onResponse(Call<ApiResponse<List<Group>>> call, Response<ApiResponse<List<Group>>> r) {
+                if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                else liveData.postValue(Result.error(msg(r, "Không tải được danh sách nhóm"), null));
             }
-            @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
-                liveData.postValue(Result.error(t.getMessage()));
+            @Override public void onFailure(Call<ApiResponse<List<Group>>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage(), null));
             }
         });
     }
 
-    // Tab "Lời mời"
     public void getInvitations(MutableLiveData<Result<List<GroupInvitation>>> liveData) {
         liveData.postValue(Result.loading());
         apiService.getGroupInvitations().enqueue(new Callback<ApiResponse<List<GroupInvitation>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<GroupInvitation>>> call, Response<ApiResponse<List<GroupInvitation>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    liveData.postValue(Result.success(response.body().getData()));
-                } else {
-                    String msg = response.body() != null ? response.body().getMessage() : "Không tải được lời mời";
-                    liveData.postValue(Result.error(msg));
-                }
+            @Override public void onResponse(Call<ApiResponse<List<GroupInvitation>>> call, Response<ApiResponse<List<GroupInvitation>>> r) {
+                if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                else liveData.postValue(Result.error(msg(r, "Không tải được lời mời"), null));
             }
-            @Override
-            public void onFailure(Call<ApiResponse<List<GroupInvitation>>> call, Throwable t) {
-                liveData.postValue(Result.error(t.getMessage()));
+            @Override public void onFailure(Call<ApiResponse<List<GroupInvitation>>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage(), null));
             }
         });
     }
 
-    // Phản hồi lời mời
-    public void respondToInvitation(String invitationId, String action, MutableLiveData<Result<Void>> liveData) {
+    public void respondToInvitation(String invitationId, String action,
+                                    MutableLiveData<Result<Object>> liveData) {
         liveData.postValue(Result.loading());
         Map<String, String> body = new HashMap<>();
         body.put("action", action);
-        apiService.respondToInvitation(invitationId, body).enqueue(new Callback<ApiResponse<Void>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    liveData.postValue(Result.success(null));
-                } else {
-                    String msg = response.body() != null ? response.body().getMessage() : "Thao tác thất bại";
-                    liveData.postValue(Result.error(msg));
-                }
+        apiService.respondToInvitation(invitationId, body).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
+                if (ok(r)) liveData.postValue(Result.success(null));
+                else liveData.postValue(Result.error(msg(r, "Thao tác thất bại")));
             }
-            @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                 liveData.postValue(Result.error(t.getMessage()));
             }
         });
     }
 
-    // Tab "Nhóm của bạn"
-    public void getMyGroups(MutableLiveData<Result<List<Group>>> resultLiveData) {
-        resultLiveData.postValue(Result.loading());
-
-        apiService.getMyGroups().enqueue(new Callback<ApiResponse<List<Group>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Group>>> call,
-                                   Response<ApiResponse<List<Group>>> response) {
-                if (response.isSuccessful()
-                        && response.body() != null
-                        && response.body().isSuccess()) {
-                    resultLiveData.postValue(Result.success(response.body().getData()));
-                } else {
-                    String msg = (response.body() != null && response.body().getMessage() != null)
-                            ? response.body().getMessage()
-                            : "Không tải được danh sách nhóm";
-                    resultLiveData.postValue(Result.error(msg, null));
-                }
+    public void getGroupDetail(String groupId, MutableLiveData<Result<GroupDetail>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.getGroupDetail(groupId).enqueue(new Callback<ApiResponse<GroupDetail>>() {
+            @Override public void onResponse(Call<ApiResponse<GroupDetail>> call, Response<ApiResponse<GroupDetail>> r) {
+                if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                else liveData.postValue(Result.error(msg(r, "Không tải được thông tin nhóm")));
             }
-
-            @Override
-            public void onFailure(Call<ApiResponse<List<Group>>> call, Throwable t) {
-                resultLiveData.postValue(Result.error(t.getMessage(), null));
+            @Override public void onFailure(Call<ApiResponse<GroupDetail>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
             }
         });
+    }
+
+    public void updateGroup(String groupId, String groupName, String description, String privacy,
+                            File avatarFile, MutableLiveData<Result<GroupDetail>> liveData) {
+        liveData.postValue(Result.loading());
+        RequestBody nameBody = body(groupName != null ? groupName : "");
+        RequestBody descBody = body(description != null ? description : "");
+        RequestBody privacyBody = body(privacy != null ? privacy : "");
+        MultipartBody.Part avatarPart = null;
+        if (avatarFile != null && avatarFile.exists()) {
+            RequestBody fileBody = RequestBody.create(MediaType.parse("image/*"), avatarFile);
+            avatarPart = MultipartBody.Part.createFormData("file", avatarFile.getName(), fileBody);
+        }
+        apiService.updateGroup(groupId, nameBody, descBody, privacyBody, avatarPart)
+                .enqueue(new Callback<ApiResponse<GroupDetail>>() {
+                    @Override public void onResponse(Call<ApiResponse<GroupDetail>> call, Response<ApiResponse<GroupDetail>> r) {
+                        if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                        else liveData.postValue(Result.error(msg(r, "Cập nhật thất bại")));
+                    }
+                    @Override public void onFailure(Call<ApiResponse<GroupDetail>> call, Throwable t) {
+                        liveData.postValue(Result.error(t.getMessage()));
+                    }
+                });
+    }
+
+    public void joinGroup(String groupId, MutableLiveData<Result<Object>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.joinGroup(groupId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
+                if (ok(r)) liveData.postValue(Result.success(null));
+                else liveData.postValue(Result.error(msg(r, "Tham gia thất bại")));
+            }
+            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+    }
+
+    public void getPostsByGroup(String groupId, int page, int limit,
+                                MutableLiveData<Result<List<GroupPost>>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.getPostsByGroup(groupId, page, limit).enqueue(new Callback<ApiResponse<List<GroupPost>>>() {
+            @Override public void onResponse(Call<ApiResponse<List<GroupPost>>> call, Response<ApiResponse<List<GroupPost>>> r) {
+                if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                else liveData.postValue(Result.error(msg(r, "Không tải được bài viết"), null));
+            }
+            @Override public void onFailure(Call<ApiResponse<List<GroupPost>>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage(), null));
+            }
+        });
+    }
+
+    // ── THÀNH VIÊN ───────────────────────────────────────────────────────────
+    public void getGroupMembers(String groupId, MutableLiveData<Result<List<GroupMember>>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.getGroupMembers(groupId).enqueue(new Callback<ApiResponse<List<GroupMember>>>() {
+            @Override public void onResponse(Call<ApiResponse<List<GroupMember>>> call, Response<ApiResponse<List<GroupMember>>> r) {
+                if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                else liveData.postValue(Result.error(msg(r, "Không tải được danh sách thành viên"), null));
+            }
+            @Override public void onFailure(Call<ApiResponse<List<GroupMember>>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage(), null));
+            }
+        });
+    }
+
+    public void kickMember(String groupId, String memberId, MutableLiveData<Result<Object>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.kickMember(groupId, memberId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
+                if (ok(r)) liveData.postValue(Result.success(null));
+                else liveData.postValue(Result.error(msg(r, "Kick thành viên thất bại")));
+            }
+            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+    }
+
+    public void sendGroupInvitation(String groupId, String inviteeId,
+                                    MutableLiveData<Result<Object>> liveData) {
+        liveData.postValue(Result.loading());
+        Map<String, String> body = new HashMap<>();
+        body.put("groupId", groupId);
+        body.put("inviteeId", inviteeId);
+        apiService.sendGroupInvitation(body).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
+                if (ok(r)) liveData.postValue(Result.success(null));
+                else liveData.postValue(Result.error(msg(r, "Gửi lời mời thất bại")));
+            }
+            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    private static RequestBody body(String text) {
+        return RequestBody.create(MediaType.parse("text/plain"), text);
+    }
+
+    private static <T> boolean ok(Response<ApiResponse<T>> r) {
+        return r.isSuccessful() && r.body() != null && r.body().isSuccess();
+    }
+
+    private static <T> String msg(Response<ApiResponse<T>> r, String fallback) {
+        if (r.body() != null && r.body().getMessage() != null) return r.body().getMessage();
+        return fallback;
     }
 }
