@@ -143,6 +143,8 @@ public class GroupDetailActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && (requestCode == 100 || requestCode == 200)) {
+            // Đăng bài thành công → cập nhật tab "Bài viết"
+            if (requestCode == 200) GroupState.onCreatedPost();
             loadAll();
         }
     }
@@ -190,8 +192,9 @@ public class GroupDetailActivity extends AppCompatActivity {
     }
 
     private void showOptionsSheet() {
+        boolean member = currentDetail != null && currentDetail.isMember();
         boolean admin = currentDetail != null && currentDetail.isAdmin();
-        GroupOptionsBottomSheet sheet = GroupOptionsBottomSheet.newInstance(admin);
+        GroupOptionsBottomSheet sheet = GroupOptionsBottomSheet.newInstance(member, admin);
         sheet.setOnOptionSelectedListener(this::handleOption);
         sheet.show(getSupportFragmentManager(), "groupOptions");
     }
@@ -203,6 +206,14 @@ public class GroupDetailActivity extends AppCompatActivity {
                 break;
             case GroupOptionsBottomSheet.OPT_SETTINGS:
                 openSettings();
+                break;
+            case GroupOptionsBottomSheet.OPT_JOIN:
+                repository.joinGroup(groupId, joinLive);
+                break;
+            case GroupOptionsBottomSheet.OPT_NOT_INTERESTED:
+                GroupState.addNotInterested(this, groupId);
+                Toast.makeText(this, "Sẽ không gợi ý nhóm này cho bạn nữa", Toast.LENGTH_SHORT).show();
+                finish();
                 break;
             case GroupOptionsBottomSheet.OPT_LEAVE:
                 confirmAction("Rời nhóm", "Bạn có chắc muốn rời khỏi nhóm này?",
@@ -287,6 +298,7 @@ public class GroupDetailActivity extends AppCompatActivity {
             if (r == null) return;
             if (r.status == Result.Status.SUCCESS) {
                 Toast.makeText(this, "Đã tham gia nhóm!", Toast.LENGTH_SHORT).show();
+                GroupState.onJoinedGroup();
                 loadAll();
             } else if (r.status == Result.Status.ERROR) {
                 Toast.makeText(this, r.message, Toast.LENGTH_SHORT).show();
@@ -330,12 +342,12 @@ public class GroupDetailActivity extends AppCompatActivity {
             btnJoin.setVisibility(View.GONE);
             btnInvite.setVisibility(View.VISIBLE);
             layoutComposer.setVisibility(View.VISIBLE);
-            btnMore.setVisibility(View.VISIBLE);
         } else {
             btnJoin.setVisibility("Public".equals(d.getPrivacy()) ? View.VISIBLE : View.GONE);
             btnInvite.setVisibility(View.GONE);
             layoutComposer.setVisibility(View.GONE);
-            btnMore.setVisibility(View.GONE);
         }
+        // "..." luôn hiện: thành viên → tùy chọn quản lý; chưa vào → Tham gia / Không quan tâm
+        btnMore.setVisibility(View.VISIBLE);
     }
 }

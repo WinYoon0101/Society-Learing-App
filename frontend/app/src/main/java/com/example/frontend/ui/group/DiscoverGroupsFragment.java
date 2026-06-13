@@ -71,6 +71,7 @@ public class DiscoverGroupsFragment extends Fragment {
                 if (r == null) return;
                 if (r.status == Result.Status.SUCCESS) {
                     Toast.makeText(requireContext(), "Đã tham gia nhóm!", Toast.LENGTH_SHORT).show();
+                    GroupState.onJoinedGroup();
                     refresh();
                 } else if (r.status == Result.Status.ERROR) {
                     Toast.makeText(requireContext(),
@@ -79,6 +80,14 @@ public class DiscoverGroupsFragment extends Fragment {
                 }
             });
             repository.joinGroup(group.getId(), joinLive);
+        });
+
+        // Click vào item → xem trước chi tiết nhóm (chưa là thành viên)
+        adapter.setOnGroupClickListener(group -> {
+            android.content.Intent i = new android.content.Intent(requireContext(), GroupDetailActivity.class);
+            i.putExtra(GroupDetailActivity.EXTRA_GROUP_ID, group.getId());
+            i.putExtra(GroupDetailActivity.EXTRA_GROUP_NAME, group.getGroupName());
+            startActivity(i);
         });
 
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -120,10 +129,32 @@ public class DiscoverGroupsFragment extends Fragment {
         refresh();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Reload khi có thay đổi (đã join nơi khác, đánh dấu "không quan tâm")
+        if (GroupState.discoverDirty) {
+            GroupState.discoverDirty = false;
+            refresh();
+        }
+    }
+
     private void refresh() {
         currentPage = 1;
         isLastPage = false;
         repository.discoverGroups(currentSearch, currentPage, LIMIT, liveData);
+    }
+
+    /** Lọc bỏ các nhóm đã đánh dấu "không quan tâm" (local). */
+    private List<Group> filterNotInterested(List<Group> data) {
+        if (data == null) return new java.util.ArrayList<>();
+        java.util.Set<String> hidden = GroupState.getNotInterested(requireContext());
+        if (hidden.isEmpty()) return data;
+        List<Group> out = new java.util.ArrayList<>();
+        for (Group g : data) {
+            if (g.getId() == null || !hidden.contains(g.getId())) out.add(g);
+        }
+        return out;
     }
 
     private void loadMore() {
@@ -141,9 +172,11 @@ public class DiscoverGroupsFragment extends Fragment {
                 swipeRefresh.setRefreshing(false);
                 isLoadingMore = false;
                 List<Group> data = result.data;
-                if (currentPage == 1) adapter.submit(data);
-                else adapter.appendAll(data);
+                // isLastPage tính theo dữ liệu gốc từ server (trước khi lọc local)
                 if (data == null || data.size() < LIMIT) isLastPage = true;
+                List<Group> visible = filterNotInterested(data);
+                if (currentPage == 1) adapter.submit(visible);
+                else adapter.appendAll(visible);
                 tvEmpty.setVisibility(adapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
                 break;
             case ERROR:

@@ -24,11 +24,20 @@ public class DiscoverGroupAdapter extends RecyclerView.Adapter<DiscoverGroupAdap
         void onJoin(Group group);
     }
 
+    public interface OnGroupClickListener {
+        void onOpen(Group group);
+    }
+
     private final List<Group> items = new ArrayList<>();
     private final OnJoinClickListener listener;
+    private OnGroupClickListener clickListener;
 
     public DiscoverGroupAdapter(OnJoinClickListener listener) {
         this.listener = listener;
+    }
+
+    public void setOnGroupClickListener(OnGroupClickListener l) {
+        this.clickListener = l;
     }
 
     public void submit(List<Group> data) {
@@ -72,6 +81,10 @@ public class DiscoverGroupAdapter extends RecyclerView.Adapter<DiscoverGroupAdap
 
         h.btnJoin.setOnClickListener(v -> {
             if (listener != null) listener.onJoin(g);
+        });
+
+        h.itemView.setOnClickListener(v -> {
+            if (clickListener != null) clickListener.onOpen(g);
         });
     }
 

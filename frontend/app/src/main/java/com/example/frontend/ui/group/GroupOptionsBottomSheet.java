@@ -29,19 +29,24 @@ public class GroupOptionsBottomSheet extends BottomSheetDialogFragment {
     public static final int OPT_APPROVE_MEMBERS = 6;
     public static final int OPT_SETTINGS        = 7;
     public static final int OPT_DELETE          = 8;
+    public static final int OPT_JOIN            = 9;
+    public static final int OPT_NOT_INTERESTED  = 10;
 
     public interface OnOptionSelectedListener {
         void onOptionSelected(int optionId);
     }
 
-    private static final String ARG_IS_ADMIN = "isAdmin";
+    private static final String ARG_IS_MEMBER = "isMember";
+    private static final String ARG_IS_ADMIN  = "isAdmin";
 
     private OnOptionSelectedListener listener;
+    private boolean isMember;
     private boolean isAdmin;
 
-    public static GroupOptionsBottomSheet newInstance(boolean isAdmin) {
+    public static GroupOptionsBottomSheet newInstance(boolean isMember, boolean isAdmin) {
         GroupOptionsBottomSheet f = new GroupOptionsBottomSheet();
         Bundle b = new Bundle();
+        b.putBoolean(ARG_IS_MEMBER, isMember);
         b.putBoolean(ARG_IS_ADMIN, isAdmin);
         f.setArguments(b);
         return f;
@@ -62,10 +67,20 @@ public class GroupOptionsBottomSheet extends BottomSheetDialogFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (getArguments() != null) isAdmin = getArguments().getBoolean(ARG_IS_ADMIN, false);
+        if (getArguments() != null) {
+            isMember = getArguments().getBoolean(ARG_IS_MEMBER, false);
+            isAdmin = getArguments().getBoolean(ARG_IS_ADMIN, false);
+        }
 
         LinearLayout container = view.findViewById(R.id.optionsContainer);
         LayoutInflater inflater = LayoutInflater.from(getContext());
+
+        if (!isMember) {
+            // Chưa là thành viên (xem từ Khám phá)
+            addOption(container, inflater, R.drawable.ic_add, "Tham gia", OPT_JOIN);
+            addOption(container, inflater, R.drawable.ic_close, "Không quan tâm", OPT_NOT_INTERESTED);
+            return;
+        }
 
         addOption(container, inflater, R.drawable.ic_friend, "Tất cả thành viên", OPT_MEMBERS);
         if (isAdmin) {

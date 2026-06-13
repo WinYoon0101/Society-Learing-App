@@ -3,10 +3,37 @@ openapi: 3.0.0
 info:
   title: Society Mobile API
   version: 1.0.0
-  description: API documentation cho ứng dụng Society
+  description: |
+    API documentation cho ứng dụng Society.
+
+    ## Realtime Chat (Socket.IO)
+    Chat dùng **Socket.IO** (không phải REST), kết nối tới `http://localhost:3000`.
+    Xác thực bằng JWT khi handshake:
+    ```js
+    const socket = io("http://localhost:3000", { auth: { token: "<JWT>" } });
+    ```
+    Các REST endpoint dưới mục **Chat** chỉ phục vụ load lịch sử / cấu hình; còn việc
+    gửi/nhận tin nhắn realtime đi qua các sự kiện socket sau:
+
+    **Client → Server (emit):**
+    - `message:send` — `{ conversationId, text?, replyTo?, mediaUrl?, mediaType? }`
+    - `message:react` — `{ messageId, emoji }` (emoji ∈ ❤️ 😆 😮 😢 😡 👍, toggle)
+    - `message:delete` — `{ messageId }` (thu hồi, chỉ người gửi)
+    - `typing:start` / `typing:stop` — `{ conversationId }`
+    - `users:online` — (không payload) yêu cầu danh sách user online
+
+    **Server → Client (on):**
+    - `message:new` — message đã populate (gửi tới mọi thành viên trong room)
+    - `message:reacted` — `{ messageId, reactions }`
+    - `message:deleted` — `{ messageId, conversationId }`
+    - `typing:start` / `typing:stop` — `{ conversationId, userId, username? }`
+    - `user:online` / `user:offline` — `{ userId }`
+    - `users:online` — `{ onlineUsers: string[] }`
+    - `error` — `{ message }`
 
 servers:
-  - url: http://localhost:3000
+  - url: http://localhost:3000/api
+    description: Local server (mọi path bên dưới đã được hiểu là có tiền tố /api)
 
 components:
   securitySchemes:
@@ -38,6 +65,148 @@ components:
           type: string
           nullable: true
         isVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Group:
+      type: object
+      properties:
+        _id:
+          type: string
+        groupName:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        privacy:
+          type: string
+          enum: [Public, Private]
+        newPostCount:
+          type: integer
+          description: Số bài viết mới trong 7 ngày gần nhất
+        lastUpdated:
+          type: string
+          format: date-time
+
+    GroupDetail:
+      type: object
+      properties:
+        _id:
+          type: string
+        groupName:
+          type: string
+        description:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+        coverUrl:
+          type: string
+          nullable: true
+        privacy:
+          type: string
+          enum: [Public, Private]
+        memberCount:
+          type: integer
+        isMember:
+          type: boolean
+        isAdmin:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    GroupMember:
+      type: object
+      properties:
+        userId:
+          type: string
+        username:
+          type: string
+        avatar:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [admin, member]
+        joinAt:
+          type: string
+          format: date-time
+
+    GroupInvitation:
+      type: object
+      properties:
+        _id:
+          type: string
+        group:
+          type: object
+          properties:
+            _id: { type: string }
+            groupName: { type: string }
+            avatarUrl: { type: string, nullable: true }
+        inviter:
+          type: object
+          properties:
+            _id: { type: string }
+            username: { type: string }
+            avatar: { type: string, nullable: true }
+        createdAt:
+          type: string
+          format: date-time
+
+    Conversation:
+      type: object
+      properties:
+        _id:
+          type: string
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        lastMessage:
+          $ref: '#/components/schemas/Message'
+        color:
+          type: string
+          nullable: true
+        nicknames:
+          type: object
+          additionalProperties:
+            type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        _id:
+          type: string
+        conversationId:
+          type: string
+        sender:
+          $ref: '#/components/schemas/User'
+        text:
+          type: string
+        mediaUrl:
+          type: string
+          nullable: true
+        mediaType:
+          type: string
+          nullable: true
+        replyTo:
+          type: object
+          nullable: true
+        reactions:
+          type: array
+          items:
+            type: object
+            properties:
+              userId: { type: string }
+              emoji: { type: string }
+        isDeleted:
           type: boolean
         createdAt:
           type: string
@@ -376,3 +545,464 @@ paths:
       responses:
         200:
           description: Thành công
+
+  # ================= GROUP =================
+
+  /groups/my:
+    get:
+      tags: [Group]
+      summary: Danh sách nhóm của tôi (tab "Nhóm của bạn")
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Group'
+
+  /groups/posts:
+    get:
+      tags: [Group]
+      summary: Feed bài viết từ tất cả nhóm đã tham gia (tab "Bài viết")
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 10 }
+      responses:
+        200:
+          description: Thành công (data + pagination)
+
+  /groups/discover:
+    get:
+      tags: [Group]
+      summary: Khám phá nhóm Public chưa tham gia (tab "Khám phá")
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+          description: Từ khoá tìm theo tên nhóm (optional)
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 10 }
+      responses:
+        200:
+          description: Thành công (data + pagination)
+
+  /groups/invitations:
+    get:
+      tags: [Group]
+      summary: Danh sách lời mời vào nhóm đang chờ (tab "Lời mời")
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GroupInvitation'
+    post:
+      tags: [Group]
+      summary: Mời người dùng vào nhóm
+      description: Nhóm Private chỉ admin được mời; nhóm Public thì thành viên cũng được.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupId, inviteeId]
+              properties:
+                groupId: { type: string }
+                inviteeId: { type: string }
+      responses:
+        201:
+          description: Đã gửi lời mời
+        400:
+          description: Thiếu tham số / đã là thành viên / đã có lời mời pending
+        403:
+          description: Không có quyền mời
+
+  /groups/invitations/{invitationId}:
+    patch:
+      tags: [Group]
+      summary: Phản hồi lời mời (chấp nhận / từ chối)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: invitationId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [accept, decline]
+      responses:
+        200:
+          description: Đã xử lý
+        400:
+          description: action không hợp lệ / lời mời đã xử lý
+        403:
+          description: Không phải người được mời
+        404:
+          description: Không tìm thấy lời mời
+
+  /groups:
+    post:
+      tags: [Group]
+      summary: Tạo nhóm mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [groupName, privacy]
+              properties:
+                groupName: { type: string }
+                description: { type: string }
+                privacy:
+                  type: string
+                  enum: [Public, Private]
+                avatar:
+                  type: string
+                  format: binary
+                  description: Ảnh đại diện nhóm (optional)
+      responses:
+        201:
+          description: Tạo nhóm thành công
+        400:
+          description: Thiếu groupName/privacy hoặc privacy không hợp lệ
+
+  /groups/{groupId}:
+    get:
+      tags: [Group]
+      summary: Chi tiết nhóm
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    $ref: '#/components/schemas/GroupDetail'
+        403:
+          description: Nhóm riêng tư (không phải thành viên)
+        404:
+          description: Không tìm thấy nhóm
+    patch:
+      tags: [Group]
+      summary: Cập nhật nhóm (chỉ admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                groupName: { type: string }
+                description: { type: string }
+                privacy:
+                  type: string
+                  enum: [Public, Private]
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: Cập nhật thành công
+        403:
+          description: Chỉ admin mới được cập nhật
+        404:
+          description: Không tìm thấy nhóm
+
+  /groups/{groupId}/join:
+    post:
+      tags: [Group]
+      summary: Tham gia nhóm Public
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Tham gia thành công
+        400:
+          description: Đã là thành viên
+        403:
+          description: Nhóm riêng tư (chỉ vào qua lời mời)
+        404:
+          description: Không tìm thấy nhóm
+
+  /groups/{groupId}/posts:
+    get:
+      tags: [Group]
+      summary: Bài viết của một nhóm cụ thể
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 10 }
+      responses:
+        200:
+          description: Thành công (data + pagination)
+        403:
+          description: Nhóm riêng tư, cần là thành viên
+        404:
+          description: Không tìm thấy nhóm
+
+  /groups/{groupId}/members:
+    get:
+      tags: [Group]
+      summary: Danh sách thành viên nhóm
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GroupMember'
+        403:
+          description: Không có quyền xem (nhóm riêng tư)
+        404:
+          description: Không tìm thấy nhóm
+
+  /groups/{groupId}/members/{memberId}:
+    delete:
+      tags: [Group]
+      summary: Xoá thành viên khỏi nhóm (chỉ admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: memberId
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Đã xoá thành viên
+        400:
+          description: Không thể tự kick bản thân
+        403:
+          description: Chỉ admin mới được kick
+        404:
+          description: Không tìm thấy nhóm / thành viên
+
+  # ================= CHAT (REST) =================
+  # Realtime gửi/nhận tin nhắn dùng Socket.IO — xem mô tả ở đầu trang.
+
+  /chat/conversations:
+    get:
+      tags: [Chat]
+      summary: Danh sách cuộc trò chuyện của tôi
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conversation'
+    post:
+      tags: [Chat]
+      summary: Lấy hoặc tạo cuộc trò chuyện 1-1
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetUserId]
+              properties:
+                targetUserId:
+                  type: string
+                  description: ID người muốn chat cùng
+      responses:
+        200:
+          description: Thành công (trả conversation đã có hoặc vừa tạo)
+        400:
+          description: Thiếu targetUserId / chat với chính mình
+
+  /chat/conversations/{conversationId}/messages:
+    get:
+      tags: [Chat]
+      summary: Lấy tin nhắn trong cuộc trò chuyện (phân trang)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 30 }
+      responses:
+        200:
+          description: Thành công (data tăng dần theo thời gian + pagination)
+        403:
+          description: Không có quyền truy cập
+
+  /chat/conversations/{conversationId}/nickname:
+    patch:
+      tags: [Chat]
+      summary: Đặt biệt danh cho thành viên trong cuộc trò chuyện
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetUserId, nickname]
+              properties:
+                targetUserId: { type: string }
+                nickname: { type: string }
+      responses:
+        200:
+          description: Thành công
+        403:
+          description: Không có quyền truy cập
+
+  /chat/conversations/{conversationId}/color:
+    patch:
+      tags: [Chat]
+      summary: Đổi màu chủ đề cuộc trò chuyện
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [color]
+              properties:
+                color:
+                  type: string
+                  example: "#43634B"
+      responses:
+        200:
+          description: Thành công
+        403:
+          description: Không có quyền truy cập
+
+  /chat/messages/{messageId}:
+    delete:
+      tags: [Chat]
+      summary: Thu hồi tin nhắn (soft delete, chỉ người gửi)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: messageId
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Đã thu hồi
+        404:
+          description: Không tìm thấy tin nhắn
