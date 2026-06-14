@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth.middleware";
-import { uploadImages, uploadImage } from "../middlewares/upload.middleware";
+import { uploadImages, uploadFile } from "../middlewares/upload.middleware";
 import {
     getMyGroups,
     getGroupPosts,
@@ -46,7 +46,8 @@ router.post("/:groupId/join", authenticate, joinPublicGroup);
 // --- Feed bài viết của 1 nhóm cụ thể ---
 router.get("/:groupId/posts", authenticate, getPostsByGroup);
 
-// --- Tạo nhóm mới (field name: "file" cho avatar) ---
-router.post("/", authenticate, uploadImage, createGroup);
+// --- Thành viên nhóm ---
+router.get("/:groupId/members", authenticate, getGroupMembers);
+router.delete("/:groupId/members/:memberId", authenticate, kickMember);
 
 export default router;
