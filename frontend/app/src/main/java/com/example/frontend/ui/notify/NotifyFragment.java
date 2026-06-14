@@ -157,6 +157,13 @@ public class NotifyFragment extends Fragment {
                     h.dotUnread.setVisibility(View.GONE);
                     h.itemView.setBackgroundColor(0xFFFFFFFF);
                 }
+
+                // CHỈ BỔ SUNG ĐOẠN NÀY: Mở trang PostDetailActivity và truyền POST_ID
+                if (n.getTargetId() != null && !n.getTargetId().isEmpty()) {
+                    android.content.Intent intent = new android.content.Intent(requireContext(), com.example.frontend.ui.feed.PostDetailActivity.class);
+                    intent.putExtra("POST_ID", n.getTargetId());
+                    startActivity(intent);
+                }
             });
         }
 

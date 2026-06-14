@@ -1,6 +1,7 @@
 package com.example.frontend.ui.feed;
 
 import android.app.Application;
+import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -10,12 +11,14 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Comment;
 import com.example.frontend.data.model.CommentRequest;
+import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.User;
 import com.example.frontend.data.repository.CommentRepository;
-import android.content.Context;
+import com.example.frontend.data.repository.PostRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -23,19 +26,20 @@ import retrofit2.Response;
 public class PostDetailViewModel extends AndroidViewModel {
 
     private CommentRepository repository;
+    private PostRepository postRepository;
 
     // --- CÁC LIVEDATA ĐỂ ACTIVITY "THEO DÕI" (OBSERVE) ---
     private MutableLiveData<List<Comment>> commentsLiveData = new MutableLiveData<>();
     private MutableLiveData<String> messageLiveData = new MutableLiveData<>();
     private MutableLiveData<Boolean> actionSuccessLiveData = new MutableLiveData<>();
     private MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
-
-    // THÊM DÒNG NÀY: LiveData để theo dõi số lượng bình luận
     private MutableLiveData<Integer> commentCountLiveData = new MutableLiveData<>();
+    private MutableLiveData<Post> postLiveData = new MutableLiveData<>();
 
     public PostDetailViewModel(@NonNull Application application) {
         super(application);
         repository = new CommentRepository(application);
+        postRepository = new PostRepository(application);
     }
 
     // Các hàm Getter cho Activity theo dõi
@@ -43,9 +47,8 @@ public class PostDetailViewModel extends AndroidViewModel {
     public LiveData<String> getMessageLiveData() { return messageLiveData; }
     public LiveData<Boolean> getActionSuccessLiveData() { return actionSuccessLiveData; }
     public LiveData<Boolean> getIsLoading() { return isLoading; }
-
-    // THÊM DÒNG NÀY: Getter cho số lượng bình luận
     public LiveData<Integer> getCommentCountLiveData() { return commentCountLiveData; }
+    public LiveData<Post> getPostLiveData() { return postLiveData; }
 
     // ==========================================
     // LOGIC 1: LẤY VÀ ÉP DẸP DANH SÁCH BÌNH LUẬN
@@ -59,14 +62,10 @@ public class PostDetailViewModel extends AndroidViewModel {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Comment> rootComments = response.body().getData();
 
-                    // Logic xử lý dữ liệu nằm ở đây, View không cần biết!
                     List<Comment> flatList = new ArrayList<>();
                     flattenComments(rootComments, flatList);
 
-                    // Đẩy danh sách đã xử lý lên LiveData
                     commentsLiveData.setValue(flatList);
-
-                    // THÊM DÒNG NÀY: Cập nhật tổng số bình luận sau khi đã trải phẳng
                     commentCountLiveData.setValue(flatList.size());
                 } else {
                     messageLiveData.setValue("Không thể tải bình luận");
@@ -81,7 +80,6 @@ public class PostDetailViewModel extends AndroidViewModel {
         });
     }
 
-    // Thuật toán đệ quy (Đã giấu kín trong ViewModel)
     private void flattenComments(List<Comment> treeList, List<Comment> flatList) {
         if (treeList == null) return;
         for (Comment comment : treeList) {
@@ -102,12 +100,10 @@ public class PostDetailViewModel extends AndroidViewModel {
             @Override
             public void onResponse(Call<ApiResponse<Comment>> call, Response<ApiResponse<Comment>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    actionSuccessLiveData.setValue(true); // Báo hiệu đăng thành công để View xóa ô nhập
+                    actionSuccessLiveData.setValue(true);
 
                     Comment created = response.body().getData();
 
-                    // Nếu backend trả về comment nhưng không populate user thông tin (avatar/username),
-                    // dùng dữ liệu của user hiện tại từ SharedPreferences để hiển thị ngay.
                     if (created != null && (created.getUserId() == null || created.getUserId().getAvatar() == null)) {
                         Context ctx = getApplication().getApplicationContext();
                         String myId = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("USER_ID", null);
@@ -116,21 +112,18 @@ public class PostDetailViewModel extends AndroidViewModel {
                         if (created.getUserId() == null) {
                             created.setUserId(new User(myId, myName, myAvatar));
                         } else if (created.getUserId().getAvatar() == null) {
-                            // replace avatar/username if missing
                             User u = created.getUserId();
                             User replaced = new User(u.getId(), u.getUsername() != null ? u.getUsername() : myName, myAvatar);
                             created.setUserId(replaced);
                         }
                     }
 
-                    // Thêm comment mới vào danh sách hiện tại (optimistic update)
                     List<Comment> current = commentsLiveData.getValue();
                     if (current == null) current = new ArrayList<>();
                     if (created != null) current.add(created);
                     commentsLiveData.setValue(current);
                     commentCountLiveData.setValue(current.size());
 
-                    // Không gọi fetchComments ngay để tránh trường hợp backend trả thiếu thông tin
                 } else {
                     try {
                         String errorBody = response.errorBody().string();
@@ -155,7 +148,7 @@ public class PostDetailViewModel extends AndroidViewModel {
             public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                 if (response.isSuccessful()) {
                     messageLiveData.setValue("Đã xóa bình luận");
-                    fetchComments(postId); // Trải nghiệm an toàn nhất là lấy lại list từ server
+                    fetchComments(postId);
                 } else {
                     messageLiveData.setValue("Bạn không có quyền xóa");
                 }
@@ -163,6 +156,41 @@ public class PostDetailViewModel extends AndroidViewModel {
             @Override
             public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                 messageLiveData.setValue("Lỗi mạng");
+            }
+        });
+    }
+
+    // ==========================================
+    // LOGIC 4: LẤY CHI TIẾT BÀI VIẾT BẰNG ID (Dùng cho Click Thông Báo)
+    // ==========================================
+    public void fetchPostById(String postId) {
+        // Thêm Log để theo dõi id bài viết được truyền vào
+        android.util.Log.d("API_DEBUG", "Đang gọi API lấy bài viết ID: " + postId);
+
+        postRepository.getPostById(postId).enqueue(new Callback<ApiResponse<Post>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Post>> call, Response<ApiResponse<Post>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    android.util.Log.d("API_DEBUG", "Tải bài viết THÀNH CÔNG!");
+                    postLiveData.setValue(response.body().getData());
+                } else {
+                    // BẮT LỖI CHI TIẾT TỪ BACKEND
+                    try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Không rõ";
+                        android.util.Log.e("API_DEBUG", "Lỗi Backend trả về. Mã lỗi: " + response.code() + " - Chi tiết: " + errorBody);
+
+                        // Hiển thị Toast mã lỗi lên màn hình điện thoại
+                        messageLiveData.setValue("Lỗi Backend: " + response.code());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Post>> call, Throwable t) {
+                android.util.Log.e("API_DEBUG", "Lỗi mạng hoặc sập Server: " + t.getMessage());
+                messageLiveData.setValue("Lỗi mạng khi tải bài viết");
             }
         });
     }

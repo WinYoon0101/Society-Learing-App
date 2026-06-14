@@ -34,19 +34,30 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Imag
     @Override
     public void onBindViewHolder(@NonNull ImageSliderViewHolder holder, int position) {
         String url = imageUrls.get(position);
+
+        // Load ảnh hiển thị bên ngoài bảng tin (không zoom)
         Glide.with(context)
                 .load(url)
                 .placeholder(R.drawable.bg_card) // Màu nền xám chờ load ảnh
                 .into(holder.imgSliderItem);
+
+        // Sự kiện Click vào ảnh: Mở chế độ xem full màn hình và có Zoom
         holder.imgSliderItem.setOnClickListener(v -> {
-            ImageView fullImage = new ImageView(context);
-            fullImage.setAdjustViewBounds(true);
-            fullImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            Glide.with(context).load(url).into(fullImage);
-            new androidx.appcompat.app.AlertDialog.Builder(context)
-                    .setView(fullImage)
-                    .setPositiveButton("Đóng", null)
-                    .show();
+            // 1. Tạo Dialog với giao diện toàn màn hình, nền màu đen cho đẹp
+            android.app.Dialog dialog = new android.app.Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+
+            // 2. Khởi tạo PhotoView của Chris Banes (Hỗ trợ kéo, thả, zoom 2 ngón tay)
+            com.github.chrisbanes.photoview.PhotoView photoView = new com.github.chrisbanes.photoview.PhotoView(context);
+
+            // 3. Load ảnh độ phân giải cao vào PhotoView
+            Glide.with(context).load(url).into(photoView);
+
+            // 4. Đưa PhotoView vào Dialog và hiển thị
+            dialog.setContentView(photoView);
+            dialog.show();
+
+            // 5. Tính năng phụ: Chạm nhẹ 1 lần vào ảnh để thoát chế độ xem ảnh
+            photoView.setOnClickListener(view -> dialog.dismiss());
         });
     }
 

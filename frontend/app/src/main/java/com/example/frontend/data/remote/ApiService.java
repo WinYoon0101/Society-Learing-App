@@ -369,4 +369,7 @@ public interface ApiService {
 
     @PUT("live/end/{liveId}")
     Call<ApiResponse<Void>> endLive(@Path("liveId") String liveId);
+
+    @GET("posts/{id}")
+    Call<ApiResponse<Post>> getPostById(@Path("id") String id);
 }
