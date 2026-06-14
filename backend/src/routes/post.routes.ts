@@ -7,6 +7,7 @@ import {
     getSavedPosts,
     getMyPosts,
     getPostsByUser,
+    getPostById,
 } from '../controllers/post.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import { uploadImages } from '../middlewares/upload.middleware';
@@ -20,5 +21,5 @@ router.get('/my/saved', authenticate, getSavedPosts);
 router.post('/:id/save', authenticate, toggleSavePost);
 router.delete('/:id', authenticate, deletePost);
 router.get('/user/:userId', authenticate, getPostsByUser);
-
+router.get('/:id', authenticate, getPostById);
 export default router;

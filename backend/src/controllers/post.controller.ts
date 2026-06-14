@@ -343,4 +343,67 @@ export const getPostsByUser = async (req: AuthRequest, res: Response) => {
         console.error("Lỗi getPostsByUser", error);
         res.status(500).json({ success: false, message: "Lỗi server" });
     }
+
+};
+
+// =====================================
+// API LẤY CHI TIẾT 1 BÀI VIẾT BẰNG ID
+// =====================================
+export const getPostById = async (req: AuthRequest, res: Response): Promise<any> => {
+    try {
+        const { id } = req.params;
+        const currentUserId = req.user?.id;
+
+        // 1. Tìm bài viết theo ID
+        const post = await Post.findById(id)
+            .populate('authorId', 'username avatar')
+            .lean();
+
+        if (!post) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy bài viết" });
+        }
+
+        const postIdObj = new mongoose.Types.ObjectId(post._id.toString());
+
+        // 2. Lấy danh sách ảnh của bài viết
+        const mediaList = await Media.find({ targetId: post._id, fileType: 'image' });
+        const imageUrls = mediaList.map(m => m.url);
+
+        // 3. Đếm số lượng comment và reaction
+        const countComment = await Comment.countDocuments({ postId: post._id });
+        const countReaction = await Reaction.countDocuments({ targetId: postIdObj });
+
+        // 4. Lấy reaction của user hiện tại (để biết mình đã thả tim hay like chưa)
+        let myReaction = null;
+        if (currentUserId) {
+            const myReactDoc = await Reaction.findOne({ targetId: postIdObj, userId: currentUserId });
+            if (myReactDoc) {
+                myReaction = myReactDoc.type;
+            }
+        }
+
+        // 5. Lấy top 2 reactions nhiều nhất (để hiển thị icon nhỏ xíu)
+        const topReactDocs = await Reaction.aggregate([
+            { $match: { targetId: postIdObj } },
+            { $group: { _id: "$type", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 2 }
+        ]);
+        const topReactions = topReactDocs.map(doc => doc._id);
+
+        // 6. Đóng gói dữ liệu trả về cho Android
+        const postDetail = {
+            ...post,
+            images: imageUrls,
+            countComment: countComment,
+            countReaction: countReaction,
+            myReaction: myReaction,
+            topReactions: topReactions
+        };
+
+        return res.status(200).json({ success: true, data: postDetail });
+    } catch (error) {
+        console.error("Lỗi lấy chi tiết bài viết:", error);
+        return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
 };
