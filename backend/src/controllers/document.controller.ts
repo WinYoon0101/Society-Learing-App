@@ -553,10 +553,11 @@ export const toggleSaveDocument = async (
   }
 };
 
+
 /**
  * @route   GET /api/documents/saved
  * @access  Private
- * @desc    Lấy danh sách tài liệu đã lưu của user
+ * @desc    Lấy danh sách tài liệu đã lưu của user (Đã bảo lưu thứ tự & lọc bài viết chết)
  */
 export const getSavedDocuments = async (
   req: AuthRequest,
@@ -567,6 +568,7 @@ export const getSavedDocuments = async (
     const { page, limit } = req.query;
     const { page: p, limit: l, skip } = getPagination(page, limit);
 
+    // 1. Tìm user và lấy mảng ID các tài liệu đã lưu
     const user = await User.findById(userId).select("savedDocument");
     if (!user) {
       res.status(404).json({ success: false, message: "Người dùng không tìm thấy." });
@@ -574,13 +576,21 @@ export const getSavedDocuments = async (
     }
 
     const total = user.savedDocument.length;
-    // Lấy slice từ savedDocument array để paginate
+    
+    // 2. Cắt mảng IDs theo đúng công thức phân trang (Pagination)
     const ids = user.savedDocument.slice(skip, skip + l);
 
-    const documents = await DocumentModel.find({ _id: { $in: ids } })
+    // 3. Tìm các tài liệu có ID nằm trong danh sách đã cắt
+    const rawDocuments = await DocumentModel.find({ _id: { $in: ids } })
       .populate("uploaderId", "username avatar")
       .populate("mediaId", "url fileType");
 
+
+    const documents = ids
+      .map((id) => rawDocuments.find((doc) => doc._id.equals(id)))
+      .filter((doc): doc is NonNullable<typeof doc> => !!doc);
+
+    // 5. Trả về kết quả cho client
     res.status(200).json({
       success: true,
       data: {
