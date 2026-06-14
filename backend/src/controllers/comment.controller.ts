@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import Comment from '../models/comment.model'; // Đảm bảo đường dẫn này đúng với model của bạn
+import Comment from '../models/comment.model'; 
 
-// Interface nhận diện req.user từ middleware auth
 interface AuthRequest extends Request {
     user?: {
         id: string;
@@ -20,17 +19,18 @@ export const createComment = async (req: AuthRequest, res: Response): Promise<Re
             return res.status(401).json({ message: 'Không tìm thấy thông tin người dùng' });
         }
 
+        // ĐÃ SỬA: Dùng đúng tên cột trong model.ts (postId, userId, parentId)
         const newComment = new Comment({
-            post: postId, // Lưu ý: Đổi thành tên trường đúng trong model của bạn (vd: postId)
-            author: userId, // Lưu ý: Đổi thành tên trường đúng trong model của bạn (vd: userId)
+            postId: postId, 
+            userId: userId, 
             content: content,
-            parentComment: parentId || null // Dành cho tính năng reply sau này
+            parentId: parentId || null 
         });
 
         await newComment.save();
 
-        // Populate thông tin người dùng để trả về frontend có sẵn avatar/tên hiển thị luôn
-        await newComment.populate('author', 'username avatar');
+        // ĐÃ SỬA: Populate đúng trường userId
+        await newComment.populate('userId', 'username avatar');
 
         return res.status(201).json({
             success: true,
@@ -53,12 +53,12 @@ export const getCommentsByPost = async (req: Request, res: Response): Promise<Re
         const limit = parseInt(req.query.limit as string) || 10;
         const skip = (page - 1) * limit;
 
-        // Chỉ lấy các comment gốc (không lấy reply lẫn vào)
-        const query = { post: postId, parentComment: null };
+        // ĐÃ SỬA: Lọc bằng postId và parentId
+        const query = { postId: postId, parentId: null };
 
         const comments = await Comment.find(query)
-            .populate('author', 'username avatar')
-            .sort({ createdAt: -1 }) // Mới nhất lên đầu
+            .populate('userId', 'username avatar') // ĐÃ SỬA: Populate userId
+            .sort({ createdAt: -1 }) 
             .skip(skip)
             .limit(limit);
 
@@ -92,10 +92,10 @@ export const deleteComment = async (req: AuthRequest, res: Response): Promise<Re
             return res.status(401).json({ message: 'Không tìm thấy thông tin người dùng' });
         }
 
-        // Tìm và xóa: Chỉ xóa nếu comment này do chính user đó tạo ra
+        // ĐÃ SỬA: Kiểm tra quyền xóa bằng cột userId
         const deletedComment = await Comment.findOneAndDelete({
             _id: commentId,
-            author: userId 
+            userId: userId 
         });
 
         if (!deletedComment) {
@@ -103,7 +103,7 @@ export const deleteComment = async (req: AuthRequest, res: Response): Promise<Re
         }
 
         // Tùy chọn: Xóa luôn các reply của comment này (nếu có)
-        // await Comment.deleteMany({ parentComment: commentId });
+        // await Comment.deleteMany({ parentId: commentId });
 
         return res.status(200).json({
             success: true,
