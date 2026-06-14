@@ -6,7 +6,6 @@ import User from "../models/user.model";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import cloudinary from "../config/cloudinary";
 
-// --- Thư viện cho AI Mindmap ---
 import { GoogleGenerativeAI, SchemaType, Schema } from "@google/generative-ai";
 import axios from "axios";
 import pdfParse = require("pdf-parse"); 
@@ -382,7 +381,7 @@ export const getSavedDocuments = async (req: AuthRequest, res: Response): Promis
 };
 
 // =========================================================================
-// ─── TÍNH NĂNG MỚI: AI SUMMARIZER & MINDMAP (CÓ CACHE) ───────────────────
+// ───  AI SUMMARIZER & MINDMAP (CÓ CACHE) ───────────────────
 // =========================================================================
 
 export const generateDocumentMindmap = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -402,7 +401,7 @@ export const generateDocumentMindmap = async (req: AuthRequest, res: Response): 
 
     // KIỂM TRA CACHE TỪ DATABASE
     if (document.mindmapData) {
-      console.log(`[Cache Hit] Trả về Mindmap có sẵn cho document: ${id}`);
+      console.log(`[Cache Hit] Mindmap có sẵn cho document: ${id}`);
       res.status(200).json({
         success: true,
         message: "Lấy sơ đồ tư duy thành công!",
@@ -436,15 +435,14 @@ export const generateDocumentMindmap = async (req: AuthRequest, res: Response): 
       return;
     }
 
-    const apiKey = process.env.GOOGLE_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY; 
     if (!apiKey) {
-      res.status(500).json({ success: false, message: "Chưa cấu hình GOOGLE_API_KEY trong file .env" });
+      res.status(500).json({ success: false, message: "Chưa cấu hình GEMINI_API_KEY trong file .env" });
       return;
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-
     const mindmapSchema: Schema = {
       type: SchemaType.OBJECT,
       properties: {
@@ -476,18 +474,24 @@ export const generateDocumentMindmap = async (req: AuthRequest, res: Response): 
       required: ["topic", "summary", "nodes"],
     };
 
+  
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: mindmapSchema,
+        temperature: 0.2, 
       },
     });
 
     const prompt = `Bạn là một trợ lý học tập. Đọc nội dung sau và trích xuất thành sơ đồ tư duy phân cấp:\n${textContent.substring(0, 30000)}`;
     const aiResult = await model.generateContent(prompt);
     
-    const mindmapJSON = JSON.parse(aiResult.response.text());
+   
+    let rawText = aiResult.response.text();
+    rawText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
+
+    const mindmapJSON = JSON.parse(rawText);
 
     // LƯU KẾT QUẢ VÀO DATABASE
     document.mindmapData = mindmapJSON;
@@ -502,6 +506,16 @@ export const generateDocumentMindmap = async (req: AuthRequest, res: Response): 
 
   } catch (error: any) {
     console.error("generateDocumentMindmap error:", error);
+    
+  
+    if (error instanceof SyntaxError) {
+       res.status(500).json({
+         success: false,
+         message: "Lỗi định dạng dữ liệu từ AI. Vui lòng thử lại.",
+       });
+       return;
+    }
+
     res.status(500).json({
       success: false,
       message: "Đã xảy ra lỗi khi tạo sơ đồ tư duy, vui lòng thử lại sau.",
