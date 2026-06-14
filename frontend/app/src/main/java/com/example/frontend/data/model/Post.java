@@ -17,7 +17,7 @@ public class Post {
     
     @SerializedName("groupId")
     private String groupId;  // null nếu bài home/profile, có giá trị nếu bài trong nhóm
-    
+
     private String createdAt;
 
     private int countComment;

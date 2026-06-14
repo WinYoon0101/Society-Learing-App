@@ -81,6 +81,16 @@ public class GroupFeedFragment extends Fragment {
         refresh();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Reload khi có thay đổi từ nơi khác (đăng bài, tham gia nhóm, chấp nhận lời mời)
+        if (GroupState.feedDirty) {
+            GroupState.feedDirty = false;
+            refresh();
+        }
+    }
+
     private void refresh() {
         currentPage = 1;
         isLastPage = false;

@@ -135,7 +135,7 @@ public class NotifyFragment extends Fragment {
         @Override
         public void onBindViewHolder(@NonNull VH h, int pos) {
             Notification n = items.get(pos);
-            h.tvMessage.setText(n.getMessage());
+            h.tvMessage.setText(n.getContent());
             h.tvTime.setText(formatTime(n.getCreatedAt()));
             h.dotUnread.setVisibility(n.isRead() ? View.GONE : View.VISIBLE);
             h.itemView.setBackgroundColor(n.isRead() ? 0xFFFFFFFF : 0xFFECFDF5);

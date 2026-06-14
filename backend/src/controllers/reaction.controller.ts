@@ -5,7 +5,8 @@ import Notification from '../models/notification.model';
 
 export const toggleReaction = async (req: Request, res: Response): Promise<void> => {
     try {
-        const userId = (req as any).user?.id || req.body.userId;
+        // Lấy ID người dùng từ token (hoặc từ body nếu test)
+        const userId = (req as any).user?.id || req.body.userId; 
         const { targetId, targetType, type } = req.body;
 
         if (!userId || !targetId || !targetType || !type) {
@@ -13,41 +14,59 @@ export const toggleReaction = async (req: Request, res: Response): Promise<void>
             return;
         }
 
-        const existingReaction = await Reaction.findOne({ userId: userId, targetId: targetId });
+        const existingReaction = await Reaction.findOne({ userId, targetId });
 
         if (existingReaction) {
             if (existingReaction.type === type) {
+                // 1. HỦY CẢM XÚC (Bấm lại nút cũ)
                 await Reaction.findByIdAndDelete(existingReaction._id);
-                // Xóa thông báo cũ khi bỏ react
-                await Notification.deleteOne({ senderId: userId, targetId: targetId, type: "REACTION" });
+                
+                // Thu hồi thông báo tương ứng
+                await Notification.deleteOne({ 
+                    sender: userId, 
+                    targetId: targetId, 
+                    type: "post_reaction" 
+                }).catch(err => console.error("Lỗi xóa thông báo:", err.message));
+
                 res.status(200).json({ message: "Đã thu hồi cảm xúc", action: "REMOVED" });
             } else {
+                // 2. ĐỔI CẢM XÚC (VD: Đổi từ Like sang Love)
                 existingReaction.type = type;
                 await existingReaction.save();
                 res.status(200).json({ message: "Đã cập nhật cảm xúc", action: "UPDATED", data: existingReaction });
             }
         } else {
+            // 3. THẢ CẢM XÚC MỚI
             const newReaction = new Reaction({ userId, targetId, targetType, type });
             await newReaction.save();
 
-            // Tạo thông báo nếu react bài viết và không phải react bài của chính mình
-            if (targetType === "Post") {
-                const post = await Post.findById(targetId).select("authorId").lean();
-                if (post && post.authorId.toString() !== userId) {
-                    const notification = new Notification({
-                        receiverId: post.authorId,
-                        senderId: userId,
+            // === TẠO THÔNG BÁO BỌC THÉP ===
+            if (targetType.toLowerCase() === 'post') {
+                const post = await Post.findById(targetId);
+                
+                // 1. Lấy ID an toàn (Đề phòng bài viết cũ dùng 'author' thay vì 'authorId')
+                const authorOfPost = post?.authorId || (post as any)?.author;
+                const senderOfReaction = userId; 
+                
+                // 2. Kẻ vạch an toàn: Phải có đủ cả người nhận, người gửi và không tự thả tim chính mình
+                if (post && authorOfPost && senderOfReaction && authorOfPost.toString() !== senderOfReaction.toString()) {
+                    await Notification.create({
+                        recipient: authorOfPost, 
+                        sender: senderOfReaction,
+                        type: 'post_reaction',
                         targetId: targetId,
-                        targetType: "Post",
-                        type: "REACTION",
-                    });
-                    notification.save().catch(err => console.error("Lỗi tạo thông báo reaction:", err));
+                        content: 'đã bày tỏ cảm xúc về bài viết của bạn'
+                    }).catch(err => console.error("Lỗi Mongoose khi lưu thông báo:", err.message));
+                } else {
+                    console.log("Bỏ qua tạo thông báo (Do thiếu ID bài viết hoặc tự thả tim chính mình)");
                 }
             }
+            // =============================
 
             res.status(201).json({ message: "Đã thả cảm xúc thành công", action: "ADDED", data: newReaction });
         }
     } catch (error: any) {
+        console.error("Lỗi toggleReaction:", error);
         res.status(500).json({ message: "Lỗi Server", error: error.message });
     }
 };

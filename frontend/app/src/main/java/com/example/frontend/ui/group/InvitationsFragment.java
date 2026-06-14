@@ -83,6 +83,7 @@ public class InvitationsFragment extends Fragment {
             if (r.status == Result.Status.SUCCESS) {
                 String msg = "accept".equals(action) ? "Đã tham gia nhóm!" : "Đã từ chối lời mời";
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                if ("accept".equals(action)) GroupState.onJoinedGroup();
                 load(); // reload list
             } else if (r.status == Result.Status.ERROR) {
                 Toast.makeText(requireContext(),

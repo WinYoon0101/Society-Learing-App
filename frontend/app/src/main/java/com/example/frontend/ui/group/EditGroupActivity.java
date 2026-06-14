@@ -74,7 +74,7 @@ public class EditGroupActivity extends AppCompatActivity {
         etName.setText(getIntent().getStringExtra(EXTRA_GROUP_NAME));
         etDescription.setText(getIntent().getStringExtra(EXTRA_DESCRIPTION));
         selectedPrivacy = getIntent().getStringExtra(EXTRA_PRIVACY);
-        tvPrivacyLabel.setText("Public".equals(selectedPrivacy) ? "🔓 Công khai" : "🔒 Riêng tư");
+        tvPrivacyLabel.setText("Public".equals(selectedPrivacy) ? "🌐 Công khai" : "🔒 Riêng tư");
         String avatarUrl = getIntent().getStringExtra(EXTRA_AVATAR_URL);
         if (avatarUrl != null && !avatarUrl.isEmpty()) {
             Glide.with(this).load(avatarUrl).placeholder(R.drawable.ic_group).into(imgAvatar);

@@ -53,6 +53,8 @@ public class MyGroupsFragment extends Fragment {
 
         // Click vào nhóm → mở GroupDetailActivity
         adapter = new GroupAdapter(group -> {
+            // Đánh dấu đã xem → badge "bài viết mới" sẽ reset khi quay lại
+            GroupState.markGroupSeen(requireContext(), group.getId(), group.getLastUpdated());
             Intent i = new Intent(requireContext(), GroupDetailActivity.class);
             i.putExtra(GroupDetailActivity.EXTRA_GROUP_ID, group.getId());
             i.putExtra(GroupDetailActivity.EXTRA_GROUP_NAME, group.getGroupName());

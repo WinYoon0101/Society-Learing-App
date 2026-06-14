@@ -53,8 +53,11 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.VH> {
         Group g = items.get(position);
         h.tvName.setText(g.getGroupName());
 
-        // Subtitle: priority -> "X bài viết mới" if newPostCount > 0, else "Cập nhật ..."
-        if (g.getNewPostCount() > 0) {
+        // Subtitle: "X bài viết mới" nếu có bài mới VÀ user chưa xem mốc mới nhất,
+        // ngược lại hiện "Cập nhật ..." (trạng thái bình thường)
+        boolean hasNew = g.getNewPostCount() > 0
+                && !GroupState.isGroupSeen(h.itemView.getContext(), g.getId(), g.getLastUpdated());
+        if (hasNew) {
             String txt = g.getNewPostCount() > 10
                     ? "• Hơn 10 bài viết mới"
                     : "• " + g.getNewPostCount() + " bài viết mới";
