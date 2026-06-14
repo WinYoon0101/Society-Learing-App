@@ -1,6 +1,7 @@
 package com.example.frontend.ui.feed;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -45,6 +46,9 @@ public class PostDetailActivity extends AppCompatActivity {
     private TextView tvReactionCount, tvLikeLabel;
     private TextView imgReact1, imgReact2, imgLikeIcon;
 
+    // ĐÃ THÊM: View cho nút Share
+    private View btnShare;
+
     // Dữ liệu quản lý trạng thái
     private String currentPostId;
     private String replyingToId = null;
@@ -76,8 +80,11 @@ public class PostDetailActivity extends AppCompatActivity {
         imgAvatar = findViewById(R.id.imgAvatar);
         tvCommentCount = findViewById(R.id.tvCommentCount);
 
-        // ĐÃ THÊM: Ánh xạ View thời gian
+        // Ánh xạ View thời gian
         tvTime = findViewById(R.id.tvTime);
+
+        // Ánh xạ View Share
+        btnShare = findViewById(R.id.btnShare);
 
         rvPostImagesFeed = findViewById(R.id.rvPostImages);
         if (rvPostImagesFeed != null) {
@@ -85,6 +92,9 @@ public class PostDetailActivity extends AppCompatActivity {
             rvPostImagesFeed.setOnFlingListener(null);
             PagerSnapHelper snapHelper = new PagerSnapHelper();
             snapHelper.attachToRecyclerView(rvPostImagesFeed);
+
+            // ĐÃ BỔ SUNG: Kích hoạt dấu chấm tròn cho danh sách ảnh
+            rvPostImagesFeed.addItemDecoration(new DotsIndicatorDecoration());
         }
 
         layoutTopReactions = findViewById(R.id.layoutTopReactions);
@@ -111,6 +121,24 @@ public class PostDetailActivity extends AppCompatActivity {
             });
         }
 
+        // ĐÃ BỔ SUNG: Sự kiện chia sẻ bài viết (Share)
+        if (btnShare != null) {
+            btnShare.setOnClickListener(v -> {
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+
+                String author = tvAuthorName != null ? tvAuthorName.getText().toString() : "Ai đó";
+                String textContent = tvContent != null ? tvContent.getText().toString() : "";
+
+                String shareMessage = author + " vừa chia sẻ một bài viết:\n\n"
+                        + "\"" + textContent + "\"\n\n"
+                        + "👉 Mở ứng dụng để xem chi tiết nhé!";
+
+                shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
+                startActivity(Intent.createChooser(shareIntent, "Chia sẻ bài viết qua"));
+            });
+        }
+
         btnSendComment.setOnClickListener(v -> {
             String text = edtComment.getText().toString().trim();
             if (!text.isEmpty()) {
@@ -133,7 +161,7 @@ public class PostDetailActivity extends AppCompatActivity {
             // Mở từ BẢNG TIN -> Đã có sẵn dữ liệu
             String authorName = getIntent().getStringExtra("AUTHOR_NAME");
             String authorAvatar = getIntent().getStringExtra("AUTHOR_AVATAR");
-            String postTime = getIntent().getStringExtra("POST_TIME"); // ĐÃ THÊM HỨNG THỜI GIAN
+            String postTime = getIntent().getStringExtra("POST_TIME");
 
             ArrayList<String> postImages = getIntent().getStringArrayListExtra("POST_IMAGES");
             int commentCount = getIntent().getIntExtra("COMMENT_COUNT", 0);
@@ -147,7 +175,6 @@ public class PostDetailActivity extends AppCompatActivity {
                 Glide.with(this).load(authorAvatar).placeholder(R.drawable.ic_user).into(imgAvatar);
             }
 
-            // ĐÃ THÊM: Set chữ hiển thị thời gian
             if (tvTime != null) tvTime.setText(formatTime(postTime));
 
             if (postImages != null && !postImages.isEmpty() && rvPostImagesFeed != null) {
@@ -251,7 +278,6 @@ public class PostDetailActivity extends AppCompatActivity {
                 if (imgAvatar != null) Glide.with(this).load(post.getAuthorId().getAvatar()).placeholder(R.drawable.ic_user).into(imgAvatar);
             }
 
-            // ĐÃ THÊM: Set thời gian khi dữ liệu được load từ Thông báo
             if (tvTime != null) tvTime.setText(formatTime(post.getCreatedAt()));
 
             if (post.getImages() != null && !post.getImages().isEmpty() && rvPostImagesFeed != null) {
@@ -264,7 +290,6 @@ public class PostDetailActivity extends AppCompatActivity {
         });
     }
 
-    // ĐÃ THÊM: Hàm format thời gian y như bên PostAdapter
     private String formatTime(String dateString) {
         if (dateString == null || dateString.isEmpty()) return "Vừa xong";
         try {
