@@ -43,19 +43,16 @@ public class LibraryFragment extends Fragment {
 
     private String currentSubject = ""; // Lưu tab đang chọn
 
-
     private final ActivityResultLauncher<Intent> uploadLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
-
                     // Nếu upload thành công, tải lại danh sách theo tab hiện tại
                     if (currentSubject.isEmpty()) {
                         viewModel.loadDocuments("");
                     } else {
                         viewModel.loadDocumentsBySubject(currentSubject);
                     }
-
                 }
             }
     );
@@ -80,7 +77,6 @@ public class LibraryFragment extends Fragment {
             chips[i].setOnClickListener(v -> {
 
                 currentSubject = subjectNames[index]; // Lưu lại tab hiện tại
-                
 
                 // 1. Đổi màu tất cả về xám nhạt (Chưa chọn)
                 for (MaterialCardView chip : chips) {
@@ -98,16 +94,13 @@ public class LibraryFragment extends Fragment {
                 activeTv.setTypeface(null, android.graphics.Typeface.BOLD);
 
                 // 3. Gọi API lấy dữ liệu
-
                 if (currentSubject.isEmpty()) {
                     viewModel.loadDocuments("");
                 } else {
                     viewModel.loadDocumentsBySubject(currentSubject);
                 }
-
             });
         }
-
 
         // 1. Ánh xạ View từ XML
         RecyclerView rv = view.findViewById(R.id.recyclerViewDocuments);
@@ -130,27 +123,22 @@ public class LibraryFragment extends Fragment {
 
             switch (result.status) {
                 case LOADING:
-                    // Hiện vòng xoay khi đang lấy dữ liệu
                     if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
                     break;
-
                 case SUCCESS:
-                    // Ẩn vòng xoay và đổ dữ liệu vào danh sách
                     if (progressBar != null) progressBar.setVisibility(View.GONE);
                     if (result.data != null) {
                         adapter.setList(result.data);
                     }
                     break;
-
                 case ERROR:
-                    // Ẩn vòng xoay và báo lỗi cho người dùng
                     if (progressBar != null) progressBar.setVisibility(View.GONE);
                     Toast.makeText(getContext(), result.message, Toast.LENGTH_SHORT).show();
                     break;
             }
         });
 
-        // 5. Xử lý Tìm kiếm (Debounce sẽ tốt hơn, nhưng đây là cách cơ bản bạn đang dùng)
+        // 5. Xử lý Tìm kiếm
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -162,7 +150,7 @@ public class LibraryFragment extends Fragment {
             public void afterTextChanged(Editable s) {}
         });
 
-        // 6. XỬ LÝ NÚT SẮP XẾP (PHẦN MỚI)
+        // 6. XỬ LÝ NÚT SẮP XẾP
         btnSort.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(requireContext(), v);
             popup.getMenuInflater().inflate(R.menu.sort_menu, popup.getMenu());
@@ -183,17 +171,14 @@ public class LibraryFragment extends Fragment {
                     label = "Tải nhiều";
                 }
 
-                // Cập nhật text trên giao diện để người dùng biết đang lọc gì
                 if (tvSortLabel != null) tvSortLabel.setText(label);
-
-                // Gọi ViewModel để tải lại (ViewModel sẽ tự giữ Search hiện tại)
                 viewModel.loadDocumentsWithSort(sortType);
                 return true;
             });
             popup.show();
         });
 
-        // 6. Xử lý khi click vào từng tài liệu
+        // 7. Xử lý khi click vào từng tài liệu để xem
         adapter.setOnItemClickListener(doc -> {
             if (doc.get_id() != null) {
                 viewModel.incrementView(doc.get_id());
@@ -205,42 +190,109 @@ public class LibraryFragment extends Fragment {
                 return;
             }
 
-            // Gửi URL sang màn hình xem trong app
             Intent intent = new Intent(getContext(), ViewDocumentActivity.class);
             intent.putExtra("FILE_URL", fileUrl);
             startActivity(intent);
         });
-        // 7. Tải dữ liệu mặc định khi vừa mở màn hình
+
+        // 8. XỬ LÝ KHI CLICK NÚT TẢI XUỐNG
+        adapter.setOnDownloadClickListener(doc -> {
+            String fileUrl = doc.getFileUrl();
+            if (fileUrl == null || fileUrl.isEmpty()) {
+                Toast.makeText(getContext(), "Tài liệu này không có file để tải!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Gọi hàm tải file
+            downloadFile(fileUrl, doc.getTitle());
+
+            // Sau khi tải xong, tăng lượt tải xuống lên 1
+            if (doc.get_id() != null) {
+                viewModel.incrementDownload(doc.get_id());
+            }
+        });
+
+        // 9. Tải dữ liệu mặc định khi vừa mở màn hình
         viewModel.loadDocuments("");
 
-        // 8. Xử lý sự kiện khi click vào nút Thêm tài liệu
+        // 10. Xử lý sự kiện khi click vào nút Thêm tài liệu
         view.findViewById(R.id.fabAdd).setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), UploadDocumentActivity.class);
             uploadLauncher.launch(intent);
         });
 
-
         return view;
     }
 
     private void downloadFile(String url, String title) {
-        // 1. Lấy đuôi file từ URL
-        String extension = MimeTypeMap.getFileExtensionFromUrl(url);
-        if (extension == null || extension.isEmpty()) extension = "pdf";
+        try {
+            if (url == null || url.trim().isEmpty()) {
+                Toast.makeText(getContext(), "URL tải xuống bị trống!", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        // 2. Đặt tên file = Tên tài liệu + đuôi
-        String fileName = title.replaceAll("\\s+", "_") + "." + extension;
+            // 1. Chuẩn hóa URL (Sửa lỗi http/https)
+            if (url.startsWith("http://")) {
+                url = url.replace("http://", "https://");
+            } else if (!url.startsWith("http")) {
+                url = "https://" + url;
+            }
 
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-        request.setTitle("Tải về: " + title);
-        request.setMimeType(MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension));
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+            // ==========================================================
+            // 2. ĐẶC TRỊ CLOUDINARY & LỌC QUERY PARAMETER CAUSING CRASH
+            // ==========================================================
+            // Xóa sạch cái đuôi ?f=.pdf hay bất kỳ thứ gì sau dấu ?
+            if (url.contains("?")) {
+                url = url.substring(0, url.indexOf("?"));
+            }
 
-        DownloadManager manager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-        if (manager != null) {
-            manager.enqueue(request);
-            Toast.makeText(getContext(), "Đang tải xuống " + fileName, Toast.LENGTH_SHORT).show();
+            // Ép Cloudinary gửi trả file dưới dạng "Tải xuống" thay vì "Xem trước"
+            if (url.contains("cloudinary.com") && url.contains("/upload/")) {
+                if (!url.contains("fl_attachment")) {
+                    url = url.replace("/upload/", "/upload/fl_attachment/");
+                }
+            }
+            // ==========================================================
+
+            // 3. Lấy định dạng đuôi file
+            String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+            if (extension == null || extension.isEmpty()) {
+                int lastDotIndex = url.lastIndexOf('.');
+                if (lastDotIndex != -1 && lastDotIndex < url.length() - 1) {
+                    extension = url.substring(lastDotIndex + 1);
+                } else {
+                    extension = "pdf";
+                }
+            }
+
+            // 4. Lấy MimeType
+            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+            if (mimeType == null) {
+                mimeType = "*/*";
+            }
+
+            // 5. Lọc tên file an toàn
+            String safeTitle = title.replaceAll("[^a-zA-Z0-9\\s-]", "");
+            if (safeTitle.trim().isEmpty()) safeTitle = "Tai_Lieu";
+            String fileName = safeTitle.replaceAll("\\s+", "_") + "." + extension;
+
+            // ... (Phần DownloadManager.Request bên dưới của bạn giữ nguyên không cần đổi)
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+            request.setTitle(title);
+            request.setDescription("Đang tải tài liệu...");
+            request.setMimeType(mimeType);
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+
+            DownloadManager manager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+            if (manager != null) {
+                manager.enqueue(request);
+                Toast.makeText(getContext(), "Đang tải xuống: " + fileName, Toast.LENGTH_SHORT).show();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Lỗi tải xuống: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 }

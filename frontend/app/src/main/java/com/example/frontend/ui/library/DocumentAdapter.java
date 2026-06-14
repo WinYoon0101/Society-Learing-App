@@ -20,13 +20,24 @@ import java.util.List;
 public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHolder> {
     private List<Document> documents = new ArrayList<>();
     private OnItemClickListener listener;
+    private OnDownloadClickListener downloadListener; // Lắng nghe sự kiện tải xuống
 
+    // Interface click vào cả item
     public interface OnItemClickListener {
         void onItemClick(Document doc);
     }
 
+    // Interface click vào nút tải xuống
+    public interface OnDownloadClickListener {
+        void onDownloadClick(Document doc);
+    }
+
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
+    }
+
+    public void setOnDownloadClickListener(OnDownloadClickListener listener) {
+        this.downloadListener = listener;
     }
 
     public void setList(List<Document> newList) {
@@ -41,7 +52,6 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
         return new ViewHolder(view);
     }
 
-
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Document doc = documents.get(position);
@@ -55,35 +65,40 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
             holder.tvTime.setText(doc.getCreatedAt().substring(0, 10));
         }
 
-        String url = doc.getFileUrl().toLowerCase();
+        String url = doc.getFileUrl() != null ? doc.getFileUrl().toLowerCase() : "";
 
         // --- BƯỚC 1: RESET NỀN  ---
         holder.ivFileType.setColorFilter(null);
         holder.iconCard.setCardBackgroundColor(Color.WHITE);
 
         // --- BƯỚC 2: LOGIC ĐỔI ICON ---
-
         if (url.contains(".pdf")) {
             holder.ivFileType.setImageResource(R.drawable.ic_pdf);
-        }
-        else if (url.contains(".doc") || url.contains(".docx")) {
+        } else if (url.contains(".doc") || url.contains(".docx")) {
             holder.ivFileType.setImageResource(R.drawable.ic_word);
-
-        }
-        else if (url.contains(".ppt") || url.contains(".pptx")) {
+        } else if (url.contains(".ppt") || url.contains(".pptx")) {
             holder.ivFileType.setImageResource(android.R.drawable.ic_menu_slideshow);
             holder.ivFileType.setColorFilter(Color.parseColor("#F57C00"));
             holder.iconCard.setCardBackgroundColor(Color.parseColor("#FFF3E0"));
-        }
-        else {
+        } else {
             // Mặc định cho các loại khác (Dùng màu xám nhuộm cho icon mặc định)
             holder.ivFileType.setImageResource(R.drawable.ic_generic_file);
             holder.ivFileType.setColorFilter(Color.parseColor("#6E7E73"));
             holder.iconCard.setCardBackgroundColor(Color.parseColor("#F5F5F5"));
         }
 
+        // --- BƯỚC 3: XỬ LÝ SỰ KIỆN CLICK ---
+
+        // Click vào toàn bộ item để xem tài liệu
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(doc);
+        });
+
+        // Click riêng vào nút tải xuống
+        holder.btnDownload.setOnClickListener(v -> {
+            if (downloadListener != null) {
+                downloadListener.onDownloadClick(doc);
+            }
         });
     }
 
@@ -94,8 +109,8 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle, tvSubtitle, tvViews, tvDownloads, tvTime;
-        ImageView ivFileType;
-        MaterialCardView iconCard; // Thêm ánh xạ cho khung icon
+        ImageView ivFileType, btnDownload;
+        MaterialCardView iconCard;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -105,7 +120,8 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
             tvDownloads = itemView.findViewById(R.id.tvDownloads);
             tvTime = itemView.findViewById(R.id.tvTime);
             ivFileType = itemView.findViewById(R.id.ivFileType);
-            iconCard = itemView.findViewById(R.id.iconCard); // Ánh xạ vào id iconCard trong XML
+            iconCard = itemView.findViewById(R.id.iconCard);
+            btnDownload = itemView.findViewById(R.id.btnDownload);
         }
     }
 }
