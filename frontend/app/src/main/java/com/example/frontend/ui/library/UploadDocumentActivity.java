@@ -62,7 +62,7 @@ public class UploadDocumentActivity extends AppCompatActivity {
 
         // Khởi tạo Select Box cho Môn học
         AutoCompleteTextView etSubject = findViewById(R.id.etSubject);
-        String[] subjects = {"CNTT/IT", "Kinh tế", "Khoa học", "Luật"};
+        String[] subjects = {"CNTT/IT", "Kinh tế", "Khoa học", "Luật", "Khác"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
