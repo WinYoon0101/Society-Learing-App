@@ -43,6 +43,12 @@ public class CreatePostFragment extends Fragment {
     private LinearLayout btnPickImage;
     private LinearLayout optFeeling, optTag;
 
+    // ĐÃ THÊM: Biến cho Quyền riêng tư
+    private LinearLayout btnPrivacy;
+    private TextView tvPrivacyText;
+    private ImageView imgPrivacyIcon;
+    private String selectedPrivacy = "Public"; // Mặc định là công khai
+
     // View và List chứa nhiều ảnh
     private RecyclerView rvImagePreview;
     private ImagePreviewAdapter previewAdapter;
@@ -78,6 +84,16 @@ public class CreatePostFragment extends Fragment {
         tvUserName = view.findViewById(R.id.tvUserName);
         imgAvatar = view.findViewById(R.id.imgAvatar);
 
+        // ĐÃ THÊM: Ánh xạ view Quyền riêng tư
+        btnPrivacy = view.findViewById(R.id.btnPrivacy);
+        tvPrivacyText = view.findViewById(R.id.tvPrivacyText);
+        imgPrivacyIcon = view.findViewById(R.id.imgPrivacyIcon);
+
+        // Bắt sự kiện click chọn quyền
+        if (btnPrivacy != null) {
+            btnPrivacy.setOnClickListener(v -> showPrivacyDialog());
+        }
+
         // =======================================================
         // 2. LẤY THÔNG TIN USER TỪ SHAREDPREFERENCES ĐỂ HIỂN THỊ
         // =======================================================
@@ -102,16 +118,14 @@ public class CreatePostFragment extends Fragment {
         // =======================================================
         // 3. SETUP RECYCLERVIEW HIỂN THỊ ẢNH PREVIEW (VUỐT NGANG)
         // =======================================================
-        rvImagePreview = view.findViewById(R.id.rvImagePreview); // Chú ý: Đảm bảo layout fragment_feed_create_post.xml đã có id này
+        rvImagePreview = view.findViewById(R.id.rvImagePreview);
 
-        // Cài đặt dạng danh sách vuốt ngang
         rvImagePreview.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
 
         previewAdapter = new ImagePreviewAdapter(getContext(), selectedImageUris, new ImagePreviewAdapter.OnImageClickListener() {
             @Override
             public void onRemove(int position) {
                 selectedImageUris.remove(position);
-                // Dùng các hàm notify này để có hiệu ứng thu hồi ảnh cực mượt
                 previewAdapter.notifyItemRemoved(position);
                 previewAdapter.notifyItemRangeChanged(position, selectedImageUris.size());
 
@@ -135,7 +149,6 @@ public class CreatePostFragment extends Fragment {
 
         btnBack.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
-        // Gọi hàm chọn nhiều ảnh (Hỗ trợ GetMultipleContents)
         btnPickImage.setOnClickListener(v -> {
             imagePickerLauncher.launch("image/*");
         });
@@ -178,19 +191,41 @@ public class CreatePostFragment extends Fragment {
 
             Toast.makeText(getContext(), "Đang đăng bài...", Toast.LENGTH_SHORT).show();
 
-            // Prepare tag ids
             List<String> tagIds = new ArrayList<>();
             for (User u : selectedTags) tagIds.add(u.getId());
 
-            // Đã sửa: truyền groupId khi đăng bài vào nhóm, cùng tags và initialReaction
+            // ĐÃ SỬA: Bổ sung thêm selectedPrivacy vào hàm uploadPost
             if (groupId != null && !groupId.isEmpty()) {
-                viewModel.uploadPost(getContext(), content, selectedImageUris, groupId, tagIds, selectedReaction);
+                viewModel.uploadPost(getContext(), content, selectedPrivacy, selectedImageUris, groupId, tagIds, selectedReaction);
             } else {
-                viewModel.uploadPost(getContext(), content, selectedImageUris, null, tagIds, selectedReaction);
+                viewModel.uploadPost(getContext(), content, selectedPrivacy, selectedImageUris, null, tagIds, selectedReaction);
             }
         });
 
         return view;
+    }
+
+    // ĐÃ THÊM: Hàm hiển thị Dialog chọn quyền
+    private void showPrivacyDialog() {
+        String[] options = {"Công khai", "Bạn bè", "Chỉ mình tôi"};
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Ai có thể xem bài viết này?")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        selectedPrivacy = "Public";
+                        if (tvPrivacyText != null) tvPrivacyText.setText("Công khai");
+                        if (imgPrivacyIcon != null) imgPrivacyIcon.setImageResource(R.drawable.ic_public);
+                    } else if (which == 1) {
+                        selectedPrivacy = "Friends";
+                        if (tvPrivacyText != null) tvPrivacyText.setText("Bạn bè");
+                        if (imgPrivacyIcon != null) imgPrivacyIcon.setImageResource(R.drawable.ic_friend);
+                    } else {
+                        selectedPrivacy = "Private";
+                        if (tvPrivacyText != null) tvPrivacyText.setText("Chỉ mình tôi");
+                        if (imgPrivacyIcon != null) imgPrivacyIcon.setImageResource(R.drawable.ic_private);
+                    }
+                })
+                .show();
     }
 
     private void updateMetaText() {
@@ -249,9 +284,6 @@ public class CreatePostFragment extends Fragment {
         dialog.show();
     }
 
-    // =======================================================
-    // 5. LẮNG NGHE KẾT QUẢ TỪ VIEWMODEL
-    // =======================================================
     private void observeViewModel() {
         viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
             btnPost.setEnabled(!isLoading);
@@ -259,10 +291,9 @@ public class CreatePostFragment extends Fragment {
 
         viewModel.getIsSuccess().observe(getViewLifecycleOwner(), isSuccess -> {
             if (Boolean.TRUE.equals(isSuccess)) {
-                viewModel.resetSuccess(); // Tránh re-trigger khi quay lại fragment
+                viewModel.resetSuccess();
                 Toast.makeText(getContext(), "Đăng bài thành công!", Toast.LENGTH_SHORT).show();
-                // Nếu mở như Fragment (FeedFragment gọi), pop back stack
-                // Nếu mở như Activity standalone, finish Activity
+
                 if (getParentFragmentManager().getBackStackEntryCount() > 0) {
                     getParentFragmentManager().popBackStack();
                 } else if (getActivity() != null) {
@@ -279,16 +310,12 @@ public class CreatePostFragment extends Fragment {
         });
     }
 
-    // =======================================================
-    // 6. ACTIVITY LAUNCHER CHỌN NHIỀU ẢNH
-    // =======================================================
     private final ActivityResultLauncher<String> imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.GetMultipleContents(),
             uris -> {
                 if (uris != null && !uris.isEmpty()) {
                     selectedImageUris.addAll(uris);
 
-                    // Giới hạn chọn tối đa 10 ảnh
                     if (selectedImageUris.size() > 10) {
                         selectedImageUris = selectedImageUris.subList(0, 10);
                         Toast.makeText(getContext(), "Chỉ được chọn tối đa 10 ảnh", Toast.LENGTH_SHORT).show();
@@ -328,7 +355,6 @@ public class CreatePostFragment extends Fragment {
                                 .into(imgAvatar);
                     }
                 }
-
                 editor.apply();
             }
         });

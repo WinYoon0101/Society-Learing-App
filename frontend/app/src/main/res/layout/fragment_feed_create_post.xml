@@ -8,13 +8,11 @@
     android:clickable="true"
     android:focusable="true">
 
-    <!-- KHUNG CHÍNH CHỨA HEADER, USER INFO VÀ NỘI DUNG -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- HEADER: NÚT ĐÓNG VÀ NÚT ĐĂNG -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="56dp"
@@ -53,7 +51,6 @@
             android:layout_height="1dp"
             android:background="#E0E0E0"/>
 
-        <!-- KHU VỰC HIỂN THỊ ẢNH VÀ TÊN NGƯỜI DÙNG -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -83,29 +80,44 @@
                     android:textStyle="bold" />
 
                 <LinearLayout
+                    android:id="@+id/btnPrivacy"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:background="@drawable/bg_privacy_button"
                     android:paddingHorizontal="8dp"
-                    android:paddingVertical="4dp">
+                    android:paddingVertical="4dp"
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true">
+
                     <ImageView
+                        android:id="@+id/imgPrivacyIcon"
                         android:layout_width="12dp"
                         android:layout_height="12dp"
                         android:src="@drawable/ic_public"
                         app:tint="#666666" />
+
                     <TextView
+                        android:id="@+id/tvPrivacyText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:text="Công khai"
                         android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:textColor="#666666"/>
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:src="@drawable/ic_arrow_down"
+                        android:layout_marginStart="4dp"
+                        app:tint="#666666"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- KHU VỰC NHẬP TEXT VÀ ẢNH (CÓ SCROLLVIEW ĐỂ CUỘN) -->
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -138,6 +150,7 @@
                     android:textColor="#666666"
                     android:textSize="14sp"
                     android:visibility="gone" />
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvImagePreview"
                     android:layout_width="match_parent"
@@ -152,7 +165,6 @@
         </ScrollView>
     </LinearLayout>
 
-    <!-- BOTTOM SHEET: MENU THÊM ẢNH/VIDEO/CẢM XÚC -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/bottomSheetOptions"
         android:layout_width="match_parent"

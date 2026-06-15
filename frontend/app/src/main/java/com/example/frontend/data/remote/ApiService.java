@@ -154,9 +154,7 @@ public interface ApiService {
     @GET("media/me")
     Call<ApiResponse<List<Media>>> getMyMedia(@Query("fileType") String fileType);
 
-
     @Multipart
-
     @POST("media/upload/document")
     Call<ApiResponse<Media>> uploadSingleFile(
             @Part MultipartBody.Part file,
@@ -199,7 +197,6 @@ public interface ApiService {
     Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);
 
     // ====== POSTS ======
-
     @GET("posts/user/{userId}")
     Call<ApiResponse<List<Post>>> getPostsByUser(@Path("userId") String userId);
 
