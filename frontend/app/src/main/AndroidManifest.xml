@@ -142,6 +142,7 @@
         <activity android:name=".ui.story.CreateStoryActivity"/>
         <activity android:name=".ui.story.StoryViewActivity"/>
         <activity android:name=".ui.chat.ChatDetailActivity"/>
+        <activity android:name=".ui.calendar.AddTaskActivity"/>
     </application>
 
 </manifest>

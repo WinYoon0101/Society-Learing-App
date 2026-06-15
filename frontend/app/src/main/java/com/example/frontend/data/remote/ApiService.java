@@ -22,6 +22,7 @@ import com.example.frontend.data.model.NotificationListResponse;
 import com.example.frontend.data.model.Notification;
 import com.example.frontend.data.model.PagedResponse;
 import com.example.frontend.data.model.ReactionItem;
+import com.example.frontend.data.model.Task;
 import com.example.frontend.data.model.UpdateProfile;
 import com.example.frontend.data.model.User;
 import com.example.frontend.data.model.ProfileResponse;
@@ -369,4 +370,24 @@ public interface ApiService {
 
     @GET("posts/{id}")
     Call<ApiResponse<Post>> getPostById(@Path("id") String id);
+
+    //task
+    @GET("api/tasks")
+    Call<List<Task>> getTasks();
+
+    @POST("api/tasks")
+    Call<Task> createTask(
+            @Body Task task
+    );
+
+    @PUT("api/tasks/{id}")
+    Call<Task> updateTask(
+            @Path("id") String id,
+            @Body Task task
+    );
+
+    @DELETE("api/tasks/{id}")
+    Call<Void> deleteTask(
+            @Path("id") String id
+    );
 }

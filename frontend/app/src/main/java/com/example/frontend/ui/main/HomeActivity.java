@@ -155,6 +155,7 @@ public class HomeActivity extends AppCompatActivity {
                 else if (id == R.id.nav_live) intent = new Intent(this, LiveStartActivity.class);
                 else if (id == R.id.nav_quiz) intent = new Intent(this, QuizListActivity.class);
                 else if (id == R.id.nav_pomodoro) intent = new Intent(this, PomodoroActivity.class);
+                else if (id == R.id.nav_calendar) intent = new Intent(this, CalendarActivity.class);
 
                 if (intent != null) {
                     startActivity(intent);
