@@ -12,40 +12,39 @@ import com.example.frontend.data.repository.DocumentRepository;
 import com.example.frontend.utils.Result;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DocsViewModel extends AndroidViewModel {
 
     private final DocumentRepository repository;
-    private final MutableLiveData<Result<DocumentListData>> myDocsResult = new MutableLiveData<>();
 
-    // LiveData riêng để theo dõi kết quả xóa
+    // LiveData cho Tài liệu đã đăng
+    private final MutableLiveData<Result<DocumentListData>> myDocsResult = new MutableLiveData<>();
     private final MutableLiveData<Result<String>> deleteResult = new MutableLiveData<>();
     private final MutableLiveData<Result<Document>> updateResult = new MutableLiveData<>();
 
+    // LiveData cho Tài liệu đã lưu
+    private final MutableLiveData<Result<List<Document>>> savedDocsResult = new MutableLiveData<>();
+    private final MutableLiveData<Result<Boolean>> toggleSaveResult = new MutableLiveData<>();
 
     public DocsViewModel(@NonNull Application application) {
         super(application);
         repository = new DocumentRepository(application);
     }
 
-    public LiveData<Result<DocumentListData>> getMyDocsResult() {
-        return myDocsResult;
-    }
+    public LiveData<Result<DocumentListData>> getMyDocsResult() { return myDocsResult; }
+    public LiveData<Result<String>> getDeleteResult() { return deleteResult; }
+    public LiveData<Result<Document>> getUpdateResult() { return updateResult; }
 
-    public LiveData<Result<String>> getDeleteResult() {
-        return deleteResult;
-    }
+    public LiveData<Result<List<Document>>> getSavedDocsResult() { return savedDocsResult; }
+    public LiveData<Result<Boolean>> getToggleSaveResult() { return toggleSaveResult; }
 
-    public LiveData<Result<Document>> getUpdateResult() {
-        return updateResult;
-    }
-
+    // --- LOGIC ĐÃ ĐĂNG ---
     public void fetchMyDocuments(int page, int limit) {
         repository.getMyDocuments(page, limit, myDocsResult);
     }
 
-    // Gắn hành động xóa vào Backend
     public void deleteDocument(String docId) {
         repository.deleteDocument(docId, deleteResult);
     }
@@ -55,5 +54,14 @@ public class DocsViewModel extends AndroidViewModel {
         updates.put("title", newTitle);
         updates.put("subject", newSubject);
         repository.updateDocument(docId, updates, updateResult);
+    }
+
+    // --- LOGIC ĐÃ LƯU ---
+    public void fetchSavedDocuments() {
+        repository.getSavedDocuments(savedDocsResult);
+    }
+
+    public void toggleSaveDocument(String docId) {
+        repository.toggleSaveDocument(docId, toggleSaveResult);
     }
 }

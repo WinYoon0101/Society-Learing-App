@@ -18,7 +18,7 @@ import com.google.android.material.card.MaterialCardView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DocsAdapter extends RecyclerView.Adapter<DocsAdapter.ViewHolder> {
+public class UploadedDocsAdapter extends RecyclerView.Adapter<UploadedDocsAdapter.ViewHolder> {
     private List<Document> list = new ArrayList<>();
     private final OnDocActionListener listener;
 
@@ -28,7 +28,7 @@ public class DocsAdapter extends RecyclerView.Adapter<DocsAdapter.ViewHolder> {
         void onItemClick(Document doc);
     }
 
-    public DocsAdapter(OnDocActionListener listener) {
+    public UploadedDocsAdapter(OnDocActionListener listener) {
         this.listener = listener;
     }
 
