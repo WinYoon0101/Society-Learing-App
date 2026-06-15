@@ -63,7 +63,7 @@ export const createPost = async (req: AuthRequest, res: Response) => {
                 });
                 await react.save();
             } catch (e) {
-                console.error('Không thể lưu reaction ban đầu:', e);
+                doc: console.error('Không thể lưu reaction ban đầu:', e);
             }
         }
 
@@ -83,14 +83,13 @@ export const createPost = async (req: AuthRequest, res: Response) => {
 };
 
 // =====================================
-// API LẤY BÀI VIẾT TRANG HOME (FEED) - ĐÃ SỬA GỘP LOGIC
+// API LẤY BÀI VIẾT TRANG HOME (FEED) - ĐÃ SỬA GỘP LOGIC PRIVACY
 // =====================================
 export const getFeed = async (req: AuthRequest, res: Response) => {
     try {
         const currentUserId = req.user?.id;
 
         // 1. Lấy danh sách ID các nhóm mà User này đã tham gia làm thành viên
-        // Tìm cả trường hợp 'member.userId' và 'members.userId' để tránh lệch data cũ
         const userGroups = await Group.find({
             $or: [
                 { 'member.userId': currentUserId },
@@ -112,18 +111,17 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
             f.requester.toString() === currentUserId ? f.recipient : f.requester
         );
 
-        // Gom ID của mình và bạn bè lại
-        const allowedAuthorIds = [new mongoose.Types.ObjectId(currentUserId!), ...friendIds];
-
-        // 3. Tìm bài viết thỏa mãn 1 trong các điều kiện sau:
-        // - Hoặc là bài viết có chế độ "Public" ở bên ngoài (không nằm trong nhóm)
-        // - Hoặc là bài viết nằm trong danh sách nhóm mà user đã tham gia (bất kể privacy gì)
-        // - Hoặc là bài viết của chính mình/bạn bè (kể cả bài viết để chế độ Friends) ngoài nhóm
+        // 3. Tìm bài viết thỏa mãn các điều kiện riêng tư bảo mật:
+        // - Hoặc là bài viết có chế độ "Public" ở bên ngoài nhóm.
+        // - Hoặc là bài viết nằm trong nhóm mà user đã tham gia.
+        // - Hoặc là bài viết của CHÍNH MÌNH ngoài nhóm (hiển thị tất cả Public, Friends, Private).
+        // - Hoặc là bài viết của BẠN BÈ ngoài nhóm (chỉ hiển thị nếu bài viết đó ở chế độ Public hoặc Friends).
         const posts = await Post.find({
             $or: [
                 { privacy: "Public", groupId: null },
                 { groupId: { $in: groupIds } },
-                { authorId: { $in: allowedAuthorIds }, groupId: null }
+                { authorId: currentUserId, groupId: null }, 
+                { authorId: { $in: friendIds }, privacy: { $in: ["Public", "Friends"] }, groupId: null } 
             ]
         })
             .sort({ createdAt: -1 })
@@ -266,6 +264,7 @@ export const getSavedPosts = async (req: AuthRequest, res: Response): Promise<an
         return res.status(500).json({ message: "Lỗi Server" });
     }
 };
+
 // =====================================
 // API LẤY BÀI VIẾT CỦA TÔI
 // =====================================
@@ -343,7 +342,6 @@ export const getPostsByUser = async (req: AuthRequest, res: Response) => {
         console.error("Lỗi getPostsByUser", error);
         res.status(500).json({ success: false, message: "Lỗi server" });
     }
-
 };
 
 // =====================================
@@ -354,7 +352,6 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<any>
         const { id } = req.params;
         const currentUserId = req.user?.id;
 
-        // 1. Tìm bài viết theo ID
         const post = await Post.findById(id)
             .populate('authorId', 'username avatar')
             .lean();
@@ -365,15 +362,12 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<any>
 
         const postIdObj = new mongoose.Types.ObjectId(post._id.toString());
 
-        // 2. Lấy danh sách ảnh của bài viết
         const mediaList = await Media.find({ targetId: post._id, fileType: 'image' });
         const imageUrls = mediaList.map(m => m.url);
 
-        // 3. Đếm số lượng comment và reaction
         const countComment = await Comment.countDocuments({ postId: post._id });
         const countReaction = await Reaction.countDocuments({ targetId: postIdObj });
 
-        // 4. Lấy reaction của user hiện tại (để biết mình đã thả tim hay like chưa)
         let myReaction = null;
         if (currentUserId) {
             const myReactDoc = await Reaction.findOne({ targetId: postIdObj, userId: currentUserId });
@@ -382,7 +376,6 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<any>
             }
         }
 
-        // 5. Lấy top 2 reactions nhiều nhất (để hiển thị icon nhỏ xíu)
         const topReactDocs = await Reaction.aggregate([
             { $match: { targetId: postIdObj } },
             { $group: { _id: "$type", count: { $sum: 1 } } },
@@ -391,7 +384,6 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<any>
         ]);
         const topReactions = topReactDocs.map(doc => doc._id);
 
-        // 6. Đóng gói dữ liệu trả về cho Android
         const postDetail = {
             ...post,
             images: imageUrls,
