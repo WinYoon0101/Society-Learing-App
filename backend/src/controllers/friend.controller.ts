@@ -6,30 +6,59 @@ import User from "../models/user.model";
 import Notification from "../models/notification.model";
 
 
+// Hàm hỗ trợ tạo thông báo nhanh
+const createFriendNotification = async (
+    senderId: string, 
+    recipientId: string, 
+    type: string, 
+    content: string, 
+    targetId: string
+) => {
+    try {
+        const newNotification = new Notification({
+            recipient: recipientId,
+            sender: senderId,
+            targetId: targetId,
+            type: type,
+            content: content
+        });
+        await newNotification.save();
+    } catch (error) {
+        console.error("Lỗi tạo thông báo:", error);
+    }
+};
+
 // 1. Gửi lời mời kết bạn
 export const sendFriendRequest = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const userA = req.user?.id; // Người gửi
-    const userB = req.params.id; // Người nhận
+    // 1. Lấy và ép kiểu ID an toàn
+    const userA = req.user?.id as string; 
+    const idParam = req.params.id;
+    const userB = Array.isArray(idParam) ? idParam[0] : idParam; // Xử lý nếu là mảng
 
-    if (userA === userB) {
-      res.status(400).json({
-        success: false,
-        message: "Bạn không thể tự gửi lời mời kết bạn cho chính mình.",
-      });
+    if (!userA || !userB) {
+      res.status(400).json({ success: false, message: "Thiếu thông tin người dùng." });
       return;
     }
 
+    if (userA === userB) {
+      res.status(400).json({ success: false, message: "Bạn không thể tự gửi lời mời kết bạn cho chính mình." });
+      return;
+    }
+
+    const sender = await User.findById(userA); 
     const recipient = await User.findById(userB);
+    
     if (!recipient) {
       res.status(404).json({ success: false, message: "Người dùng không tồn tại." });
       return;
     }
 
-    // Kiểm tra xem đã có lời mời kết bạn nào giữa 2 người chưa (chiều đi hoặc chiều về)
+    const senderName = sender?.username || "Người dùng";
+
     const existingFriendship = await Friend.findOne({
       $or: [
         { requester: userA, recipient: userB },
@@ -46,22 +75,21 @@ export const sendFriendRequest = async (
         res.status(400).json({ success: false, message: "Đã tồn tại lời mời kết bạn đang chờ xử lý." });
         return;
       }
-      // Nếu trạng thái là declined...
+      
       if (existingFriendship.status === "declined") {
         existingFriendship.requester = userA as any;
         existingFriendship.recipient = userB as any;
         existingFriendship.status = "pending";
         await existingFriendship.save();
 
-        // TẠO THÔNG BÁO KHI GỬI LẠI LỜI MỜI
-        const newNotification = new Notification({
-          receiverId: userB,
-          senderId: userA,
-          targetId: existingFriendship._id,
-          targetType: "Friend",
-          type: "friend_request"
-        });
-        await newNotification.save();
+        // TẠO THÔNG BÁO GỬI LẠI LỜI MỜI 
+        await createFriendNotification(
+            userA, 
+            userB, 
+            "friend_request", 
+            `${senderName} đã gửi lại lời mời kết bạn cho bạn`, 
+            existingFriendship._id.toString() 
+        );
 
         res.status(200).json({ 
           success: true, 
@@ -80,18 +108,14 @@ export const sendFriendRequest = async (
 
     await newRequest.save();
 
-    // ==========================================
-    // TẠO THÔNG BÁO GỬI LỜI MỜI MỚI
-    // ==========================================
-    const newNotification = new Notification({
-      receiverId: userB,
-      senderId: userA,
-      targetId: newRequest._id,
-      targetType: "Friend",
-      type: "friend_request"
-    });
-    await newNotification.save();
-    // ==========================================
+    // TẠO THÔNG BÁO GỬI LỜI MỜI MỚI 
+    await createFriendNotification(
+        userA, 
+        userB, 
+        "friend_request", 
+        `${senderName} đã gửi cho bạn một lời mời kết bạn`, 
+        newRequest._id.toString()
+    );
 
     res.status(201).json({
       success: true,
@@ -109,9 +133,10 @@ export const acceptFriendRequest = async (
   res: Response
 ): Promise<void> => {
   try {
-    const userA = req.params.id; // Người gửi lời mời
-    const userB = req.user?.id; // Người nhận (mình)
+    const userA = req.params.id; // Người gửi lời mời (người nhận thông báo)
+    const userB = req.user?.id;  // Người nhận lời mời (người chấp nhận - là mình)
 
+    // 1. Tìm lời mời kết bạn
     const request = await Friend.findOne({
       requester: userA,
       recipient: userB,
@@ -123,27 +148,30 @@ export const acceptFriendRequest = async (
       return;
     }
 
+    // 2. Cập nhật trạng thái
     request.status = "accepted";
     await request.save();
 
-    // ==========================================
-    // TẠO THÔNG BÁO ĐỒNG Ý KẾT BẠN
-    // ==========================================
-    const newNotification = new Notification({
-      receiverId: userA, // Thông báo về cho người đã gửi lời mời
-      senderId: userB,   // Mình là người đồng ý
-      targetId: request._id,
-      targetType: "Friend",
-      type: "friend_accept"
-    });
-    await newNotification.save();
-    // ==========================================
+    // 3. Lấy tên người chấp nhận (là mình - userB) để tạo thông báo cá nhân hóa
+    const me = await User.findById(userB);
+    const myName = me?.username || "Người dùng";
+
+    // 4. TẠO THÔNG BÁO ĐỒNG Ý KẾT BẠN
+    // Gọi hàm hỗ trợ createFriendNotification (đã tạo ở bước trước)
+    await createFriendNotification(
+        userB as string,            // sender là mình (userB)
+        userA as string,            // recipient là người gửi lời mời (userA)
+        "friend_accept", 
+        `${myName} đã chấp nhận lời mời kết bạn của bạn`, 
+        request._id.toString()
+    );
 
     res.status(200).json({
       success: true,
       message: "Đã chấp nhận lời mời kết bạn.",
     });
   } catch (error) {
+    console.error("Lỗi acceptFriendRequest:", error);
     res.status(500).json({ success: false, message: "Lỗi server", error });
   }
 };
