@@ -56,79 +56,28 @@ public class AddTaskActivity extends AppCompatActivity {
     }
 
     private void saveTask() {
-
         Task task = new Task();
+        task.setTitle(edtTitle.getText().toString());
+        task.setDescription(edtDescription.getText().toString());
+        task.setDate(edtDate.getText().toString());
 
-        task.setTitle(
-                edtTitle.getText().toString()
-        );
-
-        task.setDescription(
-                edtDescription.getText().toString()
-        );
-
-        task.setDate(
-                edtDate.getText().toString()
-        );
-
-        apiService.createTask(task)
-                .enqueue(new Callback<Task>() {
-
-                    @Override
-                    public void onResponse(
-                            Call<Task> call,
-                            Response<Task> response) {
-
-                        if(response.isSuccessful()) {
-
-                            Toast.makeText(
-                                    AddTaskActivity.this,
-                                    "Thêm thành công",
-                                    Toast.LENGTH_SHORT
-                            ).show();
-
-                            finish();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(
-                            Call<Task> call,
-                            Throwable t) {
-
-                        Toast.makeText(
-                                AddTaskActivity.this,
-                                t.getMessage(),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                });
+        apiService.createTask(task).enqueue(new Callback<Task>() {
+            @Override
+            public void onResponse(Call<Task> call,Response<Task> response) {
+                if(response.isSuccessful()) {
+                    Toast.makeText(AddTaskActivity.this,"Thêm thành công",Toast.LENGTH_SHORT).show();finish();}}
+            @Override
+            public void onFailure(Call<Task> call,Throwable t) {
+                Toast.makeText(AddTaskActivity.this,t.getMessage(),Toast.LENGTH_SHORT).show();}});
     }
     private void showDatePicker() {
-
         Calendar calendar = Calendar.getInstance();
-
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-        DatePickerDialog datePickerDialog =
-                new DatePickerDialog(
-                        this,
-                        (view, selectedYear, selectedMonth, selectedDay) -> {
-
-                            String date =
-                                    selectedYear + "-" +
-                                            String.format("%02d", selectedMonth + 1) + "-" +
-                                            String.format("%02d", selectedDay);
-
-                            edtDate.setText(date);
-                        },
-                        year,
-                        month,
-                        day
-                );
-
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                (view, selectedYear, selectedMonth, selectedDay) -> {
+            String date = selectedYear + "-" + String.format("%02d", selectedMonth + 1) + "-" + String.format("%02d", selectedDay);edtDate.setText(date);}, year, month, day);
         datePickerDialog.show();
     }
 }

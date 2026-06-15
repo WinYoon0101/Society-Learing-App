@@ -376,18 +376,13 @@ public interface ApiService {
     Call<List<Task>> getTasks();
 
     @POST("api/tasks")
-    Call<Task> createTask(
-            @Body Task task
-    );
+    Call<Task> createTask(@Body Task task);
 
     @PUT("api/tasks/{id}")
-    Call<Task> updateTask(
-            @Path("id") String id,
-            @Body Task task
-    );
+    Call<Task> updateTask(@Path("id") String id, @Body Task task);
 
     @DELETE("api/tasks/{id}")
-    Call<Void> deleteTask(
-            @Path("id") String id
-    );
+    Call<Void> deleteTask(@Path("id") String id);
+    @GET("api/tasks/date/{date}")
+    Call<List<Task>> getTasksByDate(@Path("date") String date);
 }

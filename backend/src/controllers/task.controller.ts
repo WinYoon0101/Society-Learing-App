@@ -56,3 +56,29 @@ export const updateTask = async (req: Request, res: Response) => {
     });
   }
 };
+export const getTasksByDate = async (req: Request, res: Response) => {
+  try {
+    const date = req.params.date as string;
+
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
+
+    const tasks = await Task.find({
+      date: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    });
+
+    res.status(200).json(tasks);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Get tasks by date failed",
+    });
+  }
+};
