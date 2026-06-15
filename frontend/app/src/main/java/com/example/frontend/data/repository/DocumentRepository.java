@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
+import com.example.frontend.data.model.MindmapData;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.utils.Result;
@@ -196,4 +197,31 @@ public class DocumentRepository {
             }
         });
     }
+
+    // 7. Hàm gọi API tạo AI Mindmap
+    public void generateMindmap(String docId, MutableLiveData<Result<MindmapData>> resultLiveData) {
+        resultLiveData.postValue(Result.loading(null));
+
+        apiService.generateMindmap(docId).enqueue(new Callback<ApiResponse<MindmapData>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<MindmapData>> call, Response<ApiResponse<MindmapData>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Nếu backend trả về thành công (success: true)
+                    if (response.body().isSuccess()) {
+                        resultLiveData.postValue(Result.success(response.body().getData()));
+                    } else {
+                        resultLiveData.postValue(Result.error(response.body().getMessage(), null));
+                    }
+                } else {
+                    resultLiveData.postValue(Result.error("Lỗi phân tích AI, vui lòng thử lại!", null));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<MindmapData>> call, Throwable t) {
+                resultLiveData.postValue(Result.error("Lỗi kết nối máy chủ: " + t.getMessage(), null));
+            }
+        });
+    }
+
 }

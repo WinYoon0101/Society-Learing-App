@@ -212,6 +212,39 @@ public class LibraryFragment extends Fragment {
             }
         });
 
+
+        // 8.5 XỬ LÝ KHI CLICK NÚT AI MINDMAP
+        adapter.setOnAiMindmapClickListener(doc -> {
+            if (doc.get_id() == null) return;
+
+            // Hiển thị Dialog loading
+            Toast.makeText(getContext(), "AI đang phân tích tài liệu, vui lòng đợi...", Toast.LENGTH_LONG).show();
+            if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+
+            // Gọi ViewModel để lấy Mindmap
+            viewModel.generateMindmap(doc.get_id()).observe(getViewLifecycleOwner(), result -> {
+                if (result == null) return;
+
+                switch (result.status) {
+                    case SUCCESS:
+                        if (progressBar != null) progressBar.setVisibility(View.GONE);
+                        // Hiển thị BottomSheet với dữ liệu trả về
+                        if (result.data != null) {
+                            MindmapBottomSheet bottomSheet = new MindmapBottomSheet(result.data);
+                            bottomSheet.show(getChildFragmentManager(), "MindmapBottomSheet");
+                        }
+                        break;
+                    case ERROR:
+                        if (progressBar != null) progressBar.setVisibility(View.GONE);
+                        Toast.makeText(getContext(), "Lỗi AI: " + result.message, Toast.LENGTH_SHORT).show();
+                        break;
+                    case LOADING:
+                        // Đã xử lý hiện ProgressBar ở trên
+                        break;
+                }
+            });
+        });
+
         // 9. Tải dữ liệu mặc định khi vừa mở màn hình
         viewModel.loadDocuments("");
 

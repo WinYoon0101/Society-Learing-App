@@ -12,81 +12,82 @@
     app:cardBackgroundColor="#FFFFFF"
     app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
-    app:strokeColor="#F0F2F5"
+    app:strokeColor="#E5E7EB"
     app:strokeWidth="1dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:padding="16dp"> <com.google.android.material.card.MaterialCardView
+        android:id="@+id/iconCard"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        app:cardBackgroundColor="#F5F7FA"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/iconCard"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            app:cardBackgroundColor="#F5F7FA"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ImageView
-                android:id="@+id/ivFileType"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:src="@android:drawable/ic_menu_agenda" />
-        </com.google.android.material.card.MaterialCardView>
+        <ImageView
+            android:id="@+id/ivFileType"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center"
+            android:src="@android:drawable/ic_menu_agenda" />
+    </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="14dp"
-            android:layout_marginEnd="12dp"
             android:ellipsize="end"
-            android:maxLines="1"
+            android:maxLines="2"
             android:textColor="#1A1C1E"
-            android:textSize="15sp"
+            android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/btnDownload"
+            android:lineSpacingExtra="2dp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/iconCard"
-            app:layout_constraintTop_toTopOf="@id/iconCard"
-            tools:text="Giáo trình Giải tích 1 - Bản chuẩn" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Công nghệ dữ liệu" />
 
         <TextView
             android:id="@+id/tvSubtitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginTop="4dp"
             android:ellipsize="end"
-            android:maxLines="1"
+            android:maxLines="2"
             android:textColor="#70777B"
             android:textSize="13sp"
-            app:layout_constraintEnd_toStartOf="@id/btnDownload"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/tvTitle"
             app:layout_constraintTop_toBottomOf="@id/tvTitle"
-            tools:text="Toán học • Dương Lê" />
+            tools:text="IT • Duong • 07/05/2026" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/barrierContent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="iconCard,tvSubtitle" />
 
         <LinearLayout
-            android:id="@+id/layoutMetadata"
+            android:id="@+id/layoutMetrics"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginTop="14dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="@id/iconCard"
-            app:layout_constraintEnd_toStartOf="@id/btnDownload"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="@id/tvTitle"
-            app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
+            app:layout_constraintTop_toBottomOf="@id/barrierContent">
 
             <ImageView
-                android:layout_width="12dp"
-                android:layout_height="12dp"
-                android:alpha="0.6"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:alpha="0.7"
                 android:src="@android:drawable/ic_menu_view"
                 app:tint="#8B9A91" />
 
@@ -94,16 +95,17 @@
                 android:id="@+id/tvViews"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="6dp"
+                android:fontFamily="sans-serif-medium"
                 android:textColor="#8B9A91"
-                android:textSize="11sp"
-                tools:text="1.2k" />
+                android:textSize="13sp"
+                tools:text="3" />
 
             <ImageView
-                android:layout_width="11dp"
-                android:layout_height="11dp"
-                android:layout_marginStart="12dp"
-                android:alpha="0.6"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="16dp"
+                android:alpha="0.7"
                 android:src="@android:drawable/stat_sys_download"
                 app:tint="#8B9A91" />
 
@@ -111,40 +113,41 @@
                 android:id="@+id/tvDownloads"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="6dp"
+                android:fontFamily="sans-serif-medium"
                 android:textColor="#8B9A91"
-                android:textSize="11sp"
-                tools:text="340" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="6dp"
-                android:text="•"
-                android:textColor="#D1D5DB" />
-
-            <TextView
-                android:id="@+id/tvTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#A0AEA4"
-                android:textSize="11sp"
-                tools:text="2 giờ trước" />
+                android:textSize="13sp"
+                tools:text="1" />
         </LinearLayout>
 
         <ImageView
             android:id="@+id/btnDownload"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:padding="10dp"
+            android:padding="6dp"
             android:src="@android:drawable/stat_sys_download"
-            app:tint="#8B9A91"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/layoutMetrics"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@id/layoutMetrics"
+            app:tint="#8B9A91" />
+
+        <ImageView
+            android:id="@+id/btnAiMindmap"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="6dp"
+            android:src="@drawable/ic_magic_sparkle"
+            app:layout_constraintBottom_toBottomOf="@id/layoutMetrics"
+            app:layout_constraintEnd_toStartOf="@id/btnDownload"
+            app:layout_constraintTop_toTopOf="@id/layoutMetrics"
+            app:tint="#8B5CF6" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

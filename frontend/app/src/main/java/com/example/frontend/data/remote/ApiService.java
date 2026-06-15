@@ -16,6 +16,7 @@ import com.example.frontend.data.model.GroupMember;
 import com.example.frontend.data.model.GroupPost;
 import com.example.frontend.data.model.LiveModel;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.data.model.MindmapData;
 import com.example.frontend.data.model.Story;
 import com.example.frontend.data.model.StoryGroup;
 import com.example.frontend.data.model.NotificationListResponse;
@@ -184,6 +185,10 @@ public interface ApiService {
 
     @GET("documents/{id}")
     Call<ApiResponse<Document>> getDocumentById(@Path("id") String id);
+
+    // API MINDMAP TẠI ĐÂY:
+    @POST("documents/{id}/mindmap")
+    Call<ApiResponse<MindmapData>> generateMindmap(@Path("id") String documentId);
 
     // ====== CHAT ======
     @GET("chat/conversations")
