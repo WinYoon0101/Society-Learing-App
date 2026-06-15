@@ -2,6 +2,7 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/documentCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
@@ -18,23 +19,25 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"> <com.google.android.material.card.MaterialCardView
-        android:id="@+id/iconCard"
-        android:layout_width="42dp"
-        android:layout_height="42dp"
-        app:cardBackgroundColor="#F5F7FA"
-        app:cardCornerRadius="10dp"
-        app:cardElevation="0dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:padding="16dp">
 
-        <ImageView
-            android:id="@+id/ivFileType"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:layout_gravity="center"
-            android:src="@android:drawable/ic_menu_agenda" />
-    </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/iconCard"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            app:cardBackgroundColor="#F5F7FA"
+            app:cardCornerRadius="10dp"
+            app:cardElevation="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/ivFileType"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@android:drawable/ic_menu_agenda" />
+        </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:id="@+id/tvTitle"
@@ -58,7 +61,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:ellipsize="end"
-            android:maxLines="2"
+            android:maxLines="1"
             android:textColor="#70777B"
             android:textSize="13sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -66,23 +69,16 @@
             app:layout_constraintTop_toBottomOf="@id/tvTitle"
             tools:text="IT • Duong • 07/05/2026" />
 
-        <androidx.constraintlayout.widget.Barrier
-            android:id="@+id/barrierContent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:barrierDirection="bottom"
-            app:constraint_referenced_ids="iconCard,tvSubtitle" />
-
         <LinearLayout
             android:id="@+id/layoutMetrics"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="6dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="@id/tvTitle"
-            app:layout_constraintTop_toBottomOf="@id/barrierContent">
+            app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
 
             <ImageView
                 android:layout_width="14dp"
@@ -119,35 +115,6 @@
                 android:textSize="13sp"
                 tools:text="1" />
         </LinearLayout>
-
-        <ImageView
-            android:id="@+id/btnDownload"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:padding="6dp"
-            android:src="@android:drawable/stat_sys_download"
-            app:layout_constraintBottom_toBottomOf="@id/layoutMetrics"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/layoutMetrics"
-            app:tint="#8B9A91" />
-
-        <ImageView
-            android:id="@+id/btnAiMindmap"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_marginEnd="6dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:padding="6dp"
-            android:src="@drawable/ic_magic_sparkle"
-            app:layout_constraintBottom_toBottomOf="@id/layoutMetrics"
-            app:layout_constraintEnd_toStartOf="@id/btnDownload"
-            app:layout_constraintTop_toTopOf="@id/layoutMetrics"
-            app:tint="#8B5CF6" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

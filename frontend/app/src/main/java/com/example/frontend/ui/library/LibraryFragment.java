@@ -28,11 +28,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.frontend.R;
+import com.example.frontend.data.model.Document;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.card.MaterialCardView;
 
 import androidx.appcompat.widget.PopupMenu;
-
-import java.util.ArrayList;
 
 public class LibraryFragment extends Fragment {
     private LibraryViewModel viewModel;
@@ -41,13 +41,12 @@ public class LibraryFragment extends Fragment {
     private ProgressBar progressBar;
     private TextView tvSortLabel;
 
-    private String currentSubject = ""; // Lưu tab đang chọn
+    private String currentSubject = "";
 
     private final ActivityResultLauncher<Intent> uploadLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
-                    // Nếu upload thành công, tải lại danh sách theo tab hiện tại
                     if (currentSubject.isEmpty()) {
                         viewModel.loadDocuments("");
                     } else {
@@ -76,24 +75,20 @@ public class LibraryFragment extends Fragment {
             final int index = i;
             chips[i].setOnClickListener(v -> {
 
-                currentSubject = subjectNames[index]; // Lưu lại tab hiện tại
+                currentSubject = subjectNames[index];
 
-                // 1. Đổi màu tất cả về xám nhạt (Chưa chọn)
                 for (MaterialCardView chip : chips) {
                     chip.setCardBackgroundColor(android.graphics.Color.parseColor("#E8EFE0"));
-                    // Tìm TextView bên trong để đổi màu chữ luôn
                     TextView tv = (TextView) chip.getChildAt(0);
                     tv.setTextColor(android.graphics.Color.parseColor("#6E7E73"));
                     tv.setTypeface(null, android.graphics.Typeface.NORMAL);
                 }
 
-                // 2. Nhuộm màu xanh cho cái được chọn
                 chips[index].setCardBackgroundColor(android.graphics.Color.parseColor("#10B981"));
                 TextView activeTv = (TextView) chips[index].getChildAt(0);
                 activeTv.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
                 activeTv.setTypeface(null, android.graphics.Typeface.BOLD);
 
-                // 3. Gọi API lấy dữ liệu
                 if (currentSubject.isEmpty()) {
                     viewModel.loadDocuments("");
                 } else {
@@ -102,22 +97,18 @@ public class LibraryFragment extends Fragment {
             });
         }
 
-        // 1. Ánh xạ View từ XML
         RecyclerView rv = view.findViewById(R.id.recyclerViewDocuments);
         etSearch = view.findViewById(R.id.etSearch);
         progressBar = view.findViewById(R.id.progressBar);
         View btnSort = view.findViewById(R.id.btnSort);
         tvSortLabel = view.findViewById(R.id.tvSortLabel);
 
-        // 2. Thiết lập RecyclerView & Adapter
         adapter = new DocumentAdapter();
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
         rv.setAdapter(adapter);
 
-        // 3. Khởi tạo ViewModel
         viewModel = new ViewModelProvider(this).get(LibraryViewModel.class);
 
-        // 4. Quan sát dữ liệu từ LiveData (Xử lý các trạng thái của Result)
         viewModel.getDocuments().observe(getViewLifecycleOwner(), result -> {
             if (result == null) return;
 
@@ -138,7 +129,6 @@ public class LibraryFragment extends Fragment {
             }
         });
 
-        // 5. Xử lý Tìm kiếm
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -150,7 +140,6 @@ public class LibraryFragment extends Fragment {
             public void afterTextChanged(Editable s) {}
         });
 
-        // 6. XỬ LÝ NÚT SẮP XẾP
         btnSort.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(requireContext(), v);
             popup.getMenuInflater().inflate(R.menu.sort_menu, popup.getMenu());
@@ -178,7 +167,7 @@ public class LibraryFragment extends Fragment {
             popup.show();
         });
 
-        // 7. Xử lý khi click vào từng tài liệu để xem
+        // Click bình thường để xem
         adapter.setOnItemClickListener(doc -> {
             if (doc.get_id() != null) {
                 viewModel.incrementView(doc.get_id());
@@ -195,60 +184,11 @@ public class LibraryFragment extends Fragment {
             startActivity(intent);
         });
 
-        // 8. XỬ LÝ KHI CLICK NÚT TẢI XUỐNG
-        adapter.setOnDownloadClickListener(doc -> {
-            String fileUrl = doc.getFileUrl();
-            if (fileUrl == null || fileUrl.isEmpty()) {
-                Toast.makeText(getContext(), "Tài liệu này không có file để tải!", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        // KHI NGƯỜI DÙNG NHẤN GIỮ -> HIỆN BOTTOM SHEET MENU
+        adapter.setOnItemLongClickListener(doc -> showBottomSheetMenu(doc));
 
-            // Gọi hàm tải file
-            downloadFile(fileUrl, doc.getTitle());
-
-            // Sau khi tải xong, tăng lượt tải xuống lên 1
-            if (doc.get_id() != null) {
-                viewModel.incrementDownload(doc.get_id());
-            }
-        });
-
-
-        // 8.5 XỬ LÝ KHI CLICK NÚT AI MINDMAP
-        adapter.setOnAiMindmapClickListener(doc -> {
-            if (doc.get_id() == null) return;
-
-            // Hiển thị Dialog loading
-            Toast.makeText(getContext(), "AI đang phân tích tài liệu, vui lòng đợi...", Toast.LENGTH_LONG).show();
-            if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
-
-            // Gọi ViewModel để lấy Mindmap
-            viewModel.generateMindmap(doc.get_id()).observe(getViewLifecycleOwner(), result -> {
-                if (result == null) return;
-
-                switch (result.status) {
-                    case SUCCESS:
-                        if (progressBar != null) progressBar.setVisibility(View.GONE);
-                        // Hiển thị BottomSheet với dữ liệu trả về
-                        if (result.data != null) {
-                            MindmapBottomSheet bottomSheet = new MindmapBottomSheet(result.data);
-                            bottomSheet.show(getChildFragmentManager(), "MindmapBottomSheet");
-                        }
-                        break;
-                    case ERROR:
-                        if (progressBar != null) progressBar.setVisibility(View.GONE);
-                        Toast.makeText(getContext(), "Lỗi AI: " + result.message, Toast.LENGTH_SHORT).show();
-                        break;
-                    case LOADING:
-                        // Đã xử lý hiện ProgressBar ở trên
-                        break;
-                }
-            });
-        });
-
-        // 9. Tải dữ liệu mặc định khi vừa mở màn hình
         viewModel.loadDocuments("");
 
-        // 10. Xử lý sự kiện khi click vào nút Thêm tài liệu
         view.findViewById(R.id.fabAdd).setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), UploadDocumentActivity.class);
             uploadLauncher.launch(intent);
@@ -257,6 +197,119 @@ public class LibraryFragment extends Fragment {
         return view;
     }
 
+    // ==========================================
+    // LOGIC XỬ LÝ BOTTOM SHEET VÀ CÁC ACTION TƯƠNG ỨNG
+    // ==========================================
+    private void showBottomSheetMenu(Document doc) {
+        if (getContext() == null) return;
+
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(getContext());
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.layout_bottom_sheet_actions, null);
+        bottomSheetDialog.setContentView(view);
+
+        View actionAiMindmap = view.findViewById(R.id.actionAiMindmap);
+        View actionSave = view.findViewById(R.id.actionSave);
+        View actionDownload = view.findViewById(R.id.actionDownload);
+
+        // Click AI Mindmap
+        actionAiMindmap.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            handleAiMindmap(doc);
+        });
+
+        // Click Lưu / Bỏ lưu tài liệu
+        actionSave.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            handleSaveDocument(doc); // Gọi hàm xử lý gọi API
+        });
+
+        // Click Tải xuống
+        actionDownload.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            handleDownloadLogic(doc);
+        });
+
+        bottomSheetDialog.show();
+    }
+
+    private void handleAiMindmap(Document doc) {
+        if (doc.get_id() == null) return;
+
+        Toast.makeText(getContext(), "AI đang phân tích tài liệu, vui lòng đợi...", Toast.LENGTH_LONG).show();
+        if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+
+        viewModel.generateMindmap(doc.get_id()).observe(getViewLifecycleOwner(), result -> {
+            if (result == null) return;
+
+            switch (result.status) {
+                case SUCCESS:
+                    if (progressBar != null) progressBar.setVisibility(View.GONE);
+                    if (result.data != null) {
+                        MindmapBottomSheet bottomSheet = new MindmapBottomSheet(result.data);
+                        bottomSheet.show(getChildFragmentManager(), "MindmapBottomSheet");
+                    }
+                    break;
+                case ERROR:
+                    if (progressBar != null) progressBar.setVisibility(View.GONE);
+                    Toast.makeText(getContext(), "Lỗi AI: " + result.message, Toast.LENGTH_SHORT).show();
+                    break;
+                case LOADING:
+                    break;
+            }
+        });
+    }
+
+    private void handleDownloadLogic(Document doc) {
+        String fileUrl = doc.getFileUrl();
+        if (fileUrl == null || fileUrl.isEmpty()) {
+            Toast.makeText(getContext(), "Tài liệu này không có file để tải!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        downloadFile(fileUrl, doc.getTitle());
+
+        if (doc.get_id() != null) {
+            viewModel.incrementDownload(doc.get_id());
+        }
+    }
+
+    private void handleSaveDocument(Document doc) {
+        if (doc.get_id() == null) return;
+
+        // Hiện loading nhẹ (tùy chọn)
+        if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+
+        // Gọi ViewModel
+        viewModel.toggleSaveDocument(doc.get_id()).observe(getViewLifecycleOwner(), result -> {
+            if (result == null) return;
+
+            switch (result.status) {
+                case SUCCESS:
+                    if (progressBar != null) progressBar.setVisibility(View.GONE);
+
+                    // Lấy kết quả backend trả về: true (đã lưu) / false (đã bỏ lưu)
+                    boolean isSaved = result.data != null && result.data;
+                    if (isSaved) {
+                        Toast.makeText(getContext(), "Đã lưu: " + doc.getTitle(), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Đã bỏ lưu tài liệu", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+
+                case ERROR:
+                    if (progressBar != null) progressBar.setVisibility(View.GONE);
+                    Toast.makeText(getContext(), "Lỗi: " + result.message, Toast.LENGTH_SHORT).show();
+                    break;
+
+                case LOADING:
+                    // Đang gọi API
+                    break;
+            }
+        });
+    }
+
+    // ==========================================
+
     private void downloadFile(String url, String title) {
         try {
             if (url == null || url.trim().isEmpty()) {
@@ -264,30 +317,22 @@ public class LibraryFragment extends Fragment {
                 return;
             }
 
-            // 1. Chuẩn hóa URL (Sửa lỗi http/https)
             if (url.startsWith("http://")) {
                 url = url.replace("http://", "https://");
             } else if (!url.startsWith("http")) {
                 url = "https://" + url;
             }
 
-            // ==========================================================
-            // 2. ĐẶC TRỊ CLOUDINARY & LỌC QUERY PARAMETER CAUSING CRASH
-            // ==========================================================
-            // Xóa sạch cái đuôi ?f=.pdf hay bất kỳ thứ gì sau dấu ?
             if (url.contains("?")) {
                 url = url.substring(0, url.indexOf("?"));
             }
 
-            // Ép Cloudinary gửi trả file dưới dạng "Tải xuống" thay vì "Xem trước"
             if (url.contains("cloudinary.com") && url.contains("/upload/")) {
                 if (!url.contains("fl_attachment")) {
                     url = url.replace("/upload/", "/upload/fl_attachment/");
                 }
             }
-            // ==========================================================
 
-            // 3. Lấy định dạng đuôi file
             String extension = MimeTypeMap.getFileExtensionFromUrl(url);
             if (extension == null || extension.isEmpty()) {
                 int lastDotIndex = url.lastIndexOf('.');
@@ -298,18 +343,15 @@ public class LibraryFragment extends Fragment {
                 }
             }
 
-            // 4. Lấy MimeType
             String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
             if (mimeType == null) {
                 mimeType = "*/*";
             }
 
-            // 5. Lọc tên file an toàn
             String safeTitle = title.replaceAll("[^a-zA-Z0-9\\s-]", "");
             if (safeTitle.trim().isEmpty()) safeTitle = "Tai_Lieu";
             String fileName = safeTitle.replaceAll("\\s+", "_") + "." + extension;
 
-            // ... (Phần DownloadManager.Request bên dưới của bạn giữ nguyên không cần đổi)
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
             request.setTitle(title);
             request.setDescription("Đang tải tài liệu...");

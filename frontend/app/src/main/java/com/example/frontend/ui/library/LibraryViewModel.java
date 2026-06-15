@@ -85,4 +85,18 @@ public class LibraryViewModel extends AndroidViewModel {
         return mindmapResult;
     }
 
+    /**
+     * Gọi API Lưu / Bỏ lưu tài liệu
+     * @return LiveData để Fragment quan sát trạng thái
+     */
+    public LiveData<Result<Boolean>> toggleSaveDocument(String docId) {
+        MutableLiveData<Result<Boolean>> saveResult = new MutableLiveData<>();
+        saveResult.setValue(Result.loading(null)); // Báo đang loading
+
+        // Gọi hàm từ Repository
+        repository.toggleSaveDocument(docId, saveResult);
+
+        return saveResult;
+    }
+
 }
