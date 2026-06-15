@@ -33,6 +33,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.card.MaterialCardView;
 
 import androidx.appcompat.widget.PopupMenu;
+import android.widget.ImageView;
 
 public class LibraryFragment extends Fragment {
     private LibraryViewModel viewModel;
@@ -47,11 +48,7 @@ public class LibraryFragment extends Fragment {
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
-                    if (currentSubject.isEmpty()) {
-                        viewModel.loadDocuments("");
-                    } else {
-                        viewModel.loadDocumentsBySubject(currentSubject);
-                    }
+                    viewModel.loadDocumentsBySubject(currentSubject);
                 }
             }
     );
@@ -66,10 +63,11 @@ public class LibraryFragment extends Fragment {
                 view.findViewById(R.id.chipIT),
                 view.findViewById(R.id.chipEconomy),
                 view.findViewById(R.id.chipScience),
-                view.findViewById(R.id.chipLaw)
+                view.findViewById(R.id.chipLaw),
+                view.findViewById(R.id.chipOther)
         };
 
-        String[] subjectNames = {"", "IT", "Kinh tế", "Khoa học", "Luật"};
+        String[] subjectNames = {"", "IT", "Kinh tế", "Khoa học", "Luật", "Khác"};
 
         for (int i = 0; i < chips.length; i++) {
             final int index = i;
@@ -89,11 +87,7 @@ public class LibraryFragment extends Fragment {
                 activeTv.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
                 activeTv.setTypeface(null, android.graphics.Typeface.BOLD);
 
-                if (currentSubject.isEmpty()) {
-                    viewModel.loadDocuments("");
-                } else {
-                    viewModel.loadDocumentsBySubject(currentSubject);
-                }
+                viewModel.loadDocumentsBySubject(currentSubject);
             });
         }
 
@@ -211,19 +205,31 @@ public class LibraryFragment extends Fragment {
         View actionSave = view.findViewById(R.id.actionSave);
         View actionDownload = view.findViewById(R.id.actionDownload);
 
-        // Click AI Mindmap
+        // Ánh xạ icon và text của nút Save
+        ImageView ivSaveIcon = view.findViewById(R.id.ivSaveIcon);
+        TextView tvSaveText = view.findViewById(R.id.tvSaveText);
+
+        // KIỂM TRA TRẠNG THÁI: Giả định model Document có thuộc tính isSaved
+        if (doc.isSaved()) {
+            ivSaveIcon.setImageResource(android.R.drawable.ic_menu_close_clear_cancel); // Icon dấu X hoặc thùng rác
+            ivSaveIcon.setColorFilter(android.graphics.Color.parseColor("#70777B")); // Màu xám
+            tvSaveText.setText("Bỏ lưu");
+        } else {
+            ivSaveIcon.setImageResource(android.R.drawable.ic_menu_add);
+            ivSaveIcon.setColorFilter(android.graphics.Color.parseColor("#0ea5e9")); // Màu xanh
+            tvSaveText.setText("Lưu tài liệu");
+        }
+
         actionAiMindmap.setOnClickListener(v -> {
             bottomSheetDialog.dismiss();
             handleAiMindmap(doc);
         });
 
-        // Click Lưu / Bỏ lưu tài liệu
         actionSave.setOnClickListener(v -> {
             bottomSheetDialog.dismiss();
-            handleSaveDocument(doc); // Gọi hàm xử lý gọi API
+            handleSaveDocument(doc);
         });
 
-        // Click Tải xuống
         actionDownload.setOnClickListener(v -> {
             bottomSheetDialog.dismiss();
             handleDownloadLogic(doc);
@@ -276,10 +282,8 @@ public class LibraryFragment extends Fragment {
     private void handleSaveDocument(Document doc) {
         if (doc.get_id() == null) return;
 
-        // Hiện loading nhẹ (tùy chọn)
         if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
 
-        // Gọi ViewModel
         viewModel.toggleSaveDocument(doc.get_id()).observe(getViewLifecycleOwner(), result -> {
             if (result == null) return;
 
@@ -287,8 +291,11 @@ public class LibraryFragment extends Fragment {
                 case SUCCESS:
                     if (progressBar != null) progressBar.setVisibility(View.GONE);
 
-                    // Lấy kết quả backend trả về: true (đã lưu) / false (đã bỏ lưu)
                     boolean isSaved = result.data != null && result.data;
+
+                    // QUAN TRỌNG: Ghi đè trạng thái lưu mới vào object hiện tại
+                    doc.setSaved(isSaved);
+
                     if (isSaved) {
                         Toast.makeText(getContext(), "Đã lưu: " + doc.getTitle(), Toast.LENGTH_SHORT).show();
                     } else {
@@ -302,7 +309,6 @@ public class LibraryFragment extends Fragment {
                     break;
 
                 case LOADING:
-                    // Đang gọi API
                     break;
             }
         });
@@ -317,29 +323,33 @@ public class LibraryFragment extends Fragment {
                 return;
             }
 
+            // 1. Đảm bảo dùng HTTPS
             if (url.startsWith("http://")) {
                 url = url.replace("http://", "https://");
             } else if (!url.startsWith("http")) {
                 url = "https://" + url;
             }
 
-            if (url.contains("?")) {
-                url = url.substring(0, url.indexOf("?"));
-            }
-
+            // Ép Cloudinary tải xuống trực tiếp thay vì xem trước
             if (url.contains("cloudinary.com") && url.contains("/upload/")) {
                 if (!url.contains("fl_attachment")) {
                     url = url.replace("/upload/", "/upload/fl_attachment/");
                 }
             }
 
-            String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+            // 2. Tạo một URL sạch (bỏ query params)  ĐỂ dò tìm đuôi file
+            String cleanUrlForExtension = url;
+            if (cleanUrlForExtension.contains("?")) {
+                cleanUrlForExtension = cleanUrlForExtension.substring(0, cleanUrlForExtension.indexOf("?"));
+            }
+
+            String extension = MimeTypeMap.getFileExtensionFromUrl(cleanUrlForExtension);
             if (extension == null || extension.isEmpty()) {
-                int lastDotIndex = url.lastIndexOf('.');
-                if (lastDotIndex != -1 && lastDotIndex < url.length() - 1) {
-                    extension = url.substring(lastDotIndex + 1);
+                int lastDotIndex = cleanUrlForExtension.lastIndexOf('.');
+                if (lastDotIndex != -1 && lastDotIndex < cleanUrlForExtension.length() - 1) {
+                    extension = cleanUrlForExtension.substring(lastDotIndex + 1);
                 } else {
-                    extension = "pdf";
+                    extension = "pdf"; // Mặc định là PDF
                 }
             }
 
@@ -348,10 +358,19 @@ public class LibraryFragment extends Fragment {
                 mimeType = "*/*";
             }
 
-            String safeTitle = title.replaceAll("[^a-zA-Z0-9\\s-]", "");
-            if (safeTitle.trim().isEmpty()) safeTitle = "Tai_Lieu";
-            String fileName = safeTitle.replaceAll("\\s+", "_") + "." + extension;
+            // 3.  Chỉ thay thế các ký tự bị cấm trong hệ thống file bằng dấu gạch dưới
+            String fileName = title;
+            if (fileName == null || fileName.trim().isEmpty()) {
+                fileName = "Tai_Lieu_" + System.currentTimeMillis();
+            } else {
+                // Lọc các ký tự cấm: \ / : * ? " < > |
+                fileName = fileName.replaceAll("[\\\\/:*?\"<>|]", "_");
+            }
 
+            // Gắn đuôi file vào
+            fileName = fileName + "." + extension;
+
+            // 4. Tiến hành tải xuống
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
             request.setTitle(title);
             request.setDescription("Đang tải tài liệu...");
