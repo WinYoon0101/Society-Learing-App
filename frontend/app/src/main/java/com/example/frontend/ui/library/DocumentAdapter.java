@@ -20,16 +20,23 @@ import java.util.List;
 public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHolder> {
     private List<Document> documents = new ArrayList<>();
     private OnItemClickListener listener;
-    private OnDownloadClickListener downloadListener; // Lắng nghe sự kiện tải xuống
+    private OnDownloadClickListener downloadListener;
+    private OnAiMindmapClickListener aiListener;
 
-    // Interface click vào cả item
+    public interface OnAiMindmapClickListener {
+        void onAiClick(Document doc);
+    }
+
     public interface OnItemClickListener {
         void onItemClick(Document doc);
     }
 
-    // Interface click vào nút tải xuống
     public interface OnDownloadClickListener {
         void onDownloadClick(Document doc);
+    }
+
+    public void setOnAiMindmapClickListener(OnAiMindmapClickListener listener) {
+        this.aiListener = listener;
     }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
@@ -57,21 +64,27 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
         Document doc = documents.get(position);
 
         holder.tvTitle.setText(doc.getTitle());
-        holder.tvSubtitle.setText(doc.getSubject() + " • " + doc.getUploaderName());
         holder.tvViews.setText(String.valueOf(doc.getNumberView()));
         holder.tvDownloads.setText(String.valueOf(doc.getNumberDownload()));
 
-        if (doc.getCreatedAt() != null && doc.getCreatedAt().length() > 10) {
-            holder.tvTime.setText(doc.getCreatedAt().substring(0, 10));
+        // --- BƯỚC 1: LOGIC GỘP SUBTITLE VÀ FORMAT NGÀY THÁNG ---
+        String subtitle = doc.getSubject() + " • " + doc.getUploaderName();
+
+        if (doc.getCreatedAt() != null && doc.getCreatedAt().length() >= 10) {
+            String rawDate = doc.getCreatedAt().substring(0, 10); // Lấy "YYYY-MM-DD"
+            String formattedDate = formatDate(rawDate); // Chuyển thành "DD/MM/YYYY"
+            subtitle += " • " + formattedDate;
         }
 
+        holder.tvSubtitle.setText(subtitle);
+
+        // --- BƯỚC 2: LOGIC ĐỔI ICON THEO ĐỊNH DẠNG FILE ---
         String url = doc.getFileUrl() != null ? doc.getFileUrl().toLowerCase() : "";
 
-        // --- BƯỚC 1: RESET NỀN  ---
+        // Reset nền trước khi kiểm tra
         holder.ivFileType.setColorFilter(null);
         holder.iconCard.setCardBackgroundColor(Color.WHITE);
 
-        // --- BƯỚC 2: LOGIC ĐỔI ICON ---
         if (url.contains(".pdf")) {
             holder.ivFileType.setImageResource(R.drawable.ic_pdf);
         } else if (url.contains(".doc") || url.contains(".docx")) {
@@ -81,23 +94,26 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
             holder.ivFileType.setColorFilter(Color.parseColor("#F57C00"));
             holder.iconCard.setCardBackgroundColor(Color.parseColor("#FFF3E0"));
         } else {
-            // Mặc định cho các loại khác (Dùng màu xám nhuộm cho icon mặc định)
+            // Mặc định cho các loại khác
             holder.ivFileType.setImageResource(R.drawable.ic_generic_file);
             holder.ivFileType.setColorFilter(Color.parseColor("#6E7E73"));
             holder.iconCard.setCardBackgroundColor(Color.parseColor("#F5F5F5"));
         }
 
         // --- BƯỚC 3: XỬ LÝ SỰ KIỆN CLICK ---
-
-        // Click vào toàn bộ item để xem tài liệu
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(doc);
         });
 
-        // Click riêng vào nút tải xuống
         holder.btnDownload.setOnClickListener(v -> {
             if (downloadListener != null) {
                 downloadListener.onDownloadClick(doc);
+            }
+        });
+
+        holder.btnAiMindmap.setOnClickListener(v -> {
+            if (aiListener != null) {
+                aiListener.onAiClick(doc);
             }
         });
     }
@@ -107,9 +123,23 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
         return documents.size();
     }
 
+    // --- HÀM HELPER: CHUYỂN ĐỔI "YYYY-MM-DD" THÀNH "DD/MM/YYYY" ---
+    private String formatDate(String dbDate) {
+        try {
+            String[] parts = dbDate.split("-");
+            if (parts.length == 3) {
+                return parts[2] + "/" + parts[1] + "/" + parts[0];
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return dbDate;
+    }
+
+
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTitle, tvSubtitle, tvViews, tvDownloads, tvTime;
-        ImageView ivFileType, btnDownload;
+        TextView tvTitle, tvSubtitle, tvViews, tvDownloads;
+        ImageView ivFileType, btnDownload, btnAiMindmap;
         MaterialCardView iconCard;
 
         ViewHolder(View itemView) {
@@ -118,10 +148,11 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
             tvSubtitle = itemView.findViewById(R.id.tvSubtitle);
             tvViews = itemView.findViewById(R.id.tvViews);
             tvDownloads = itemView.findViewById(R.id.tvDownloads);
-            tvTime = itemView.findViewById(R.id.tvTime);
+
             ivFileType = itemView.findViewById(R.id.ivFileType);
             iconCard = itemView.findViewById(R.id.iconCard);
             btnDownload = itemView.findViewById(R.id.btnDownload);
+            btnAiMindmap = itemView.findViewById(R.id.btnAiMindmap);
         }
     }
 }
