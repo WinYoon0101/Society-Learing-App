@@ -476,7 +476,7 @@ export const generateDocumentMindmap = async (req: AuthRequest, res: Response): 
       },
     });
 
-    // CHUYỂN ĐỔI PDF SANG DẠNG BASE64 ĐỂ ĐƯA TRỰC TIẾP CHO GEMINI
+    // CHUYỂN ĐỔI PDF SANG DẠNG BASE64
     const pdfPart = {
       inlineData: {
         data: buffer.toString("base64"),
