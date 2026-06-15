@@ -16,7 +16,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class QuizViewModel extends AndroidViewModel {
-    
+
     private final QuizRepository repository;
     private final MutableLiveData<Result<Quiz>> quizResult = new MutableLiveData<>();
 
