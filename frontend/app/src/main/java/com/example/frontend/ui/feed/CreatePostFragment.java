@@ -160,12 +160,12 @@ public class CreatePostFragment extends Fragment {
                         ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
                 popupWindow.setOutsideTouchable(true);
 
-                ImageView btnReactLike = popupView.findViewById(R.id.btnReactLike);
-                ImageView btnReactLove = popupView.findViewById(R.id.btnReactLove);
-                ImageView btnReactHaha = popupView.findViewById(R.id.btnReactHaha);
-                ImageView btnReactWow = popupView.findViewById(R.id.btnReactWow);
-                ImageView btnReactSad = popupView.findViewById(R.id.btnReactSad);
-                ImageView btnReactAngry = popupView.findViewById(R.id.btnReactAngry);
+                TextView btnReactLike = popupView.findViewById(R.id.btnReactLike);
+                TextView btnReactLove = popupView.findViewById(R.id.btnReactLove);
+                TextView btnReactHaha = popupView.findViewById(R.id.btnReactHaha);
+                TextView btnReactWow = popupView.findViewById(R.id.btnReactWow);
+                TextView btnReactSad = popupView.findViewById(R.id.btnReactSad);
+                TextView btnReactAngry = popupView.findViewById(R.id.btnReactAngry);
 
                 btnReactLike.setOnClickListener(x -> { selectedReaction = "Like"; updateMetaText(); popupWindow.dismiss(); });
                 btnReactLove.setOnClickListener(x -> { selectedReaction = "Love"; updateMetaText(); popupWindow.dismiss(); });
