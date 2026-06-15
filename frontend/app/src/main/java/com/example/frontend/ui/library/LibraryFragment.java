@@ -211,11 +211,11 @@ public class LibraryFragment extends Fragment {
 
         // KIỂM TRA TRẠNG THÁI: Giả định model Document có thuộc tính isSaved
         if (doc.isSaved()) {
-            ivSaveIcon.setImageResource(android.R.drawable.ic_menu_close_clear_cancel); // Icon dấu X hoặc thùng rác
+            ivSaveIcon.setImageResource(android.R.drawable.ic_menu_close_clear_cancel); // Icon dấu X
             ivSaveIcon.setColorFilter(android.graphics.Color.parseColor("#70777B")); // Màu xám
             tvSaveText.setText("Bỏ lưu");
         } else {
-            ivSaveIcon.setImageResource(android.R.drawable.ic_menu_add);
+            ivSaveIcon.setImageResource(R.drawable.ic_bookmark);
             ivSaveIcon.setColorFilter(android.graphics.Color.parseColor("#0ea5e9")); // Màu xanh
             tvSaveText.setText("Lưu tài liệu");
         }

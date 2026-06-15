@@ -50,7 +50,7 @@
             android:id="@+id/ivSaveIcon"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@android:drawable/ic_menu_add"
+            android:src="@drawable/ic_bookmark"
             app:tint="#0ea5e9" />
 
         <TextView

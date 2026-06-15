@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FFFFFF">
+    android:background="#F8FAF9">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -23,45 +22,32 @@
             android:src="@android:drawable/ic_menu_revert"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Back" />
+            android:focusable="true" />
 
         <TextView
-            android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Tài liệu của tôi"
-            android:textColor="#283633"
+            android:text="Quản lý tài liệu"
+            android:textColor="#1F2924"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
 
-    <RelativeLayout
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        app:tabIndicatorColor="#10B981"
+        app:tabSelectedTextColor="#10B981"
+        app:tabTextColor="#6E7E73"
+        app:tabMode="fixed"
+        app:tabGravity="fill" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvMyDocs"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="12dp"
-            android:clipToPadding="false"/>
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-        <ProgressBar
-            android:id="@+id/loading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/tvEmpty"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="Bạn chưa đăng tài liệu nào"
-            android:visibility="gone"
-            android:textColor="#888888"/>
-    </RelativeLayout>
 </LinearLayout>
