@@ -23,6 +23,8 @@ object ChatSocketManager {
     private var onMessageDeleted: ((String) -> Unit)? = null
     private var onUserOnline: ((String) -> Unit)? = null
     private var onUserOffline: ((String) -> Unit)? = null
+    private var onOnlineUsers: ((List<String>) -> Unit)? = null
+    private var onConnected: (() -> Unit)? = null
     private var onTypingStart: ((String, String) -> Unit)? = null
     private var onTypingStop: ((String) -> Unit)? = null
     private var onError: ((String) -> Unit)? = null
@@ -78,6 +80,7 @@ object ChatSocketManager {
     private fun setupListeners() {
         socket?.on(Socket.EVENT_CONNECT) {
             Log.d(TAG, "✅ Connected to server")
+            onConnected?.invoke()
         }
 
         socket?.on(Socket.EVENT_DISCONNECT) {
@@ -153,6 +156,22 @@ object ChatSocketManager {
                 onUserOffline?.invoke(userId)
             } catch (e: Exception) {
                 Log.e(TAG, "Parse user:offline error: ${e.message}")
+            }
+        }
+
+        // Snapshot trả về sau khi client emit "users:online"
+        socket?.on("users:online") { args ->
+            try {
+                val data = args[0] as JSONObject
+                val arr = data.getJSONArray("onlineUsers")
+                val ids = ArrayList<String>(arr.length())
+                for (i in 0 until arr.length()) {
+                    ids.add(arr.getString(i))
+                }
+                Log.d(TAG, "Online snapshot: ${ids.size} users")
+                onOnlineUsers?.invoke(ids)
+            } catch (e: Exception) {
+                Log.e(TAG, "Parse users:online error: ${e.message}")
             }
         }
 
@@ -299,6 +318,22 @@ object ChatSocketManager {
 
     fun setOnUserOfflineListener(listener: (userId: String) -> Unit) {
         onUserOffline = listener
+    }
+
+    fun setOnOnlineUsersListener(listener: (onlineUserIds: List<String>) -> Unit) {
+        onOnlineUsers = listener
+    }
+
+    fun setOnConnectedListener(listener: () -> Unit) {
+        onConnected = listener
+    }
+
+    /** Clear listeners liên quan tới online rail — gọi khi fragment bị destroy. */
+    fun clearOnlineRailListeners() {
+        onConnected = null
+        onOnlineUsers = null
+        onUserOnline = null
+        onUserOffline = null
     }
 
     fun setOnTypingStartListener(listener: (userId: String, username: String) -> Unit) {

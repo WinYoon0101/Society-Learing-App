@@ -1,6 +1,6 @@
-frontend/.claude/skills/group-feature/context.md
+# Sensitive config (chứa BASE_URL/token...) — không đẩy lên git
 frontend/app/src/main/java/com/example/frontend/utils/Constants.java
-frontend/app/src/main/java/com/example/frontend/utils/Constants.java
-frontend/CHAT_CONTEXT.md
-frontend/.claude/skills/chat-feature/CHAT_CONTEXT.md
+
+# Claude Code skill & context docs — chỉ giữ local, không tracking lên github
+frontend/.claude/skills/
 frontend/CHAT_CONTEXT.md

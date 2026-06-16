@@ -3,6 +3,7 @@ package com.example.frontend.ui.chat;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,13 +17,27 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.frontend.R;
+import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Conversation;
+import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.User;
+import com.example.frontend.data.remote.ApiClient;
+import com.example.frontend.data.remote.ApiService;
+import com.example.frontend.data.socket.ChatSocketManager;
+import com.example.frontend.utils.Constants;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ChatFragment extends Fragment {
+
+    private static final String LOG_TAG = "ChatFragment";
 
     private ChatViewModel viewModel;
     private ConversationAdapter conversationAdapter;
@@ -30,6 +45,11 @@ public class ChatFragment extends Fragment {
 
     private String currentUserId;
     private String currentUserAvatar;
+
+    // Online rail state
+    private final Set<String> onlineIds = new HashSet<>();
+    private final List<Friend> friends = new ArrayList<>();
+    private Call<ApiResponse<List<Friend>>> friendsCall;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -43,6 +63,7 @@ public class ChatFragment extends Fragment {
         SharedPreferences prefs = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
         currentUserId = prefs.getString("USER_ID", "");
         currentUserAvatar = prefs.getString("USER_AVATAR", null);
+        String token = prefs.getString("JWT_TOKEN", "");
 
         viewModel = new ViewModelProvider(this).get(ChatViewModel.class);
 
@@ -51,13 +72,30 @@ public class ChatFragment extends Fragment {
         setupNewChatFab(view);
         observeViewModel(view);
 
+        setupSocketForPresence(token);
+        fetchFriendsForRail();
+
         viewModel.fetchConversations();
     }
 
-    /**
-     * Mở/tạo conversation với user {@code userId}. Gọi từ SelectFriendBottomSheet
-     * sau khi user chọn 1 bạn — reuse observer getOpenConversationResult() để navigate.
-     */
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Xin snapshot online mỗi lần quay lại màn list — nếu socket chưa connect,
+        // setOnConnectedListener bên dưới sẽ tự xin lại lúc connect thành công.
+        ChatSocketManager.INSTANCE.getOnlineUsers();
+    }
+
+    @Override
+    public void onDestroyView() {
+        ChatSocketManager.INSTANCE.clearOnlineRailListeners();
+        if (friendsCall != null) {
+            friendsCall.cancel();
+            friendsCall = null;
+        }
+        super.onDestroyView();
+    }
+
     public void openChatWith(String userId) {
         if (userId == null || userId.isEmpty() || viewModel == null) return;
         viewModel.openConversation(userId);
@@ -77,8 +115,9 @@ public class ChatFragment extends Fragment {
                 new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
 
         onlineUserAdapter = new OnlineUserAdapter(currentUserId, currentUserAvatar, user -> {
-            // Khi bấm vào user online → mở/tạo conversation với user đó
-            viewModel.openConversation(user.getId());
+            if (user != null && user.getId() != null) {
+                viewModel.openConversation(user.getId());
+            }
         });
         rvOnlineUsers.setAdapter(onlineUserAdapter);
     }
@@ -106,21 +145,17 @@ public class ChatFragment extends Fragment {
             switch (result.status) {
                 case LOADING:
                     break;
-
                 case SUCCESS:
                     List<Conversation> conversations = result.data;
                     if (conversations != null && !conversations.isEmpty()) {
                         layoutEmpty.setVisibility(View.GONE);
                         rvConversations.setVisibility(View.VISIBLE);
                         conversationAdapter.submitList(conversations);
-                        onlineUserAdapter.submitList(extractOnlineUsers(conversations));
                     } else {
                         layoutEmpty.setVisibility(View.VISIBLE);
                         rvConversations.setVisibility(View.GONE);
-                        onlineUserAdapter.submitList(new ArrayList<>());
                     }
                     break;
-
                 case ERROR:
                     Toast.makeText(getContext(), result.message, Toast.LENGTH_SHORT).show();
                     break;
@@ -130,6 +165,8 @@ public class ChatFragment extends Fragment {
         viewModel.getOpenConversationResult().observe(getViewLifecycleOwner(), result -> {
             if (result == null) return;
             if (result.status == com.example.frontend.utils.Result.Status.SUCCESS && result.data != null) {
+                // Tiêu thụ sự kiện ngay để observer không phát lại khi quay về từ back stack
+                viewModel.clearOpenConversationResult();
                 ChatDetailFragment fragment = ChatDetailFragment.newInstance(result.data, null);
                 requireActivity().getSupportFragmentManager()
                         .beginTransaction()
@@ -140,23 +177,110 @@ public class ChatFragment extends Fragment {
         });
     }
 
-    // Lấy danh sách user online từ các conversations (không bao gồm current user)
-    private List<User> extractOnlineUsers(List<Conversation> conversations) {
-        List<User> onlineUsers = new ArrayList<>();
-        List<String> seenIds = new ArrayList<>();
+    // ─────────────────────── Socket presence ───────────────────────
 
-        for (Conversation conv : conversations) {
-            if (conv.getMembers() == null) continue;
-            for (User member : conv.getMembers()) {
-                if (member.getId() == null) continue;
-                if (member.getId().equals(currentUserId)) continue;
-                if (seenIds.contains(member.getId())) continue;
-                if (member.isActive()) {
-                    seenIds.add(member.getId());
-                    onlineUsers.add(member);
+    private void setupSocketForPresence(String token) {
+        ChatSocketManager socket = ChatSocketManager.INSTANCE;
+
+        if (!socket.isConnected()) {
+            socket.initialize(requireContext().getApplicationContext(), Constants.SOCKET_URL, token);
+            socket.connect();
+        }
+
+        socket.setOnConnectedListener(() -> {
+            runOnUi(() -> ChatSocketManager.INSTANCE.getOnlineUsers());
+            return kotlin.Unit.INSTANCE;
+        });
+
+        socket.setOnOnlineUsersListener(ids -> {
+            runOnUi(() -> {
+                onlineIds.clear();
+                if (ids != null) onlineIds.addAll(ids);
+                refreshOnlineRail();
+            });
+            return kotlin.Unit.INSTANCE;
+        });
+
+        socket.setOnUserOnlineListener(userId -> {
+            runOnUi(() -> {
+                if (userId != null && !userId.equals(currentUserId)) {
+                    onlineIds.add(userId);
+                    refreshOnlineRail();
+                }
+            });
+            return kotlin.Unit.INSTANCE;
+        });
+
+        socket.setOnUserOfflineListener(userId -> {
+            runOnUi(() -> {
+                if (userId != null) {
+                    onlineIds.remove(userId);
+                    refreshOnlineRail();
+                }
+            });
+            return kotlin.Unit.INSTANCE;
+        });
+
+        // Socket có thể đã connect từ trước → xin snapshot ngay
+        if (socket.isConnected()) {
+            socket.getOnlineUsers();
+        }
+    }
+
+    private void runOnUi(Runnable r) {
+        if (!isAdded()) return;
+        requireActivity().runOnUiThread(() -> {
+            if (isAdded()) r.run();
+        });
+    }
+
+    // ─────────────────────── Friends source ───────────────────────
+
+    private void fetchFriendsForRail() {
+        ApiService api = ApiClient.getApiService(requireContext().getApplicationContext());
+        friendsCall = api.getFriends();
+        friendsCall.enqueue(new Callback<ApiResponse<List<Friend>>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<List<Friend>>> call,
+                                   @NonNull Response<ApiResponse<List<Friend>>> response) {
+                if (!isAdded()) return;
+                ApiResponse<List<Friend>> body = response.body();
+                if (response.isSuccessful() && body != null && body.isSuccess() && body.getData() != null) {
+                    friends.clear();
+                    friends.addAll(body.getData());
+                    refreshOnlineRail();
+                } else {
+                    Log.w(LOG_TAG, "getFriends failed: " + (body != null ? body.getMessage() : "null body"));
                 }
             }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<List<Friend>>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Log.e(LOG_TAG, "getFriends error", t);
+            }
+        });
+    }
+
+    /** Rail = bạn bè, online lên đầu. Self slot do adapter render ở vị trí 0. */
+    private void refreshOnlineRail() {
+        if (onlineUserAdapter == null) return;
+        List<User> railOnline = new ArrayList<>();
+        List<User> railOffline = new ArrayList<>();
+        for (Friend f : friends) {
+            if (f.getId() == null) continue;
+            if (f.getId().equals(currentUserId)) continue;
+            User u = new User(f.getId(), f.getUsername(), f.getAvatar());
+            if (onlineIds.contains(f.getId())) {
+                railOnline.add(u);
+            } else {
+                railOffline.add(u);
+            }
         }
-        return onlineUsers;
+        List<User> rail = new ArrayList<>(railOnline.size() + railOffline.size());
+        rail.addAll(railOnline);
+        rail.addAll(railOffline);
+        onlineUserAdapter.setOnlineIds(new HashSet<>(onlineIds));
+        onlineUserAdapter.submitList(rail);
     }
 }
