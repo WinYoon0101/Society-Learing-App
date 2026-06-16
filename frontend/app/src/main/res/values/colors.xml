@@ -9,6 +9,16 @@
     <color name="white">#FFFFFFFF</color>
     <color name="green_main">#6C8F7E</color>
     <color name="green_dark">#43634B</color>
+
+    <!-- Group feature palette (emerald on white) -->
+    <color name="group_primary">#10B981</color>
+    <color name="group_primary_dark">#059669</color>
+    <color name="group_bg">#FFFFFF</color>
+    <color name="group_surface">#FFFFFF</color>
+    <color name="group_text">#111827</color>
+    <color name="group_text_secondary">#6B7280</color>
+    <color name="group_divider">#E5E7EB</color>
+    <color name="group_badge">#10B981</color>
 </resources>
 
 <!-- Màu chủ đạo    #10B981-->

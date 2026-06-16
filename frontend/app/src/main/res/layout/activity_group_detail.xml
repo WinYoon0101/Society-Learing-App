@@ -4,20 +4,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4F7EE">
+    android:background="@color/group_bg">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
+        android:background="@color/group_surface"
         app:elevation="0dp">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:contentScrim="#FFFFFF"
-            app:statusBarScrim="#FFFFFF"
+            app:contentScrim="@color/group_surface"
+            app:statusBarScrim="@color/group_surface"
             app:titleEnabled="false"
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
@@ -49,7 +49,7 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginBottom="12dp"
                     android:src="@drawable/ic_group"
-                    app:civ_border_color="#FFFFFF"
+                    app:civ_border_color="@color/group_surface"
                     app:civ_border_width="3dp" />
             </FrameLayout>
 
@@ -76,7 +76,7 @@
                         android:contentDescription="Quay lại"
                         android:padding="8dp"
                         android:src="@drawable/ic_arrow_back"
-                        app:tint="#283633" />
+                        app:tint="@color/group_text" />
 
                     <ImageButton
                         android:id="@+id/btnSearch"
@@ -88,7 +88,7 @@
                         android:contentDescription="Tìm kiếm"
                         android:padding="8dp"
                         android:src="@drawable/ic_search"
-                        app:tint="#283633" />
+                        app:tint="@color/group_text" />
 
                     <ImageButton
                         android:id="@+id/btnMore"
@@ -100,7 +100,7 @@
                         android:contentDescription="Tùy chọn"
                         android:padding="8dp"
                         android:src="@drawable/ic_more_horiz"
-                        app:tint="#283633" />
+                        app:tint="@color/group_text" />
 
                     <TextView
                         android:id="@+id/tvToolbarName"
@@ -113,7 +113,7 @@
                         android:gravity="center"
                         android:maxLines="1"
                         android:text="Nhóm"
-                        android:textColor="#283633"
+                        android:textColor="@color/group_text"
                         android:textSize="18sp"
                         android:textStyle="bold" />
                 </RelativeLayout>
@@ -125,7 +125,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#FFFFFF"
+            android:background="@color/group_surface"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingTop="10dp"
@@ -150,7 +150,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Nhóm"
-                        android:textColor="#283633"
+                        android:textColor="@color/group_text"
                         android:textSize="22sp"
                         android:textStyle="bold" />
 
@@ -160,7 +160,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
                         android:text="Công khai · 0 thành viên"
-                        android:textColor="#888888"
+                        android:textColor="@color/group_text_secondary"
                         android:textSize="13sp" />
                 </LinearLayout>
 
@@ -174,7 +174,7 @@
                     android:paddingEnd="18dp"
                     android:text="👥 Mời"
                     android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/group_surface"
                     android:textSize="14sp"
                     android:visibility="gone" />
 
@@ -188,7 +188,7 @@
                     android:paddingEnd="18dp"
                     android:text="Tham gia"
                     android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/group_surface"
                     android:textSize="14sp"
                     android:visibility="gone" />
             </LinearLayout>
@@ -199,7 +199,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="Mô tả nhóm"
-                android:textColor="#4B4B4B"
+                android:textColor="@color/group_text_secondary"
                 android:textSize="14sp"
                 android:visibility="gone" />
 
@@ -215,7 +215,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginTop="12dp"
-                    android:background="#E5E7DD" />
+                    android:background="@color/group_divider" />
 
                 <LinearLayout
                     android:id="@+id/composerRow"
@@ -242,7 +242,7 @@
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
                         android:text="Bạn đang nghĩ gì?"
-                        android:textColor="#888888"
+                        android:textColor="@color/group_text_secondary"
                         android:textSize="14sp" />
                 </LinearLayout>
 
@@ -272,7 +272,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
                             android:text="File"
-                            android:textColor="#555555"
+                            android:textColor="@color/group_text_secondary"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -296,7 +296,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
                             android:text="Ảnh"
-                            android:textColor="#555555"
+                            android:textColor="@color/group_text_secondary"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -320,7 +320,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
                             android:text="Cảm xúc"
-                            android:textColor="#555555"
+                            android:textColor="@color/group_text_secondary"
                             android:textSize="13sp" />
                     </LinearLayout>
                 </LinearLayout>

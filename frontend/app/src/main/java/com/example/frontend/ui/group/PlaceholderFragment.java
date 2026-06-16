@@ -1,6 +1,5 @@
 package com.example.frontend.ui.group;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -11,7 +10,10 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+
+import com.example.frontend.R;
 
 public class PlaceholderFragment extends Fragment {
 
@@ -34,7 +36,7 @@ public class PlaceholderFragment extends Fragment {
         root.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
-        root.setBackgroundColor(Color.parseColor("#F4F7EE"));
+        root.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.group_bg));
 
         TextView tv = new TextView(requireContext());
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
@@ -42,7 +44,7 @@ public class PlaceholderFragment extends Fragment {
                 FrameLayout.LayoutParams.WRAP_CONTENT);
         lp.gravity = Gravity.CENTER;
         tv.setLayoutParams(lp);
-        tv.setTextColor(Color.parseColor("#888888"));
+        tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.group_text_secondary));
         tv.setText(getArguments() != null
                 ? getArguments().getString(ARG_TITLE) + " - sắp ra mắt"
                 : "Sắp ra mắt");

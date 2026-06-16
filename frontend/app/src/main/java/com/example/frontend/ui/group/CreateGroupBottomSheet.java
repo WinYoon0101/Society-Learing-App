@@ -118,7 +118,7 @@ public class CreateGroupBottomSheet extends BottomSheetDialogFragment {
             privacySheet.setOnPrivacySelectedListener((privacy, label) -> {
                 selectedPrivacy = privacy;
                 tvPrivacyLabel.setText(label);
-                tvPrivacyLabel.setTextColor(0xFF283633);
+                tvPrivacyLabel.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.group_text));
             });
             privacySheet.show(getChildFragmentManager(), "PrivacySheet");
         });

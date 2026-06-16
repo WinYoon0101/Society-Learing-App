@@ -30,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Tên người dùng"
-            android:textColor="#283633"
+            android:textColor="@color/group_text"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -39,7 +39,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Thành viên"
-            android:textColor="#757575"
+            android:textColor="@color/group_text_secondary"
             android:textSize="14sp"
             android:layout_marginTop="2dp" />
     </LinearLayout>

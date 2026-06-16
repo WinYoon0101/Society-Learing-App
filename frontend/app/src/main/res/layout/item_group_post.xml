@@ -30,15 +30,15 @@
 
                 <TextView android:id="@+id/tvAuthorName"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:textColor="#283633" android:textSize="14sp" android:textStyle="bold" />
+                    android:textColor="@color/group_text" android:textSize="14sp" android:textStyle="bold" />
 
                 <TextView android:id="@+id/tvGroupName"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:textColor="#43634B" android:textSize="12sp" />
+                    android:textColor="@color/group_primary" android:textSize="12sp" />
 
                 <TextView android:id="@+id/tvTime"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:textColor="#999999" android:textSize="11sp" />
+                    android:textColor="@color/group_text_secondary" android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -46,7 +46,7 @@
         <TextView android:id="@+id/tvContent"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:textColor="#333333" android:textSize="14sp" />
+            android:textColor="@color/group_text" android:textSize="14sp" />
 
         <!-- Ảnh (RecyclerView ngang như feed) -->
         <androidx.recyclerview.widget.RecyclerView
@@ -58,7 +58,7 @@
 
         <!-- Divider -->
         <View android:layout_width="match_parent" android:layout_height="1dp"
-            android:layout_marginTop="10dp" android:background="#E5E7DD" />
+            android:layout_marginTop="10dp" android:background="@color/group_divider" />
 
         <!-- Top reactions row -->
         <LinearLayout
@@ -95,13 +95,13 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:text="0"
-                android:textColor="#666666"
+                android:textColor="@color/group_text_secondary"
                 android:textSize="13sp" />
         </LinearLayout>
 
         <!-- Divider action -->
         <View android:layout_width="match_parent" android:layout_height="1dp"
-            android:layout_marginTop="8dp" android:background="#E5E7DD" />
+            android:layout_marginTop="8dp" android:background="@color/group_divider" />
 
         <!-- Action buttons: Like + Comment -->
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -130,7 +130,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:text="Thích"
-                    android:textColor="#555555"
+                    android:textColor="@color/group_text_secondary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -155,7 +155,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:text="0"
-                    android:textColor="#555555"
+                    android:textColor="@color/group_text_secondary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
             </LinearLayout>
