@@ -62,10 +62,10 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.VH> {
                     ? "• Hơn 10 bài viết mới"
                     : "• " + g.getNewPostCount() + " bài viết mới";
             h.tvSubtitle.setText(txt);
-            h.tvSubtitle.setTextColor(0xFF1F8B4C); // green
+            h.tvSubtitle.setTextColor(androidx.core.content.ContextCompat.getColor(h.itemView.getContext(), R.color.group_badge));
         } else {
             h.tvSubtitle.setText(formatLastUpdated(g.getLastUpdated()));
-            h.tvSubtitle.setTextColor(0xFF888888); // gray
+            h.tvSubtitle.setTextColor(androidx.core.content.ContextCompat.getColor(h.itemView.getContext(), R.color.group_text_secondary));
         }
 
         if (g.getAvatarUrl() != null && !g.getAvatarUrl().isEmpty()) {

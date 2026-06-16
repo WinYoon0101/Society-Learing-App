@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F4F7EE">
+    android:background="@color/group_bg">
 
     <!-- HEADER -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#FFFFFF"
+        android:background="@color/group_surface"
         android:paddingHorizontal="8dp"
         android:elevation="2dp">
 
@@ -24,14 +24,14 @@
             android:contentDescription="Đóng"
             android:padding="8dp"
             android:src="@drawable/ic_arrow_back"
-            app:tint="#283633" />
+            app:tint="@color/group_text" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Tạo nhóm"
-            android:textColor="#283633"
+            android:textColor="@color/group_text"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -60,7 +60,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_group"
-                app:civ_border_color="#6C8F7E"
+                app:civ_border_color="@color/group_primary"
                 app:civ_border_width="1.5dp" />
 
             <!-- Camera icon overlay -->
@@ -91,8 +91,8 @@
             android:inputType="textPersonName"
             android:maxLength="60"
             android:paddingHorizontal="14dp"
-            android:textColor="#283633"
-            android:textColorHint="#AAAAAA"
+            android:textColor="@color/group_text"
+            android:textColorHint="@color/group_text_secondary"
             android:textSize="15sp" />
 
         <!-- QUYỀN RIÊNG TƯ -->
@@ -101,7 +101,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
             android:text="Quyền riêng tư"
-            android:textColor="#283633"
+            android:textColor="@color/group_text"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -123,7 +123,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Chọn quyền riêng tư"
-                android:textColor="#AAAAAA"
+                android:textColor="@color/group_text_secondary"
                 android:textSize="15sp" />
 
             <ImageView
@@ -131,7 +131,7 @@
                 android:layout_height="20dp"
                 android:src="@drawable/ic_arrow_down"
                 android:contentDescription="Chọn"
-                app:tint="#6C8F7E" />
+                app:tint="@color/group_primary" />
         </LinearLayout>
 
     </LinearLayout>
@@ -147,7 +147,7 @@
         android:background="@drawable/bg_button_create"
         app:backgroundTint="@null"
         android:text="Tạo"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/group_surface"
         android:textSize="16sp"
         android:textStyle="bold" />
 

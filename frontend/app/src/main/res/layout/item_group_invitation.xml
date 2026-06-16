@@ -18,7 +18,7 @@
                 android:id="@+id/imgGroupAvatar"
                 android:layout_width="52dp" android:layout_height="52dp"
                 android:src="@drawable/ic_group"
-                android:background="#E5E7DD" />
+                android:background="@color/group_divider" />
 
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                 android:layout_weight="1" android:layout_marginStart="12dp"
@@ -26,15 +26,15 @@
 
                 <TextView android:id="@+id/tvGroupName"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:textColor="#283633" android:textSize="15sp" android:textStyle="bold" />
+                    android:textColor="@color/group_text" android:textSize="15sp" android:textStyle="bold" />
 
                 <TextView android:id="@+id/tvInviter"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:textColor="#666666" android:textSize="13sp" android:layout_marginTop="2dp" />
+                    android:textColor="@color/group_text_secondary" android:textSize="13sp" android:layout_marginTop="2dp" />
 
                 <TextView android:id="@+id/tvTime"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:textColor="#999999" android:textSize="11sp" android:layout_marginTop="2dp" />
+                    android:textColor="@color/group_text_secondary" android:textSize="11sp" android:layout_marginTop="2dp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -46,16 +46,16 @@
                 android:layout_width="0dp" android:layout_height="38dp"
                 android:layout_weight="1" android:layout_marginEnd="6dp"
                 android:text="Chấp nhận"
-                android:backgroundTint="#43634B"
-                android:textColor="#FFFFFF"
+                android:backgroundTint="@color/group_primary"
+                android:textColor="@color/group_surface"
                 style="@style/Widget.MaterialComponents.Button" />
 
             <Button android:id="@+id/btnDecline"
                 android:layout_width="0dp" android:layout_height="38dp"
                 android:layout_weight="1" android:layout_marginStart="6dp"
                 android:text="Từ chối"
-                android:backgroundTint="#E5E7DD"
-                android:textColor="#283633"
+                android:backgroundTint="@color/group_divider"
+                android:textColor="@color/group_text"
                 style="@style/Widget.MaterialComponents.Button" />
         </LinearLayout>
     </LinearLayout>

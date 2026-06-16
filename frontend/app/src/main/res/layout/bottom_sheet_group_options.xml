@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#FFFFFF"
+    android:background="@color/group_surface"
     android:orientation="vertical"
     android:paddingStart="20dp"
     android:paddingEnd="20dp"
@@ -14,7 +14,7 @@
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="14dp"
-        android:background="#D9DDD0" />
+        android:background="@color/group_divider" />
 
     <TextView
         android:layout_width="match_parent"
@@ -22,7 +22,7 @@
         android:layout_marginBottom="18dp"
         android:gravity="center"
         android:text="Tùy chọn"
-        android:textColor="#43634B"
+        android:textColor="@color/group_primary"
         android:textSize="20sp"
         android:textStyle="bold" />
 

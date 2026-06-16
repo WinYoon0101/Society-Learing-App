@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F4F7EE">
+    android:background="@color/group_bg">
 
     <!-- Toolbar -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#FFFFFF"
+        android:background="@color/group_surface"
         android:elevation="2dp"
         android:paddingStart="8dp"
         android:paddingEnd="8dp">
@@ -25,14 +25,14 @@
             android:contentDescription="Quay lại"
             android:padding="8dp"
             android:src="@drawable/ic_arrow_back"
-            app:tint="#283633" />
+            app:tint="@color/group_text" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Cài đặt nhóm"
-            android:textColor="#283633"
+            android:textColor="@color/group_text"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="#FFFFFF"
+                android:background="@color/group_surface"
                 android:padding="16dp"
                 android:layout_marginBottom="12dp">
 
@@ -71,8 +71,8 @@
                     android:layout_marginTop="10dp"
                     android:text="Đổi ảnh nhóm"
                     android:textAllCaps="false"
-                    android:backgroundTint="#43634B"
-                    android:textColor="#FFFFFF" />
+                    android:backgroundTint="@color/group_primary"
+                    android:textColor="@color/group_surface" />
             </LinearLayout>
 
             <!-- Group name -->
@@ -80,7 +80,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Tên nhóm"
-                android:textColor="#283633"
+                android:textColor="@color/group_text"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
@@ -89,10 +89,10 @@
                 android:id="@+id/etGroupName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#FFFFFF"
+                android:background="@color/group_surface"
                 android:padding="12dp"
                 android:hint="Tên nhóm"
-                android:textColor="#333333"
+                android:textColor="@color/group_text"
                 android:textSize="15sp"
                 android:layout_marginBottom="12dp" />
 
@@ -101,7 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Mô tả nhóm"
-                android:textColor="#283633"
+                android:textColor="@color/group_text"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
@@ -110,10 +110,10 @@
                 android:id="@+id/etDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#FFFFFF"
+                android:background="@color/group_surface"
                 android:padding="12dp"
                 android:hint="Mô tả về nhóm của bạn..."
-                android:textColor="#333333"
+                android:textColor="@color/group_text"
                 android:textSize="15sp"
                 android:minLines="3"
                 android:gravity="top"
@@ -124,7 +124,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Quyền riêng tư"
-                android:textColor="#283633"
+                android:textColor="@color/group_text"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
@@ -132,7 +132,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#FFFFFF"
+                android:background="@color/group_surface"
                 android:padding="12dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
@@ -143,7 +143,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="#333333"
+                    android:textColor="@color/group_text"
                     android:textSize="15sp"
                     android:text="🔓 Công khai" />
 
@@ -153,8 +153,8 @@
                     android:layout_height="wrap_content"
                     android:text="Thay đổi"
                     android:textAllCaps="false"
-                    android:backgroundTint="#E0E0E0"
-                    android:textColor="#283633"
+                    android:backgroundTint="@color/group_divider"
+                    android:textColor="@color/group_text"
                     android:textSize="13sp" />
             </LinearLayout>
 
@@ -164,8 +164,8 @@
                 android:layout_height="52dp"
                 android:text="Lưu thay đổi"
                 android:textAllCaps="false"
-                android:backgroundTint="#43634B"
-                android:textColor="#FFFFFF"
+                android:backgroundTint="@color/group_primary"
+                android:textColor="@color/group_surface"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginTop="8dp" />
