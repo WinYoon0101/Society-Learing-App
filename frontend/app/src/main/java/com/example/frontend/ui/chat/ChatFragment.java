@@ -54,6 +54,15 @@ public class ChatFragment extends Fragment {
         viewModel.fetchConversations();
     }
 
+    /**
+     * Mở/tạo conversation với user {@code userId}. Gọi từ SelectFriendBottomSheet
+     * sau khi user chọn 1 bạn — reuse observer getOpenConversationResult() để navigate.
+     */
+    public void openChatWith(String userId) {
+        if (userId == null || userId.isEmpty() || viewModel == null) return;
+        viewModel.openConversation(userId);
+    }
+
     private void setupNewChatFab(View view) {
         com.google.android.material.floatingactionbutton.FloatingActionButton fab =
                 view.findViewById(R.id.fabNewChat);
