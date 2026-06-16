@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.frontend.data.model.Document;
+import com.example.frontend.data.model.MindmapData;
 import com.example.frontend.data.repository.DocumentRepository;
 import com.example.frontend.utils.Result;
 import java.util.List;
@@ -67,6 +68,35 @@ public class LibraryViewModel extends AndroidViewModel {
 //  Hàm này sẽ được gọi khi người dùng nhấn vào tên tài liệu để xem chi tiết, từ đó tăng lượt xem lên 1
     public void incrementView(String docId) {
         repository.incrementViewCount(docId);
+    }
+
+
+    /**
+     * Gọi API phân tích AI Mindmap
+     * @return LiveData để Fragment quan sát trạng thái (Loading, Success, Error)
+     */
+    public LiveData<Result<MindmapData>> generateMindmap(String docId) {
+        MutableLiveData<Result<MindmapData>> mindmapResult = new MutableLiveData<>();
+        mindmapResult.setValue(Result.loading(null)); // Báo đang loading
+
+        // Gọi hàm từ Repository
+        repository.generateMindmap(docId, mindmapResult);
+
+        return mindmapResult;
+    }
+
+    /**
+     * Gọi API Lưu / Bỏ lưu tài liệu
+     * @return LiveData để Fragment quan sát trạng thái
+     */
+    public LiveData<Result<Boolean>> toggleSaveDocument(String docId) {
+        MutableLiveData<Result<Boolean>> saveResult = new MutableLiveData<>();
+        saveResult.setValue(Result.loading(null)); // Báo đang loading
+
+        // Gọi hàm từ Repository
+        repository.toggleSaveDocument(docId, saveResult);
+
+        return saveResult;
     }
 
 }

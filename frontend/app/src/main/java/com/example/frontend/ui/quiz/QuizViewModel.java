@@ -15,13 +15,13 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class QuizViewModel extends AndroidViewModel { // Chuyển sang AndroidViewModel
-    private QuizRepository repository;
-    private MutableLiveData<Result<Quiz>> quizResult = new MutableLiveData<>();
+public class QuizViewModel extends AndroidViewModel {
+
+    private final QuizRepository repository;
+    private final MutableLiveData<Result<Quiz>> quizResult = new MutableLiveData<>();
 
     public QuizViewModel(@NonNull Application application) {
         super(application);
-        // Truyền context từ application vào repository ở đây
         this.repository = new QuizRepository(application);
     }
 
@@ -32,20 +32,22 @@ public class QuizViewModel extends AndroidViewModel { // Chuyển sang AndroidVi
     public void createQuiz(String content, int num) {
         quizResult.setValue(Result.loading());
 
-        repository.generateAIQuiz(content, num, "Quiz mới", new Callback<ApiResponse<Quiz>>() {
+
+        repository.generateAIQuiz(content, num, content, new Callback<ApiResponse<Quiz>>() {
             @Override
-            public void onResponse(Call<ApiResponse<Quiz>> call, Response<ApiResponse<Quiz>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<Quiz>> call, @NonNull Response<ApiResponse<Quiz>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    // Lấy data từ ApiResponse và đẩy vào Result.success
                     quizResult.setValue(Result.success(response.body().getData()));
                 } else {
-                    quizResult.setValue(Result.error("Không thể tạo Quiz, thử lại sau nhé!"));
+
+                    quizResult.setValue(Result.error("Không thể tạo Quiz (Lỗi: " + response.code() + "). Hãy thử lại sau!"));
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Quiz>> call, Throwable t) {
-                quizResult.setValue(Result.error("Lỗi kết nối: " + t.getMessage()));
+            public void onFailure(@NonNull Call<ApiResponse<Quiz>> call, @NonNull Throwable t) {
+
+                quizResult.setValue(Result.error("Lỗi kết nối: " + t.getLocalizedMessage()));
             }
         });
     }

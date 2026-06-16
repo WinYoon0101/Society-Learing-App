@@ -13,7 +13,6 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,12 +33,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         void onReactClick(String targetId, String type);
     }
 
-    // 1. ĐÃ THÊM: Tạo Interface để báo tin ra ngoài Fragment khi bấm XÓA
+    // Tạo Interface để báo tin ra ngoài Fragment khi bấm XÓA
     public interface OnPostDeleteListener {
         void onDeletePost(String postId);
     }
 
-    // ĐÃ THÊM: Tạo Interface để báo tin ra ngoài Fragment khi bấm LƯU
+    // Tạo Interface để báo tin ra ngoài Fragment khi bấm LƯU
     public interface OnPostSaveListener {
         void onSavePost(String postId);
     }
@@ -48,7 +47,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     private Context context;
     private OnReactionListener reactionListener;
     private OnPostDeleteListener deleteListener;
-    private OnPostSaveListener saveListener; // ĐÃ THÊM
+    private OnPostSaveListener saveListener;
 
     public PostAdapter(Context context, List<Post> postList, OnReactionListener listener) {
         this.context = context;
@@ -56,12 +55,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         this.reactionListener = listener;
     }
 
-    // ĐÃ THÊM: Hàm để FeedFragment truyền tai nghe vào (cho Xóa)
+    // Hàm để FeedFragment truyền tai nghe vào (cho Xóa)
     public void setOnPostDeleteListener(OnPostDeleteListener listener) {
         this.deleteListener = listener;
     }
 
-    // ĐÃ THÊM: Hàm để FeedFragment truyền tai nghe vào (cho Lưu)
+    // Hàm để FeedFragment truyền tai nghe vào (cho Lưu)
     public void setOnPostSaveListener(OnPostSaveListener listener) {
         this.saveListener = listener;
     }
@@ -87,7 +86,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         if (post.getAuthorId() != null) {
             holder.tvUserName.setText(post.getAuthorId().getUsername());
             Glide.with(context).load(post.getAuthorId().getAvatar()).placeholder(R.drawable.ic_user).into(holder.imgAvatar);
-            
+
             View.OnClickListener goToProfile = v -> {
                 if (post.getAuthorId().getId() != null) {
                     Intent intent = new Intent(context, com.example.frontend.ui.profile.FriendProfileActivity.class);
@@ -153,7 +152,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         }
 
         // ==========================================
-        // CẬP NHẬT: HIỂN THỊ MẢNG ẢNH BẰNG RECYCLERVIEW
+        // HIỂN THỊ MẢNG ẢNH BẰNG RECYCLERVIEW
         // ==========================================
         if (post.getImages() != null && !post.getImages().isEmpty()) {
             holder.rvPostImages.setVisibility(View.VISIBLE);
@@ -201,6 +200,28 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         });
 
         // ==========================================
+        // SỰ KIỆN NÚT CHIA SẺ (SHARE)
+        // ==========================================
+        if (holder.btnShare != null) {
+            holder.btnShare.setOnClickListener(v -> {
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+
+                String authorName = post.getAuthorId() != null ? post.getAuthorId().getUsername() : "Một người bạn";
+                String shareMessage = authorName + " vừa chia sẻ một bài viết thú vị:\n\n"
+                        + "\"" + post.getContent() + "\"\n\n"
+                        + "👉 Tải ngay ứng dụng để tham gia thảo luận cùng nhóm UIT tụi mình nhé!";
+
+                if (post.getImages() != null && !post.getImages().isEmpty()) {
+                    shareMessage += "\n\nXem ảnh tại: " + post.getImages().get(0);
+                }
+
+                shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
+                context.startActivity(Intent.createChooser(shareIntent, "Chia sẻ bài viết qua"));
+            });
+        }
+
+        // ==========================================
         // CHUYỂN DỮ LIỆU SANG POST DETAIL
         // ==========================================
         if (holder.btnComment != null) {
@@ -208,12 +229,15 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 Intent intent = new Intent(context, PostDetailActivity.class);
                 intent.putExtra("POST_ID", post.getId());
                 intent.putExtra("POST_CONTENT", post.getContent());
+
+                intent.putExtra("POST_TIME", post.getCreatedAt());
+
                 if (post.getAuthorId() != null) {
                     intent.putExtra("AUTHOR_NAME", post.getAuthorId().getUsername());
                     intent.putExtra("AUTHOR_AVATAR", post.getAuthorId().getAvatar());
                 }
 
-                // CẬP NHẬT: Gửi mảng ảnh sang Detail
+                // Gửi mảng ảnh sang Detail
                 if (post.getImages() != null) {
                     intent.putStringArrayListExtra("POST_IMAGES", new ArrayList<>(post.getImages()));
                 }
@@ -362,7 +386,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             if (minutes < 60) return minutes + " phút trước";
             if (hours < 24) return hours + " giờ trước";
             if (days < 7) return days + " ngày trước";
-            
+
             return new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(date);
         } catch (Exception e) {
             return "Vừa xong";
@@ -373,6 +397,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         TextView tvUserName, tvContent, tvCommentCount, tvTime;
         ImageView imgAvatar;
         View btnComment;
+
+        // ĐÃ THÊM NÚT SHARE
+        View btnShare;
 
         ImageView btnMoreOptions;
 
@@ -395,11 +422,17 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
             btnMoreOptions = itemView.findViewById(R.id.btnMoreOptions);
 
+            // ÁNH XẠ NÚT SHARE
+            btnShare = itemView.findViewById(R.id.btnShare);
+
             rvPostImages = itemView.findViewById(R.id.rvPostImages);
             rvPostImages.setLayoutManager(new LinearLayoutManager(itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
             rvPostImages.setOnFlingListener(null);
             PagerSnapHelper snapHelper = new PagerSnapHelper();
             snapHelper.attachToRecyclerView(rvPostImages);
+
+            // ĐÃ THÊM DÒNG KÍCH HOẠT DẤU CHẤM TRÒN
+            rvPostImages.addItemDecoration(new DotsIndicatorDecoration());
 
             btnComment = itemView.findViewById(R.id.btnComment);
             tvCommentCount = itemView.findViewById(R.id.tvCommentCount);

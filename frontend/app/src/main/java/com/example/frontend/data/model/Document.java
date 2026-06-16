@@ -14,6 +14,16 @@ public class Document implements Serializable {
     private Media mediaId;
     private String createdAt;
 
+    private boolean isSaved = false;
+
+    public boolean isSaved() {
+        return isSaved;
+    }
+
+    public void setSaved(boolean saved) {
+        isSaved = saved;
+    }
+
     public String get_id() {
         return _id;
     }
@@ -93,6 +103,7 @@ public class Document implements Serializable {
     public String getUploaderName() {
         return (uploaderId != null) ? uploaderId.getUsername() : "Ẩn danh";
     }
+
 
     public String getFileUrl() {
         if (mediaId == null || mediaId.getUrl() == null) return "";

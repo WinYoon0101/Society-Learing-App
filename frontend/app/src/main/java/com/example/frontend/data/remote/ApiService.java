@@ -16,6 +16,7 @@ import com.example.frontend.data.model.GroupMember;
 import com.example.frontend.data.model.GroupPost;
 import com.example.frontend.data.model.LiveModel;
 import com.example.frontend.data.model.LoginResponse;
+import com.example.frontend.data.model.MindmapData;
 import com.example.frontend.data.model.Story;
 import com.example.frontend.data.model.StoryGroup;
 import com.example.frontend.data.model.NotificationListResponse;
@@ -154,9 +155,7 @@ public interface ApiService {
     @GET("media/me")
     Call<ApiResponse<List<Media>>> getMyMedia(@Query("fileType") String fileType);
 
-
     @Multipart
-
     @POST("media/upload/document")
     Call<ApiResponse<Media>> uploadSingleFile(
             @Part MultipartBody.Part file,
@@ -185,6 +184,10 @@ public interface ApiService {
     @GET("documents/{id}")
     Call<ApiResponse<Document>> getDocumentById(@Path("id") String id);
 
+    // API MINDMAP TẠI ĐÂY:
+    @POST("documents/{id}/mindmap")
+    Call<ApiResponse<MindmapData>> generateMindmap(@Path("id") String documentId);
+
     // ====== CHAT ======
     @GET("chat/conversations")
     Call<ApiResponse<List<Conversation>>> getConversations();
@@ -199,7 +202,6 @@ public interface ApiService {
     Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);
 
     // ====== POSTS ======
-
     @GET("posts/user/{userId}")
     Call<ApiResponse<List<Post>>> getPostsByUser(@Path("userId") String userId);
 
@@ -369,4 +371,7 @@ public interface ApiService {
 
     @PUT("live/end/{liveId}")
     Call<ApiResponse<Void>> endLive(@Path("liveId") String liveId);
+
+    @GET("posts/{id}")
+    Call<ApiResponse<Post>> getPostById(@Path("id") String id);
 }

@@ -13,6 +13,7 @@ import {
   getDocumentsByUser,
   toggleSaveDocument,
   getSavedDocuments,
+  generateDocumentMindmap,
 } from "../controllers/document.controller";
 
 const router = Router();
@@ -193,5 +194,7 @@ router.get(
   handleValidationErrors,
   getSavedDocuments
 );
+
+router.post("/:id/mindmap", mongoIdParamValidator, handleValidationErrors, generateDocumentMindmap);
 
 export default router;

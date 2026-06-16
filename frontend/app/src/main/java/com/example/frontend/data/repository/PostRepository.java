@@ -67,4 +67,8 @@ public class PostRepository {
     public void getSavedPosts(String token, Callback<ApiResponse<List<Post>>> callback) {
         apiService.getSavedPosts(token).enqueue(callback);
     }
+
+    public retrofit2.Call<ApiResponse<Post>> getPostById(String postId) {
+        return apiService.getPostById(postId);
+    }
 }
