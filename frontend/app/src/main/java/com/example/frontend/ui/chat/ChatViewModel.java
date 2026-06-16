@@ -50,6 +50,15 @@ public class ChatViewModel extends AndroidViewModel {
         repository.getOrCreateConversation(targetUserId, openConversationResult);
     }
 
+    /**
+     * Xoá kết quả open-conversation sau khi đã điều hướng xong.
+     * Tránh observer phát lại SUCCESS cũ khi ChatFragment quay lại từ back stack
+     * (gây lỗi tự nhảy lại vào ChatDetail, không out ra được).
+     */
+    public void clearOpenConversationResult() {
+        openConversationResult.setValue(null);
+    }
+
     public void fetchMessages(String conversationId) {
         repository.getMessages(conversationId, messagesResult);
     }

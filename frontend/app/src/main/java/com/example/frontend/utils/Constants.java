@@ -20,5 +20,3 @@ public class Constants {
 //--- Điện thoại thật (đổi IP thành IP máy tính trong LAN) ---
 //BASE_URL = "http://192.168.54.22:3000/api/"
 //SOCKET_URL = "http://192.168.54.22:3000"
-
-
