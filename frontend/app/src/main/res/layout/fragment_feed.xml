@@ -39,7 +39,6 @@
                     android:src="@drawable/ic_user" />
             </androidx.cardview.widget.CardView>
 
-            <!-- ĐÃ THÊM ID CHO TEXTVIEW NÀY -->
             <TextView
                 android:id="@+id/tvCreatePostHint"
                 android:layout_width="0dp"
@@ -49,7 +48,7 @@
                 android:background="@drawable/bg_message_input"
                 android:gravity="center_vertical"
                 android:paddingHorizontal="16dp"
-                android:text="Huy ơi, bạn muốn chia sẻ kiến thức gì?"
+                android:text="Bạn muốn chia sẻ kiến thức gì?"
                 android:textColor="#65676B"
                 android:textSize="15sp" />
 
@@ -68,36 +67,46 @@
         android:layout_height="8dp"
         android:background="#E9EBEE" />
 
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardBackgroundColor="@android:color/white"
-        app:cardElevation="1dp"
-        app:cardCornerRadius="0dp">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvStories"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="12dp"
-            android:clipToPadding="false"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-    </androidx.cardview.widget.CardView>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="8dp"
-        android:background="#E9EBEE" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvPosts"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingBottom="20dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@android:color/white"
+                app:cardElevation="1dp"
+                app:cardCornerRadius="0dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvStories"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="12dp"
+                    android:clipToPadding="false" />
+            </androidx.cardview.widget.CardView>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:background="#E9EBEE" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvPosts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:paddingBottom="20dp"
+                android:nestedScrollingEnabled="false" /> </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>
