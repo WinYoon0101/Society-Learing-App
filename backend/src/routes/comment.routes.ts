@@ -5,7 +5,8 @@ import { handleValidationErrors } from "../middlewares/validate.middleware";
 import {
   createComment,
   getCommentsByPost,
-  deleteComment
+  deleteComment,
+  getReplies
 } from "../controllers/comment.controller";
 
 const router = Router();
@@ -55,6 +56,18 @@ const getCommentsValidators = [
     .withMessage("limit phải từ 1-50"),
 ];
 
+const getRepliesValidators = [
+  param("commentId").isMongoId().withMessage("Comment ID không hợp lệ"),
+  query("page")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("page phải là số nguyên dương"),
+  query("limit")
+    .optional()
+    .isInt({ min: 1, max: 50 })
+    .withMessage("limit phải từ 1-50"),
+];
+
 const deleteCommentValidators = [
   param("id").isMongoId().withMessage("Comment ID không hợp lệ"),
 ];
@@ -68,6 +81,13 @@ router.get(
   getCommentsValidators,
   handleValidationErrors,
   getCommentsByPost
+);
+//ROUTE LẤY DANH SÁCH PHẢN HỒI (REPLIES)
+router.get(
+  "/replies/:commentId",
+  getRepliesValidators,
+  handleValidationErrors,
+  getReplies
 );
 
 // Bật hàng rào bảo vệ: Các chức năng dưới đây bắt buộc phải đăng nhập
