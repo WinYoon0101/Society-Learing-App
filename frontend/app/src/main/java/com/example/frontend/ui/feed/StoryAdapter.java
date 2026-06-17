@@ -63,7 +63,7 @@ public class StoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             String myAvatar = prefs.getString("USER_AVATAR", "");
 
             CreateVH createVH = (CreateVH) holder;
-            
+
             if (!myAvatar.isEmpty()) {
                 Glide.with(context).load(myAvatar)
                         .placeholder(R.drawable.ic_launcher_background)

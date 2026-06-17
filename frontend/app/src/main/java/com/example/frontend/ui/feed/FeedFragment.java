@@ -90,6 +90,8 @@ public class FeedFragment extends Fragment {
         RecyclerView rcv = view.findViewById(R.id.rvPosts);
         rcv.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        rcv.setNestedScrollingEnabled(false);
+
         // Khởi tạo Adapter kèm Interface Lắng nghe Reaction
         adapter = new PostAdapter(getContext(), new ArrayList<>(), (targetId, type) -> {
             // Fix lỗi truyền Null cho Backend khi người dùng ấn Hủy Like
