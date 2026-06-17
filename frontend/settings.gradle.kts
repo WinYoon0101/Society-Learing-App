@@ -24,6 +24,7 @@ dependencyResolutionManagement {
         }
         maven { url = uri("https://maven.zego.im") }
         maven { url = uri("https://www.jitpack.io") }
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
