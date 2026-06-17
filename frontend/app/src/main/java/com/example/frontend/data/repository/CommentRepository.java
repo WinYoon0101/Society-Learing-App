@@ -29,4 +29,8 @@ public class CommentRepository {
     public Call<ApiResponse<Object>> deleteComment(String token, String commentId) {
         return apiService.deleteComment(token, commentId);
     }
+
+    public Call<ApiResponse<List<Comment>>> getReplies(String commentId) {
+        return apiService.getReplies(commentId);
+    }
 }

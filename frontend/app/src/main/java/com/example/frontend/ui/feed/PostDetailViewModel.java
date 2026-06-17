@@ -51,7 +51,7 @@ public class PostDetailViewModel extends AndroidViewModel {
     public LiveData<Post> getPostLiveData() { return postLiveData; }
 
     // ==========================================
-    // LOGIC 1: LẤY VÀ ÉP DẸP DANH SÁCH BÌNH LUẬN
+    // LOGIC 1: LẤY BÌNH LUẬN GỐC & TỰ ĐỘNG TẢI PHẢN HỒI
     // ==========================================
     public void fetchComments(String postId) {
         isLoading.setValue(true);
@@ -62,11 +62,15 @@ public class PostDetailViewModel extends AndroidViewModel {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Comment> rootComments = response.body().getData();
 
-                    List<Comment> flatList = new ArrayList<>();
-                    flattenComments(rootComments, flatList);
-
+                    // 1. Khởi tạo danh sách bằng các comment gốc
+                    List<Comment> flatList = new ArrayList<>(rootComments);
                     commentsLiveData.setValue(flatList);
                     commentCountLiveData.setValue(flatList.size());
+
+                    // 2. Tự động tải ngầm các phản hồi cho từng comment gốc
+                    for (Comment root : rootComments) {
+                        fetchRepliesForComment(root.getId());
+                    }
                 } else {
                     messageLiveData.setValue("Không thể tải bình luận");
                 }
@@ -80,14 +84,39 @@ public class PostDetailViewModel extends AndroidViewModel {
         });
     }
 
-    private void flattenComments(List<Comment> treeList, List<Comment> flatList) {
-        if (treeList == null) return;
-        for (Comment comment : treeList) {
-            flatList.add(comment);
-            if (comment.getReplies() != null && !comment.getReplies().isEmpty()) {
-                flattenComments(comment.getReplies(), flatList);
+    // Hàm gọi API lấy phản hồi và chèn vào đúng vị trí dưới comment cha
+    private void fetchRepliesForComment(String parentId) {
+        repository.getReplies(parentId).enqueue(new Callback<ApiResponse<List<Comment>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Comment>>> call, Response<ApiResponse<List<Comment>>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Comment> replies = response.body().getData();
+                    if (replies != null && !replies.isEmpty()) {
+
+                        List<Comment> current = commentsLiveData.getValue();
+                        if (current == null) return;
+
+                        // Tìm vị trí của comment cha trong danh sách
+                        int insertIndex = -1;
+                        for (int i = 0; i < current.size(); i++) {
+                            if (current.get(i).getId().equals(parentId)) {
+                                insertIndex = i + 1; // Chèn ngay phía sau cha
+                                break;
+                            }
+                        }
+
+                        // Nếu tìm thấy cha, chèn toàn bộ reply vào danh sách hiển thị
+                        if (insertIndex != -1) {
+                            current.addAll(insertIndex, replies);
+                            commentsLiveData.setValue(current);
+                            commentCountLiveData.setValue(current.size());
+                        }
+                    }
+                }
             }
-        }
+            @Override
+            public void onFailure(Call<ApiResponse<List<Comment>>> call, Throwable t) {}
+        });
     }
 
     // ==========================================
@@ -101,34 +130,51 @@ public class PostDetailViewModel extends AndroidViewModel {
             public void onResponse(Call<ApiResponse<Comment>> call, Response<ApiResponse<Comment>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     actionSuccessLiveData.setValue(true);
-
                     Comment created = response.body().getData();
 
+                    // Bổ sung thông tin User hiện tại nếu API chưa kịp Populate
                     if (created != null && (created.getUserId() == null || created.getUserId().getAvatar() == null)) {
                         Context ctx = getApplication().getApplicationContext();
                         String myId = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("USER_ID", null);
                         String myName = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("USERNAME", null);
                         String myAvatar = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("USER_AVATAR", null);
+
                         if (created.getUserId() == null) {
                             created.setUserId(new User(myId, myName, myAvatar));
-                        } else if (created.getUserId().getAvatar() == null) {
+                        } else {
                             User u = created.getUserId();
-                            User replaced = new User(u.getId(), u.getUsername() != null ? u.getUsername() : myName, myAvatar);
-                            created.setUserId(replaced);
+                            created.setUserId(new User(u.getId(), u.getUsername() != null ? u.getUsername() : myName, myAvatar));
                         }
                     }
 
                     List<Comment> current = commentsLiveData.getValue();
                     if (current == null) current = new ArrayList<>();
-                    if (created != null) current.add(created);
+
+                    if (created != null) {
+                        if (parentId == null) {
+                            // Nếu là bình luận gốc -> Chèn lên đầu danh sách
+                            current.add(0, created);
+                        } else {
+                            // Nếu là Reply -> Tìm cha và chèn ngay dưới cùng của cụm reply đó
+                            int insertPos = current.size();
+                            for (int i = 0; i < current.size(); i++) {
+                                if (current.get(i).getId().equals(parentId)) {
+                                    insertPos = i + 1;
+                                    // Nhảy qua các reply cũ để chèn xuống dòng cuối cùng của nhóm
+                                    while (insertPos < current.size() && current.get(insertPos).getParentId() != null && current.get(insertPos).getParentId().equals(parentId)) {
+                                        insertPos++;
+                                    }
+                                    break;
+                                }
+                            }
+                            current.add(insertPos, created);
+                        }
+                    }
+
                     commentsLiveData.setValue(current);
                     commentCountLiveData.setValue(current.size());
 
                 } else {
-                    try {
-                        String errorBody = response.errorBody().string();
-                        android.util.Log.e("API_LỖI", "Mã lỗi: " + response.code() + " - Chi tiết: " + errorBody);
-                    } catch (Exception e) {}
                     messageLiveData.setValue("Lỗi đăng bình luận");
                 }
             }
@@ -138,7 +184,6 @@ public class PostDetailViewModel extends AndroidViewModel {
             }
         });
     }
-
     // ==========================================
     // LOGIC 3: XÓA BÌNH LUẬN
     // ==========================================

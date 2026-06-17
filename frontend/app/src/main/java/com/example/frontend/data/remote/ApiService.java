@@ -238,16 +238,19 @@ public interface ApiService {
     Call<ApiResponse<List<Post>>> getSavedPosts(@Header("Authorization") String token);
 
     // ====== COMMENTS ======
-    @GET("/api/comments/post/{postId}")
+    @GET("comments/post/{postId}")
     Call<ApiResponse<List<Comment>>> getComments(@Path("postId") String postId);
 
-    @POST("/api/comments")
+    @GET("comments/replies/{commentId}")
+    Call<ApiResponse<List<Comment>>> getReplies(@Path("commentId") String commentId);
+
+    @POST("comments")
     Call<ApiResponse<Comment>> createComment(
             @Header("Authorization") String token,
             @Body CommentRequest body
     );
 
-    @DELETE("/api/comments/{commentId}")
+    @DELETE("comments/{commentId}")
     Call<ApiResponse<Object>> deleteComment(
             @Header("Authorization") String token,
             @Path("commentId") String commentId
