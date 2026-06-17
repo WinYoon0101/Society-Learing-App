@@ -43,7 +43,7 @@
                 android:layout_centerVertical="true"
                 android:text="ĐĂNG"
                 app:cornerRadius="8dp"
-                app:backgroundTint="#0B8A00" />
+                app:backgroundTint="#10B981" />
         </RelativeLayout>
 
         <View
