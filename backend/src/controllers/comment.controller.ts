@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
 import Comment from '../models/comment.model'; 
+import Post from '../models/post.model';
+import User from '../models/user.model';
+import Notification from '../models/notification.model';
 
 interface AuthRequest extends Request {
     user?: {
@@ -7,6 +10,9 @@ interface AuthRequest extends Request {
     };
 }
 
+/**
+ * 1. Viết comment mới
+ */
 /**
  * 1. Viết comment mới
  */
@@ -19,7 +25,6 @@ export const createComment = async (req: AuthRequest, res: Response): Promise<Re
             return res.status(401).json({ message: 'Không tìm thấy thông tin người dùng' });
         }
 
-        // ĐÃ SỬA: Dùng đúng tên cột trong model.ts (postId, userId, parentId)
         const newComment = new Comment({
             postId: postId, 
             userId: userId, 
@@ -29,8 +34,35 @@ export const createComment = async (req: AuthRequest, res: Response): Promise<Re
 
         await newComment.save();
 
-        // ĐÃ SỬA: Populate đúng trường userId
+
         await newComment.populate('userId', 'username avatar');
+
+        // === TẠO THÔNG BÁO BÌNH LUẬN ===
+        try {
+            const post = await Post.findById(postId);
+            
+            // Lấy ID tác giả bài viết
+            const authorOfPost = post?.authorId || (post as any)?.author;
+            
+            // Kẻ vạch an toàn: Không tự thông báo khi mình tự comment bài của mình
+            if (post && authorOfPost && authorOfPost.toString() !== userId.toString()) {
+                
+                // Lấy thông tin người gửi để gắn tên vào thông báo
+                const senderInfo = await User.findById(userId).select('username');
+                const senderName = senderInfo?.username || 'Ai đó';
+
+                await Notification.create({
+                    recipient: authorOfPost, 
+                    sender: userId,
+                    type: 'post_comment', 
+                    targetId: postId, 
+                    content: `${senderName} đã bình luận về bài viết của bạn`
+                });
+            }
+        } catch (notifError: any) {
+            console.error("Lỗi Mongoose khi lưu thông báo comment:", notifError.message);
+        }
+        // =============================
 
         return res.status(201).json({
             success: true,
