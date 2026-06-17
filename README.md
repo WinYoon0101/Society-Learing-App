@@ -12,11 +12,14 @@ Dự án bao gồm hai phần chính: **Backend (Node.js/Express)** và **Fronte
 - **Tạo Quiz tự động bằng AI:** Tích hợp `Google Generative AI` tự động phân tích chủ đề học tập và sinh ra bộ câu hỏi trắc nghiệm (Quiz/Attempt) một cách thông minh và nhanh chóng.
 - **Quản lý Tài liệu:** Lưu trữ, chia sẻ và quản lý tài liệu học tập dễ dàng giữa các người dùng và hội nhóm.
 - **Pomodoro & AI Emotion Detector:** Tích hợp phương pháp Pomodoro để quản lý thời gian tập trung. Đặc biệt kết hợp AI (TensorFlow Lite & Google ML Kit) qua CameraX để nhận diện khuôn mặt và phân tích cảm xúc của người dùng trong suốt phiên học.
+- **Smart Scanner (OCR & Code Detection):** Tích hợp AI (Google ML Kit) để quét và bóc tách văn bản, đoạn code từ hình ảnh hoặc camera. Thuật toán tự động nhận diện ngôn ngữ lập trình, giữ nguyên định dạng thụt lề (indentation) và tô màu cú pháp (Syntax Highlighting) qua CodeView, cho phép người dùng chia sẻ nhanh chóng lên bảng tin.
+- **Quản lý Lịch biểu (Calendar):** Tích hợp lịch thông minh giúp người dùng lên kế hoạch cá nhân, theo dõi các sự kiện của nhóm hoặc đặt lịch nhắc nhở cho các bài kiểm tra (Quiz).
 
 ### 🌐 Mạng xã hội & Tương tác
 - **Cộng đồng kết bạn:** Hỗ trợ đăng bài (Post), bình luận (Comment), thả cảm xúc (Reaction) và chia sẻ bản tin (Story). Kết bạn, tạo và quản lý nhóm (Group) học tập.
 - **Trò chuyện Real-time (Chat):** Tích hợp Socket.io cho phép nhắn tin cá nhân, nhắn tin nhóm và nhận thông báo theo thời gian thực với độ trễ cực thấp.
 - **Gọi video & Livestream:** Cung cấp tính năng phát sóng trực tiếp (Livestreaming) và gọi điện trực tiếp (Calling) mượt mà thông qua nền tảng ZegoCloud.
+- **Hệ thống Thông báo (Push Notifications):** Cập nhật ngay lập tức các tương tác mới (thích, bình luận, nhắc tên), lời mời kết bạn,...
 
 ### 🛡 Hệ thống & Bảo mật
 - **Xác thực đa luồng:** Hỗ trợ đăng nhập qua Facebook, Google Auth. Bảo mật tài khoản với hệ thống mã hóa mật khẩu và JWT (JSON Web Tokens).
@@ -41,7 +44,8 @@ Dự án bao gồm hai phần chính: **Backend (Node.js/Express)** và **Fronte
 - **Ngôn ngữ & Kiến trúc:** Kotlin / Java (Min SDK 26, Target SDK 36), kiến trúc MVVM (ViewModel, LiveData)
 - **Networking:** Retrofit, OkHttp (với Logging Interceptor)
 - **Real-time:** Socket.io-client
-- **AI & Computer Vision:** TensorFlow Lite, Google ML Kit (Face Detection), CameraX
+- **AI & Computer Vision:** TensorFlow Lite, Google ML Kit (Face Detection), CameraX, Text Recognition (OCR offline)
+- **Image Processing & UI Tools:** UCrop, CodeView, PhotoView
 - **Streaming & Calling:** ZegoCloud (UIKit Prebuilt Live Streaming & Signaling)
 - **UI & Animation:** Material Design, Lottie, Glide, CircleImageView
 - **Native C++:** External Native Build bằng CMake

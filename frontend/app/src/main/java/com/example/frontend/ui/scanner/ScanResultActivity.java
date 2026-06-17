@@ -60,7 +60,7 @@ public class ScanResultActivity extends AppCompatActivity {
             // 1. Lấy text mới nhất đang hiển thị
             String finalTxt = isCode ? codeView.getText().toString() : etPlainText.getText().toString();
 
-
+            // 2. Tạo Intent gọi đến màn hình CreatePostActivity
             Intent intent = new Intent(ScanResultActivity.this, com.example.frontend.ui.feed.CreatePostActivity.class);
 
             // 3. Đóng gói đoạn chữ vừa quét được để gửi đi theo
@@ -79,19 +79,53 @@ public class ScanResultActivity extends AppCompatActivity {
     private void setupCodeEditor() {
         codeView.setVisibility(View.VISIBLE);
         etPlainText.setVisibility(View.GONE);
-        codeView.setText(ocrText);
 
-        int colorKeyword = 0xFFFF79C6;
-        int colorBuiltin = 0xFF8BE9FD;
-        int colorString = 0xFFF1FA8C;
-        int colorComment = 0xFF6272A4;
+        // --- BẢNG MÀU  ---
+        int colorKeyword    = 0xFFFF79C6; // Hồng: public, return, if...
+        int colorType       = 0xFF8BE9FD; // Xanh lơ: int, String, boolean...
+        int colorMethod     = 0xFF50FA7B; // Xanh lá: tên hàm (ví dụ: onCreate)
+        int colorAnnotation = 0xFFFFB86C; // Cam: @Override, @Nullable...
+        int colorNumber     = 0xFFBD93F9; // Tím: Số 0-9
+        int colorString     = 0xFFF1FA8C; // Vàng: Chuỗi "Hello"
+        int colorComment    = 0xFF6272A4; // Xám: // Chú thích
 
-        String[] keywords = {"def", "import", "class", "return", "if", "else", "for", "while", "public", "private", "void", "static"};
+        // 1. Từ khóa điều khiển (Control & Modifiers)
+        String[] keywords = {
+                "def", "import", "class", "return", "if", "else", "for", "while",
+                "public", "private", "protected", "void", "static", "final", "new",
+                "let", "const", "var", "function", "extends", "implements", "this", "super"
+        };
 
-        codeView.addSyntaxPattern(Pattern.compile("\\b(" + String.join("|", keywords) + ")\\b"), colorKeyword);
-        codeView.addSyntaxPattern(Pattern.compile("\"[^\"]*\""), colorString);
-        codeView.addSyntaxPattern(Pattern.compile("'[^']*'"), colorString);
+        // 2. Kiểu dữ liệu cơ bản (Data Types)
+        String[] types = {
+                "int", "float", "double", "boolean", "char", "String", "Object", "List", "Map", "HashMap"
+        };
+
+        // --- ADD CÁC PATTERN TÔ MÀU ---
+
+        // 1. Chú thích (Comment) - Ưu tiên cao nhất để không bị đè màu
         codeView.addSyntaxPattern(Pattern.compile("//.*"), colorComment);
         codeView.addSyntaxPattern(Pattern.compile("#.*"), colorComment);
+        codeView.addSyntaxPattern(Pattern.compile("/\\*.*?\\*/", Pattern.DOTALL), colorComment);
+
+        // 2. Chuỗi (String)
+        codeView.addSyntaxPattern(Pattern.compile("\"[^\"]*\""), colorString);
+        codeView.addSyntaxPattern(Pattern.compile("'[^']*'"), colorString);
+
+        // 3. Annotation (@Override, @NonNull...)
+        codeView.addSyntaxPattern(Pattern.compile("@\\w+"), colorAnnotation);
+
+        // 4. Tên hàm (Nhận diện các từ đứng ngay trước dấu ngoặc đơn mở "(" )
+        codeView.addSyntaxPattern(Pattern.compile("\\b\\w+(?=\\()"), colorMethod);
+
+        // 5. Từ khóa & Kiểu dữ liệu
+        codeView.addSyntaxPattern(Pattern.compile("\\b(" + String.join("|", keywords) + ")\\b"), colorKeyword);
+        codeView.addSyntaxPattern(Pattern.compile("\\b(" + String.join("|", types) + ")\\b"), colorType);
+
+        // 6. Chữ số (Numbers)
+        codeView.addSyntaxPattern(Pattern.compile("\\b\\d+\\b"), colorNumber);
+
+
+        codeView.setText(ocrText);
     }
 }
