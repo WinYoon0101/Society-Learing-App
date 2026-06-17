@@ -42,6 +42,7 @@ public class PomodoroSummaryActivity extends AppCompatActivity {
         cardAdvice = findViewById(R.id.cardAdvice);
     }
 
+    @SuppressWarnings("unchecked")
     private void displayStats() {
         // Nhận dữ liệu từ Intent gửi qua
         HashMap<String, Integer> stats = (HashMap<String, Integer>) getIntent().getSerializableExtra("STATS");

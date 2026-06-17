@@ -43,6 +43,7 @@ import com.example.frontend.ui.pomodoro.PomodoroActivity;
 import com.example.frontend.ui.profile.ProfileFragment;
 import com.example.frontend.ui.quiz.QuizListActivity;
 import com.example.frontend.ui.feed.SavedActivity;
+import com.example.frontend.ui.scanner.ScanActivity;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
@@ -155,6 +156,7 @@ public class HomeActivity extends AppCompatActivity {
                 else if (id == R.id.nav_live) intent = new Intent(this, LiveStartActivity.class);
                 else if (id == R.id.nav_quiz) intent = new Intent(this, QuizListActivity.class);
                 else if (id == R.id.nav_pomodoro) intent = new Intent(this, PomodoroActivity.class);
+                else if (id == R.id.nav_scan) intent = new Intent(this, ScanActivity.class);
 
                 if (intent != null) {
                     startActivity(intent);

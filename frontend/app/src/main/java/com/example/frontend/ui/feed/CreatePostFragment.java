@@ -84,6 +84,13 @@ public class CreatePostFragment extends Fragment {
         tvUserName = view.findViewById(R.id.tvUserName);
         imgAvatar = view.findViewById(R.id.imgAvatar);
 
+        if (getArguments() != null) {
+            String scannedContent = getArguments().getString("SCANNED_CONTENT");
+            if (scannedContent != null && !scannedContent.isEmpty()) {
+                edtContent.setText(scannedContent);
+            }
+        }
+
         // ĐÃ THÊM: Ánh xạ view Quyền riêng tư
         btnPrivacy = view.findViewById(R.id.btnPrivacy);
         tvPrivacyText = view.findViewById(R.id.tvPrivacyText);
@@ -147,7 +154,16 @@ public class CreatePostFragment extends Fragment {
         viewModel = new ViewModelProvider(this).get(CreatePostViewModel.class);
         observeViewModel();
 
-        btnBack.setOnClickListener(v -> getParentFragmentManager().popBackStack());
+        btnBack.setOnClickListener(v -> {
+            // Nếu có fragment trước đó trong danh sách thì lùi lại
+            if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+                getParentFragmentManager().popBackStack();
+            }
+            // Nếu không có thì đóng Activity
+            else if (getActivity() != null) {
+                getActivity().finish();
+            }
+        });
 
         btnPickImage.setOnClickListener(v -> {
             imagePickerLauncher.launch("image/*");

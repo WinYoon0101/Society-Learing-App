@@ -111,4 +111,11 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
+    //OCR
+    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.0")
+    //Thư viện CodeView để hiển thị và tô màu code (Syntax Highlighting)
+    implementation("io.github.amrdeveloper:codeview:1.3.9")
+
+    // Thư viện UCrop để cắt ảnh ( loại bỏ viền rác)
+    implementation("com.github.yalantis:ucrop:2.2.8")
 }
