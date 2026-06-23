@@ -35,7 +35,6 @@ public class PostDetailActivity extends AppCompatActivity {
     private EditText edtComment;
     private ImageView btnSendComment, imgAvatar, btnBack;
 
-    // ĐÃ THÊM tvTime VÀO ĐÂY
     private TextView tvAuthorName, tvContent, tvCommentCount, tvTime;
 
     private RecyclerView rvComments;
@@ -46,7 +45,6 @@ public class PostDetailActivity extends AppCompatActivity {
     private TextView tvReactionCount, tvLikeLabel;
     private TextView imgReact1, imgReact2, imgLikeIcon;
 
-    // ĐÃ THÊM: View cho nút Share
     private View btnShare;
 
     // Dữ liệu quản lý trạng thái
@@ -80,10 +78,7 @@ public class PostDetailActivity extends AppCompatActivity {
         imgAvatar = findViewById(R.id.imgAvatar);
         tvCommentCount = findViewById(R.id.tvCommentCount);
 
-        // Ánh xạ View thời gian
         tvTime = findViewById(R.id.tvTime);
-
-        // Ánh xạ View Share
         btnShare = findViewById(R.id.btnShare);
 
         rvPostImagesFeed = findViewById(R.id.rvPostImages);
@@ -92,8 +87,6 @@ public class PostDetailActivity extends AppCompatActivity {
             rvPostImagesFeed.setOnFlingListener(null);
             PagerSnapHelper snapHelper = new PagerSnapHelper();
             snapHelper.attachToRecyclerView(rvPostImagesFeed);
-
-            // ĐÃ BỔ SUNG: Kích hoạt dấu chấm tròn cho danh sách ảnh
             rvPostImagesFeed.addItemDecoration(new DotsIndicatorDecoration());
         }
 
@@ -121,7 +114,6 @@ public class PostDetailActivity extends AppCompatActivity {
             });
         }
 
-        // ĐÃ BỔ SUNG: Sự kiện chia sẻ bài viết (Share)
         if (btnShare != null) {
             btnShare.setOnClickListener(v -> {
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -153,12 +145,10 @@ public class PostDetailActivity extends AppCompatActivity {
         String content = getIntent().getStringExtra("POST_CONTENT");
 
         if (content == null || content.isEmpty()) {
-            // Mở từ THÔNG BÁO -> Chỉ có POST_ID, phải gọi API lấy chi tiết
             if (currentPostId != null) {
                 viewModel.fetchPostById(currentPostId);
             }
         } else {
-            // Mở từ BẢNG TIN -> Đã có sẵn dữ liệu
             String authorName = getIntent().getStringExtra("AUTHOR_NAME");
             String authorAvatar = getIntent().getStringExtra("AUTHOR_AVATAR");
             String postTime = getIntent().getStringExtra("POST_TIME");
@@ -244,6 +234,11 @@ public class PostDetailActivity extends AppCompatActivity {
             if (currentPostId != null) {
                 viewModel.fetchComments(currentPostId);
             }
+        });
+
+        // 👉 SỰ KIỆN DUY NHẤT ĐƯỢC CHỈNH SỬA: Gọi thẳng ViewModel (do ViewModel đã tự lấy token)
+        commentAdapter.setOnReactionClickListener((commentId, reactionType) -> {
+            viewModel.toggleCommentReaction(commentId, reactionType);
         });
     }
 
