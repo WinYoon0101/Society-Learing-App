@@ -7,7 +7,8 @@ export interface IPost extends Document {
     sharedPostId?: mongoose.Types.ObjectId;
     content: string;
     privacy: string;
-    tags: mongoose.Types.ObjectId[]; // 
+    tags: mongoose.Types.ObjectId[];  
+    hashtags: string[];
     countReaction: number;
     countComment: number;
     countShare: number;
@@ -47,6 +48,10 @@ const PostSchema: Schema = new Schema<IPost>(
             type: Number,
             default: 0
         },
+        hashtags: {
+            type: [String],
+            default: []
+        },
         countComment: {
             type: Number,
             default: 0
@@ -60,6 +65,8 @@ const PostSchema: Schema = new Schema<IPost>(
         timestamps: true, // Tự tạo ra createdAt và updatedAt
     }
 )
+
+PostSchema.index({ hashtags: 1, createdAt: -1 });
 
 PostSchema.virtual('mediaFiles', {
     ref: 'Media',            // Chạy sang bảng Media để tìm

@@ -29,12 +29,22 @@ export const createPost = async (req: AuthRequest, res: Response) => {
             }
         }
 
+        // ====================================================
+        // Tự động bóc tách Hashtag từ nội dung bài viết
+        // ====================================================
+        // Regex hỗ trợ tiếng Việt có dấu 
+        const hashtagRegex = /#[\p{L}\p{N}_]+/gu; 
+        const extractedHashtags = content ? content.match(hashtagRegex) || [] : [];
+        const uniqueHashtags = [...new Set(extractedHashtags)];
+        // ====================================================
+
         const newPost = new Post({
             authorId: authorId,
             groupId: groupId || null,
             content: content,
             privacy: privacy || "Public",
-            tags: tags ? (Array.isArray(tags) ? tags : JSON.parse(tags)) : []
+            tags: tags ? (Array.isArray(tags) ? tags : JSON.parse(tags)) : [],
+            hashtags: uniqueHashtags
         });
 
         const savePost = await newPost.save();
@@ -399,3 +409,5 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<any>
         return res.status(500).json({ success: false, message: "Lỗi server" });
     }
 };
+
+

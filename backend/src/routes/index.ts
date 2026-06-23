@@ -16,6 +16,7 @@ import commentRoutes from "./comment.routes";
 import reactionRoutes from "./reaction.routes";
 import groupRoutes from "./group.routes";
 import notificationRoutes from "./notification.routes";
+import searchRoutes from './search.route';
 
 
 import storyRoutes from "./story.routes";
@@ -60,5 +61,7 @@ router.use("/notifications", notificationRoutes);
 
 // Story routes
 router.use("/stories", storyRoutes);
+
+router.use('/search', searchRoutes);
 
 export default router;
