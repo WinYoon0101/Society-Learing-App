@@ -1,6 +1,8 @@
 package com.example.frontend.ui.notify;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,11 +18,17 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
+import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Notification;
 import com.example.frontend.data.model.NotificationListResponse;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.google.android.material.button.MaterialButton;
+
+// IMPORT CÁC ACTIVITY ĐÍCH TẠI ĐÂY
+import com.example.frontend.ui.feed.PostDetailActivity;
+import com.example.frontend.ui.profile.FriendProfileActivity;
+import com.example.frontend.ui.group.GroupDetailActivity;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -122,7 +130,10 @@ public class NotifyFragment extends Fragment {
         }
 
         void markAllRead() {
-            for (int i = 0; i < items.size(); i++) notifyItemChanged(i);
+            for (int i = 0; i < items.size(); i++) {
+                items.get(i).setRead(true);
+                notifyItemChanged(i);
+            }
         }
 
         @NonNull @Override
@@ -135,7 +146,7 @@ public class NotifyFragment extends Fragment {
         @Override
         public void onBindViewHolder(@NonNull VH h, int pos) {
             Notification n = items.get(pos);
-            h.tvMessage.setText(n.getContent());
+            h.tvMessage.setText(n.getContent() != null ? n.getContent() : "Thông báo mới");
             h.tvTime.setText(formatTime(n.getCreatedAt()));
             h.dotUnread.setVisibility(n.isRead() ? View.GONE : View.VISIBLE);
             h.itemView.setBackgroundColor(n.isRead() ? 0xFFFFFFFF : 0xFFECFDF5);
@@ -148,21 +159,59 @@ public class NotifyFragment extends Fragment {
                 h.imgAvatar.setImageResource(R.drawable.ic_user);
             }
 
+            // XỬ LÝ SỰ KIỆN CLICK CHUYỂN TRANG
             h.itemView.setOnClickListener(v -> {
+                Log.d("NOTI_DEBUG", "Type: " + n.getTargetType() + " | Id: " + n.getTargetId());
+                // 1. Gửi API đổi trạng thái đọc
                 if (!n.isRead()) {
-                    apiService.markNotificationRead(n.getId()).enqueue(new Callback<com.example.frontend.data.model.ApiResponse<Object>>() {
-                        @Override public void onResponse(Call<com.example.frontend.data.model.ApiResponse<Object>> call, Response<com.example.frontend.data.model.ApiResponse<Object>> r) {}
-                        @Override public void onFailure(Call<com.example.frontend.data.model.ApiResponse<Object>> call, Throwable t) {}
+                    n.setRead(true);
+                    notifyItemChanged(pos); // Cập nhật lại UI dòng này
+                    apiService.markNotificationRead(n.getId()).enqueue(new Callback<ApiResponse<Object>>() {
+                        @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {}
+                        @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {}
                     });
-                    h.dotUnread.setVisibility(View.GONE);
-                    h.itemView.setBackgroundColor(0xFFFFFFFF);
                 }
 
-                // CHỈ BỔ SUNG ĐOẠN NÀY: Mở trang PostDetailActivity và truyền POST_ID
-                if (n.getTargetId() != null && !n.getTargetId().isEmpty()) {
-                    android.content.Intent intent = new android.content.Intent(requireContext(), com.example.frontend.ui.feed.PostDetailActivity.class);
-                    intent.putExtra("POST_ID", n.getTargetId());
-                    startActivity(intent);
+                // 2. Logic phân luồng điều hướng
+                String targetType = n.getTargetType();
+                String targetId = n.getTargetId();
+
+                if (targetType == null || targetId == null) {
+                    Toast.makeText(requireContext(), "Không thể mở nội dung này", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                try {
+                    if (targetType.equalsIgnoreCase("Post") || targetType.equalsIgnoreCase("Comment")) {
+                        // Chuyển tới Bài Viết
+                        Intent intent = new Intent(requireContext(), PostDetailActivity.class);
+                        intent.putExtra("POST_ID", targetId);
+                        startActivity(intent);
+
+                    } else if (targetType.equalsIgnoreCase("Friend") || targetType.equalsIgnoreCase("User")) {
+                        // Chuyển tới Trang cá nhân bạn bè
+                        if (n.getSender() != null) {
+                            Intent intent = new Intent(requireContext(), FriendProfileActivity.class);
+                            intent.putExtra("FRIEND_ID", n.getSender().getId());
+                            intent.putExtra("FRIEND_NAME", n.getSender().getUsername());
+                            intent.putExtra("FRIEND_AVATAR", n.getSender().getAvatar());
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(requireContext(), "Không tìm thấy người dùng", Toast.LENGTH_SHORT).show();
+                        }
+
+                    } else if (targetType.equalsIgnoreCase("Group")) {
+                        // Chuyển tới Chi tiết Nhóm
+                        Intent intent = new Intent(requireContext(), GroupDetailActivity.class);
+                        intent.putExtra(GroupDetailActivity.EXTRA_GROUP_ID, targetId);
+                        startActivity(intent);
+
+                    } else {
+                        Toast.makeText(requireContext(), "Loại thông báo không được hỗ trợ", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(requireContext(), "Đã xảy ra lỗi khi mở màn hình", Toast.LENGTH_SHORT).show();
                 }
             });
         }
