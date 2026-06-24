@@ -1,12 +1,17 @@
 import mongoose, {Document, Schema} from "mongoose";
 
-export type GroupPrivacy ="private"| "public";
+export type GroupPrivacy ="Private"| "Public";
 export type MemberRole = "admin"| "member";
 
 export interface IGroupMember{
     userId: mongoose.Types.ObjectId;
     role: MemberRole;
     joinAt: Date;
+}
+
+export interface IPendingRequest{
+    userId: mongoose.Types.ObjectId;
+    requestedAt: Date;
 }
 
 export interface IGroup extends Document{
@@ -17,6 +22,7 @@ export interface IGroup extends Document{
     coverUrl: String;
     creatorId: mongoose.Types.ObjectId;
     member: IGroupMember[];
+    pendingRequests: IPendingRequest[];
     privacy: GroupPrivacy;
     createdAt: Date;
     updatedAt: Date;
@@ -38,6 +44,20 @@ const GroupMemberSchema = new Schema<IGroupMember>({
         type: Date,
         default: Date.now,
     }, 
+},
+ { _id: false,}
+);
+
+const PendingRequestSchema = new Schema<IPendingRequest>({
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
+    requestedAt: {
+        type: Date,
+        default: Date.now,
+    },
 },
  { _id: false,}
 );
@@ -67,6 +87,7 @@ const GroupSchema = new Schema<IGroup>(
         require: true,
     },
     member:[GroupMemberSchema],
+    pendingRequests:[PendingRequestSchema],
     privacy:{
         type: String,
         enum: ["Private", "Public"],

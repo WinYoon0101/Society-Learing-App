@@ -108,6 +108,12 @@
             android:name=".ui.group.GroupMembersActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.group.PendingMembersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.notify.NotificationsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.feed.CreatePostActivity"
             android:exported="false" />
         <activity

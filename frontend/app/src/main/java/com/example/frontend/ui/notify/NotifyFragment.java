@@ -158,12 +158,8 @@ public class NotifyFragment extends Fragment {
                     h.itemView.setBackgroundColor(0xFFFFFFFF);
                 }
 
-                // CHỈ BỔ SUNG ĐOẠN NÀY: Mở trang PostDetailActivity và truyền POST_ID
-                if (n.getTargetId() != null && !n.getTargetId().isEmpty()) {
-                    android.content.Intent intent = new android.content.Intent(requireContext(), com.example.frontend.ui.feed.PostDetailActivity.class);
-                    intent.putExtra("POST_ID", n.getTargetId());
-                    startActivity(intent);
-                }
+                // Điều hướng theo loại thông báo
+                navigateForNotification(n);
             });
         }
 
@@ -181,6 +177,42 @@ public class NotifyFragment extends Fragment {
                 dotUnread  = v.findViewById(R.id.dotUnread);
             }
         }
+    }
+
+    /** Điều hướng tới màn phù hợp theo loại thông báo. */
+    private void navigateForNotification(Notification n) {
+        String targetId = n.getTargetId();
+        if (targetId == null || targetId.isEmpty()) return;
+        String type = n.getType() != null ? n.getType() : "";
+
+        android.content.Intent intent;
+        switch (type) {
+            case "group_join_request":
+                // Admin: yêu cầu tham gia → mở màn duyệt thành viên của nhóm
+                intent = new android.content.Intent(requireContext(),
+                        com.example.frontend.ui.group.PendingMembersActivity.class);
+                intent.putExtra(com.example.frontend.ui.group.PendingMembersActivity.EXTRA_GROUP_ID, targetId);
+                break;
+            case "group_request_approved":
+                // Được duyệt vào nhóm → mở chi tiết nhóm
+                intent = new android.content.Intent(requireContext(),
+                        com.example.frontend.ui.group.GroupDetailActivity.class);
+                intent.putExtra(com.example.frontend.ui.group.GroupDetailActivity.EXTRA_GROUP_ID, targetId);
+                break;
+            case "group_invitation":
+                // Được mời vào nhóm → mở tab "Lời mời"
+                intent = new android.content.Intent(requireContext(),
+                        com.example.frontend.ui.group.GroupActivity.class);
+                intent.putExtra(com.example.frontend.ui.group.GroupActivity.EXTRA_OPEN_TAB, 3);
+                break;
+            default:
+                // post_reaction / post_comment / comment_reply → mở chi tiết bài viết
+                intent = new android.content.Intent(requireContext(),
+                        com.example.frontend.ui.feed.PostDetailActivity.class);
+                intent.putExtra("POST_ID", targetId);
+                break;
+        }
+        startActivity(intent);
     }
 
     private String formatTime(String iso) {

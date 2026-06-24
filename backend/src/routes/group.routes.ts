@@ -17,6 +17,10 @@ import {
     kickMember,
     leaveGroup,
     deleteGroup,
+    requestJoinGroup,
+    getPendingMembers,
+    approveMember,
+    rejectMember,
 } from "../controllers/group.controller";
 
 const router = Router();
@@ -45,6 +49,7 @@ router.delete("/:groupId", authenticate, deleteGroup);
 
 // --- Tham gia / rời nhóm ---
 router.post("/:groupId/join", authenticate, joinPublicGroup);
+router.post("/:groupId/request-join", authenticate, requestJoinGroup);
 router.post("/:groupId/leave", authenticate, leaveGroup);
 
 // --- Feed bài viết của 1 nhóm cụ thể ---
@@ -53,5 +58,10 @@ router.get("/:groupId/posts", authenticate, getPostsByGroup);
 // --- Thành viên nhóm ---
 router.get("/:groupId/members", authenticate, getGroupMembers);
 router.delete("/:groupId/members/:memberId", authenticate, kickMember);
+
+// --- Duyệt thành viên (admin) ---
+router.get("/:groupId/pending-members", authenticate, getPendingMembers);
+router.patch("/:groupId/members/:userId/approve", authenticate, approveMember);
+router.patch("/:groupId/members/:userId/reject", authenticate, rejectMember);
 
 export default router;

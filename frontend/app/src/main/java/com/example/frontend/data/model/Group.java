@@ -28,6 +28,9 @@ public class Group {
     @SerializedName("memberCount")
     private int memberCount;
 
+    @SerializedName("hasPendingRequest")
+    private boolean hasPendingRequest;
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -51,4 +54,7 @@ public class Group {
 
     public int getMemberCount() { return memberCount; }
     public void setMemberCount(int memberCount) { this.memberCount = memberCount; }
+
+    public boolean hasPendingRequest() { return hasPendingRequest; }
+    public void setHasPendingRequest(boolean v) { this.hasPendingRequest = v; }
 }

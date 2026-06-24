@@ -21,6 +21,8 @@ public class GroupDetail {
     private boolean isMember;
     @SerializedName("isAdmin")
     private boolean isAdmin;
+    @SerializedName("hasPendingRequest")
+    private boolean hasPendingRequest;
     @SerializedName("createdAt")
     private String createdAt;
 
@@ -37,5 +39,6 @@ public class GroupDetail {
     public int getMemberCount() { return memberCount; }
     public boolean isMember() { return isMember; }
     public boolean isAdmin() { return isAdmin; }
+    public boolean hasPendingRequest() { return hasPendingRequest; }
     public String getCreatedAt() { return createdAt; }
 }

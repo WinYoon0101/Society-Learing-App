@@ -22,6 +22,7 @@ import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.model.GroupDetail;
 import com.example.frontend.data.model.GroupPost;
+import com.example.frontend.data.model.RequestJoinResult;
 import com.example.frontend.data.repository.GroupRepository;
 import com.example.frontend.utils.Result;
 import com.example.frontend.data.remote.ApiClient;
@@ -32,6 +33,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,10 +61,13 @@ public class GroupDetailActivity extends AppCompatActivity {
 
     private final MutableLiveData<Result<GroupDetail>> detailLive = new MutableLiveData<>();
     private final MutableLiveData<Result<List<GroupPost>>> postsLive = new MutableLiveData<>();
-    private final MutableLiveData<Result<Object>> joinLive = new MutableLiveData<>();
+    private final MutableLiveData<Result<RequestJoinResult>> joinLive = new MutableLiveData<>();
     private final MutableLiveData<Result<Object>> reactLive = new MutableLiveData<>();
     private final MutableLiveData<Result<Object>> leaveLive = new MutableLiveData<>();
     private final MutableLiveData<Result<Object>> deleteLive = new MutableLiveData<>();
+
+    /** false khi xem nhóm Private mà chưa là thành viên → không tải/được xem bài viết. */
+    private boolean canViewPosts = true;
 
     private GroupDetail currentDetail;
     private static final int LIMIT = 15;
@@ -88,7 +93,7 @@ public class GroupDetailActivity extends AppCompatActivity {
         btnSearch.setOnClickListener(v ->
                 Toast.makeText(this, "Tìm kiếm trong nhóm sắp ra mắt", Toast.LENGTH_SHORT).show());
 
-        btnJoin.setOnClickListener(v -> repository.joinGroup(groupId, joinLive));
+        btnJoin.setOnClickListener(v -> repository.requestJoinGroup(groupId, joinLive));
 
         // "Mời" → mở màn hình thành viên và bật hộp thoại mời luôn
         btnInvite.setOnClickListener(v -> openMembers(true));
@@ -210,7 +215,10 @@ public class GroupDetailActivity extends AppCompatActivity {
                 openSettings();
                 break;
             case GroupOptionsBottomSheet.OPT_JOIN:
-                repository.joinGroup(groupId, joinLive);
+                repository.requestJoinGroup(groupId, joinLive);
+                break;
+            case GroupOptionsBottomSheet.OPT_APPROVE_MEMBERS:
+                openPendingMembers();
                 break;
             case GroupOptionsBottomSheet.OPT_NOT_INTERESTED:
                 GroupState.addNotInterested(this, groupId);
@@ -228,7 +236,6 @@ public class GroupDetailActivity extends AppCompatActivity {
             case GroupOptionsBottomSheet.OPT_MANAGE_CONTENT:
             case GroupOptionsBottomSheet.OPT_MANAGE_NOTIF:
             case GroupOptionsBottomSheet.OPT_APPROVE_POSTS:
-            case GroupOptionsBottomSheet.OPT_APPROVE_MEMBERS:
             default:
                 Toast.makeText(this, "Tính năng đang được phát triển", Toast.LENGTH_SHORT).show();
                 break;
@@ -241,6 +248,12 @@ public class GroupDetailActivity extends AppCompatActivity {
         i.putExtra(GroupMembersActivity.EXTRA_IS_ADMIN,
                 currentDetail != null && currentDetail.isAdmin());
         if (openInvite) i.putExtra(GroupMembersActivity.EXTRA_OPEN_INVITE, true);
+        startActivity(i);
+    }
+
+    private void openPendingMembers() {
+        Intent i = new Intent(this, PendingMembersActivity.class);
+        i.putExtra(PendingMembersActivity.EXTRA_GROUP_ID, groupId);
         startActivity(i);
     }
 
@@ -267,8 +280,8 @@ public class GroupDetailActivity extends AppCompatActivity {
     private void loadAll() {
         page = 1;
         isLastPage = false;
+        // Tải chi tiết trước; bài viết chỉ tải sau khi biết quyền xem (renderDetail).
         repository.getGroupDetail(groupId, detailLive);
-        repository.getPostsByGroup(groupId, page, LIMIT, postsLive);
     }
 
     private void observeLiveData() {
@@ -298,9 +311,16 @@ public class GroupDetailActivity extends AppCompatActivity {
         joinLive.observe(this, r -> {
             if (r == null) return;
             if (r.status == Result.Status.SUCCESS) {
-                Toast.makeText(this, "Đã tham gia nhóm!", Toast.LENGTH_SHORT).show();
-                GroupState.onJoinedGroup();
-                loadAll();
+                boolean pending = r.data != null && r.data.isPending();
+                if (pending) {
+                    Toast.makeText(this, "Đã gửi yêu cầu tham gia, chờ duyệt", Toast.LENGTH_SHORT).show();
+                    // Cập nhật trạng thái nút "Đã gửi yêu cầu"
+                    repository.getGroupDetail(groupId, detailLive);
+                } else {
+                    Toast.makeText(this, "Đã tham gia nhóm!", Toast.LENGTH_SHORT).show();
+                    GroupState.onJoinedGroup();
+                    loadAll();
+                }
             } else if (r.status == Result.Status.ERROR) {
                 Toast.makeText(this, r.message, Toast.LENGTH_SHORT).show();
             }
@@ -361,16 +381,37 @@ public class GroupDetailActivity extends AppCompatActivity {
             imgAvatar.setImageResource(R.drawable.ic_group);
         }
 
+        boolean isPublic = "Public".equals(d.getPrivacy());
+
         if (d.isMember()) {
             btnJoin.setVisibility(View.GONE);
             btnInvite.setVisibility(View.VISIBLE);
             layoutComposer.setVisibility(View.VISIBLE);
         } else {
-            btnJoin.setVisibility("Public".equals(d.getPrivacy()) ? View.VISIBLE : View.GONE);
+            // Chưa là thành viên: Public → "Tham gia"; Private → "Yêu cầu tham gia"
+            // (nếu đã gửi yêu cầu → "Đã gửi yêu cầu", vô hiệu hóa)
+            btnJoin.setVisibility(View.VISIBLE);
+            if (d.hasPendingRequest()) {
+                btnJoin.setText("Đã gửi yêu cầu");
+                btnJoin.setEnabled(false);
+            } else {
+                btnJoin.setText(isPublic ? "Tham gia" : "Yêu cầu tham gia");
+                btnJoin.setEnabled(true);
+            }
             btnInvite.setVisibility(View.GONE);
             layoutComposer.setVisibility(View.GONE);
         }
         // "..." luôn hiện: thành viên → tùy chọn quản lý; chưa vào → Tham gia / Không quan tâm
         btnMore.setVisibility(View.VISIBLE);
+
+        // Quyền xem bài viết: thành viên, hoặc nhóm Public. Nhóm Private + chưa vào → ẩn feed.
+        canViewPosts = d.isMember() || isPublic;
+        if (canViewPosts) {
+            repository.getPostsByGroup(groupId, page, LIMIT, postsLive);
+        } else {
+            postAdapter.submit(new ArrayList<>());
+            isLastPage = true;
+            swipeRefresh.setRefreshing(false);
+        }
     }
 }

@@ -10,6 +10,8 @@ import com.example.frontend.data.model.GroupDetail;
 import com.example.frontend.data.model.GroupInvitation;
 import com.example.frontend.data.model.GroupMember;
 import com.example.frontend.data.model.GroupPost;
+import com.example.frontend.data.model.PendingMember;
+import com.example.frontend.data.model.RequestJoinResult;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.utils.Result;
@@ -111,16 +113,16 @@ public class GroupRepository {
     }
 
     public void respondToInvitation(String invitationId, String action,
-                                    MutableLiveData<Result<Object>> liveData) {
+                                    MutableLiveData<Result<RequestJoinResult>> liveData) {
         liveData.postValue(Result.loading());
         Map<String, String> body = new HashMap<>();
         body.put("action", action);
-        apiService.respondToInvitation(invitationId, body).enqueue(new Callback<ApiResponse<Object>>() {
-            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
-                if (ok(r)) liveData.postValue(Result.success(null));
+        apiService.respondToInvitation(invitationId, body).enqueue(new Callback<ApiResponse<RequestJoinResult>>() {
+            @Override public void onResponse(Call<ApiResponse<RequestJoinResult>> call, Response<ApiResponse<RequestJoinResult>> r) {
+                if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
                 else liveData.postValue(Result.error(msg(r, "Thao tác thất bại")));
             }
-            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+            @Override public void onFailure(Call<ApiResponse<RequestJoinResult>> call, Throwable t) {
                 liveData.postValue(Result.error(t.getMessage()));
             }
         });
@@ -168,6 +170,58 @@ public class GroupRepository {
             @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
                 if (ok(r)) liveData.postValue(Result.success(null));
                 else liveData.postValue(Result.error(msg(r, "Tham gia thất bại")));
+            }
+            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+    }
+
+    public void requestJoinGroup(String groupId, MutableLiveData<Result<RequestJoinResult>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.requestJoinGroup(groupId).enqueue(new Callback<ApiResponse<RequestJoinResult>>() {
+            @Override public void onResponse(Call<ApiResponse<RequestJoinResult>> call, Response<ApiResponse<RequestJoinResult>> r) {
+                if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                else liveData.postValue(Result.error(msg(r, "Gửi yêu cầu thất bại")));
+            }
+            @Override public void onFailure(Call<ApiResponse<RequestJoinResult>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+    }
+
+    public void getPendingMembers(String groupId, MutableLiveData<Result<List<PendingMember>>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.getPendingMembers(groupId).enqueue(new Callback<ApiResponse<List<PendingMember>>>() {
+            @Override public void onResponse(Call<ApiResponse<List<PendingMember>>> call, Response<ApiResponse<List<PendingMember>>> r) {
+                if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                else liveData.postValue(Result.error(msg(r, "Không tải được yêu cầu tham gia"), null));
+            }
+            @Override public void onFailure(Call<ApiResponse<List<PendingMember>>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage(), null));
+            }
+        });
+    }
+
+    public void approveMember(String groupId, String userId, MutableLiveData<Result<Object>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.approveMember(groupId, userId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
+                if (ok(r)) liveData.postValue(Result.success(null));
+                else liveData.postValue(Result.error(msg(r, "Duyệt thành viên thất bại")));
+            }
+            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+    }
+
+    public void rejectMember(String groupId, String userId, MutableLiveData<Result<Object>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.rejectMember(groupId, userId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
+                if (ok(r)) liveData.postValue(Result.success(null));
+                else liveData.postValue(Result.error(msg(r, "Từ chối thành viên thất bại")));
             }
             @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                 liveData.postValue(Result.error(t.getMessage()));
