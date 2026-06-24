@@ -665,6 +665,101 @@ export const getGroupMembers = async (req: AuthRequest, res: Response): Promise<
 };
 
 // =====================================
+// RỜI NHÓM
+// POST /api/groups/:groupId/leave
+// =====================================
+export const leaveGroup = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const member = group.member.find((m) => m.userId.toString() === userId);
+        if (!member) {
+            res.status(400).json({ success: false, message: "Bạn không phải thành viên của nhóm này" });
+            return;
+        }
+
+        // Quản trị viên duy nhất (còn thành viên khác) không được rời —
+        // phải chuyển quyền cho người khác hoặc xóa nhóm trước.
+        if (member.role === "admin") {
+            const adminCount = group.member.filter((m) => m.role === "admin").length;
+            if (adminCount === 1 && group.member.length > 1) {
+                res.status(400).json({
+                    success: false,
+                    message: "Bạn là quản trị viên duy nhất. Hãy chuyển quyền cho thành viên khác hoặc xóa nhóm trước khi rời.",
+                });
+                return;
+            }
+        }
+
+        await Group.findByIdAndUpdate(groupId, {
+            $pull: { member: { userId: new mongoose.Types.ObjectId(userId) } },
+        });
+
+        res.status(200).json({ success: true, message: "Đã rời nhóm" });
+    } catch (error) {
+        console.error("leaveGroup error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
+// XÓA NHÓM (chỉ creator hoặc admin)
+// DELETE /api/groups/:groupId
+// Dọn luôn Post / Media / Comment / Reaction / GroupInvitation liên quan
+// =====================================
+export const deleteGroup = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const isCreator = group.creatorId.toString() === userId;
+        const isAdmin = group.member.some(
+            (m) => m.userId.toString() === userId && m.role === "admin"
+        );
+        if (!isCreator && !isAdmin) {
+            res.status(403).json({ success: false, message: "Chỉ quản trị viên mới được xóa nhóm" });
+            return;
+        }
+
+        // Lấy toàn bộ bài viết của nhóm để dọn dữ liệu phụ thuộc
+        const posts = await Post.find({ groupId }).select("_id").lean();
+        const postIds = posts.map((p) => p._id);
+
+        // Lấy comment của các bài để dọn reaction trên comment
+        const comments = await Comment.find({ postId: { $in: postIds } }).select("_id").lean();
+        const commentIds = comments.map((c) => c._id);
+
+        await Promise.all([
+            Media.deleteMany({ targetId: { $in: postIds }, sourceType: "post" }),
+            Comment.deleteMany({ postId: { $in: postIds } }),
+            Reaction.deleteMany({ targetId: { $in: [...postIds, ...commentIds] } }),
+            Post.deleteMany({ groupId }),
+            GroupInvitation.deleteMany({ groupId }),
+        ]);
+
+        await Group.findByIdAndDelete(groupId);
+
+        res.status(200).json({ success: true, message: "Đã xóa nhóm" });
+    } catch (error) {
+        console.error("deleteGroup error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
 // KICK THÀNH VIÊN (chỉ admin)
 // DELETE /api/groups/:groupId/members/:memberId
 // =====================================

@@ -61,6 +61,8 @@ public class GroupDetailActivity extends AppCompatActivity {
     private final MutableLiveData<Result<List<GroupPost>>> postsLive = new MutableLiveData<>();
     private final MutableLiveData<Result<Object>> joinLive = new MutableLiveData<>();
     private final MutableLiveData<Result<Object>> reactLive = new MutableLiveData<>();
+    private final MutableLiveData<Result<Object>> leaveLive = new MutableLiveData<>();
+    private final MutableLiveData<Result<Object>> deleteLive = new MutableLiveData<>();
 
     private GroupDetail currentDetail;
     private static final int LIMIT = 15;
@@ -217,11 +219,11 @@ public class GroupDetailActivity extends AppCompatActivity {
                 break;
             case GroupOptionsBottomSheet.OPT_LEAVE:
                 confirmAction("Rời nhóm", "Bạn có chắc muốn rời khỏi nhóm này?",
-                        "Tính năng rời nhóm đang được phát triển");
+                        () -> repository.leaveGroup(groupId, leaveLive));
                 break;
             case GroupOptionsBottomSheet.OPT_DELETE:
                 confirmAction("Xóa nhóm", "Bạn có chắc muốn xóa nhóm này? Hành động không thể hoàn tác.",
-                        "Tính năng xóa nhóm đang được phát triển");
+                        () -> repository.deleteGroup(groupId, deleteLive));
                 break;
             case GroupOptionsBottomSheet.OPT_MANAGE_CONTENT:
             case GroupOptionsBottomSheet.OPT_MANAGE_NOTIF:
@@ -253,12 +255,11 @@ public class GroupDetailActivity extends AppCompatActivity {
         startActivityForResult(i, 100);
     }
 
-    private void confirmAction(String title, String message, String pendingMessage) {
+    private void confirmAction(String title, String message, Runnable onConfirm) {
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle(title)
                 .setMessage(message)
-                .setPositiveButton("Đồng ý", (d, w) ->
-                        Toast.makeText(this, pendingMessage, Toast.LENGTH_SHORT).show())
+                .setPositiveButton("Đồng ý", (d, w) -> onConfirm.run())
                 .setNegativeButton("Hủy", null)
                 .show();
     }
@@ -300,6 +301,28 @@ public class GroupDetailActivity extends AppCompatActivity {
                 Toast.makeText(this, "Đã tham gia nhóm!", Toast.LENGTH_SHORT).show();
                 GroupState.onJoinedGroup();
                 loadAll();
+            } else if (r.status == Result.Status.ERROR) {
+                Toast.makeText(this, r.message, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        leaveLive.observe(this, r -> {
+            if (r == null) return;
+            if (r.status == Result.Status.SUCCESS) {
+                Toast.makeText(this, "Đã rời nhóm", Toast.LENGTH_SHORT).show();
+                GroupState.onLeftOrDeletedGroup();
+                finish();
+            } else if (r.status == Result.Status.ERROR) {
+                Toast.makeText(this, r.message, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        deleteLive.observe(this, r -> {
+            if (r == null) return;
+            if (r.status == Result.Status.SUCCESS) {
+                Toast.makeText(this, "Đã xóa nhóm", Toast.LENGTH_SHORT).show();
+                GroupState.onLeftOrDeletedGroup();
+                finish();
             } else if (r.status == Result.Status.ERROR) {
                 Toast.makeText(this, r.message, Toast.LENGTH_SHORT).show();
             }

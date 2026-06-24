@@ -346,6 +346,14 @@ public interface ApiService {
     @POST("groups/{groupId}/join")
     Call<ApiResponse<Object>> joinGroup(@Path("groupId") String groupId);
 
+    // Rời nhóm
+    @POST("groups/{groupId}/leave")
+    Call<ApiResponse<Object>> leaveGroup(@Path("groupId") String groupId);
+
+    // Xóa nhóm (creator/admin only)
+    @DELETE("groups/{groupId}")
+    Call<ApiResponse<Object>> deleteGroup(@Path("groupId") String groupId);
+
     // Bài viết của 1 nhóm cụ thể
     @GET("groups/{groupId}/posts")
     Call<ApiResponse<List<GroupPost>>> getPostsByGroup(

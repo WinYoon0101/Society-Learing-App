@@ -15,6 +15,8 @@ import {
     updateGroup,
     getGroupMembers,
     kickMember,
+    leaveGroup,
+    deleteGroup,
 } from "../controllers/group.controller";
 
 const router = Router();
@@ -36,12 +38,14 @@ router.patch("/invitations/:invitationId", authenticate, respondToInvitation);
 // --- Tạo nhóm mới ---
 router.post("/", authenticate, uploadFile, createGroup);
 
-// --- Chi tiết nhóm + cập nhật (phải đặt TRƯỚC /:groupId/posts) ---
+// --- Chi tiết nhóm + cập nhật + xóa (phải đặt TRƯỚC /:groupId/posts) ---
 router.get("/:groupId", authenticate, getGroupDetail);
 router.patch("/:groupId", authenticate, uploadFile, updateGroup);
+router.delete("/:groupId", authenticate, deleteGroup);
 
-// --- Tham gia nhóm public ---
+// --- Tham gia / rời nhóm ---
 router.post("/:groupId/join", authenticate, joinPublicGroup);
+router.post("/:groupId/leave", authenticate, leaveGroup);
 
 // --- Feed bài viết của 1 nhóm cụ thể ---
 router.get("/:groupId/posts", authenticate, getPostsByGroup);

@@ -175,6 +175,32 @@ public class GroupRepository {
         });
     }
 
+    public void leaveGroup(String groupId, MutableLiveData<Result<Object>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.leaveGroup(groupId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
+                if (ok(r)) liveData.postValue(Result.success(null));
+                else liveData.postValue(Result.error(msg(r, "Rời nhóm thất bại")));
+            }
+            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+    }
+
+    public void deleteGroup(String groupId, MutableLiveData<Result<Object>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.deleteGroup(groupId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
+                if (ok(r)) liveData.postValue(Result.success(null));
+                else liveData.postValue(Result.error(msg(r, "Xóa nhóm thất bại")));
+            }
+            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+    }
+
     public void getPostsByGroup(String groupId, int page, int limit,
                                 MutableLiveData<Result<List<GroupPost>>> liveData) {
         liveData.postValue(Result.loading());
