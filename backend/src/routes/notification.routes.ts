@@ -5,6 +5,7 @@ import { authenticate } from '../middlewares/auth.middleware';
 const router = Router();
 
 router.get('/', authenticate, notificationController.getNotifications);
+router.put('/mark-all-read', authenticate, notificationController.markAllAsRead);
 router.put('/:id/read', authenticate, notificationController.markAsRead);
 router.put('/read-all', authenticate, notificationController.markAllAsRead);
 router.delete('/:id', authenticate, notificationController.deleteNotification);
