@@ -23,6 +23,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.frontend.R;
 import com.example.frontend.data.model.ApiResponse;
+import com.example.frontend.data.model.Group;
+import com.example.frontend.data.model.Post;
+import com.example.frontend.data.model.SearchItem;
 import com.example.frontend.data.model.SearchResponseData;
 import com.example.frontend.data.model.TrendingTopic;
 import com.example.frontend.data.model.User;
@@ -133,11 +136,36 @@ public class SearchActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call<ApiResponse<SearchResponseData>> call, @NonNull Response<ApiResponse<SearchResponseData>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     SearchResponseData data = response.body().getData();
-                    List<User> userResults = data.getUsers();
 
-                    searchAdapter.submit(userResults);
+                    // 1. Tạo danh sách tổng hợp
+                    List<SearchItem> combinedResults = new ArrayList<>();
 
-                    boolean isEmpty = (userResults == null || userResults.isEmpty());
+                    // 2. Lắp dữ liệu vào danh sách tổng hợp (Ưu tiên thứ tự User -> Group -> Post)
+                    if (data.getUsers() != null) {
+                        for (User u : data.getUsers()) {
+                            combinedResults.add(new SearchItem(SearchItem.TYPE_USER, u));
+                        }
+                    }
+
+                    if (data.getGroups() != null) {
+                        // Chú ý: Cần có class Group trong model của bạn
+                        for (Group g : data.getGroups()) {
+                            combinedResults.add(new SearchItem(SearchItem.TYPE_GROUP, g));
+                        }
+                    }
+
+                    if (data.getPosts() != null) {
+                        // Chú ý: Cần có class Post trong model của bạn
+                        for (Post p : data.getPosts()) {
+                            combinedResults.add(new SearchItem(SearchItem.TYPE_POST, p));
+                        }
+                    }
+
+                    // 3. Đưa vào Adapter
+                    searchAdapter.submit(combinedResults);
+
+                    // 4. Kiểm tra trạng thái rỗng
+                    boolean isEmpty = combinedResults.isEmpty();
                     tvEmptyState.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
                     rvResults.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
                 }
