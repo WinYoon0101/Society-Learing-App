@@ -112,6 +112,7 @@ export const getTrendingTopics = async (req: AuthRequest, res: Response): Promis
     }
 };
 
+
 // ====================================================
 // 2. API TÌM KIẾM TỔNG HỢP (Bài viết, Thành viên, Nhóm)
 // ====================================================
@@ -152,8 +153,10 @@ export const searchEverything = async (req: AuthRequest, res: Response): Promise
                 .limit(5)
                 .lean(),
 
-            hashtag ? [] : Group.find({ name: new RegExp(q as string, 'i') })
-                .select('_id name avatar cover member')
+            hashtag ? [] : Group.find({ 
+                groupName: { $regex: q as string, $options: 'i' } 
+            } as any) 
+                .select('_id groupName avatarUrl coverUrl member privacy description')
                 .limit(5)
                 .lean()
         ]);
@@ -200,10 +203,12 @@ export const searchEverything = async (req: AuthRequest, res: Response): Promise
                 users: users,
                 groups: groups.map((g: any) => ({
                     _id: g._id,
-                    name: g.name,
-                    avatar: g.avatar,
-                    cover: g.cover,
-                    memberCount: g.member ? g.member.length : 0
+                    groupName: g.groupName,  // Đổi g.name -> g.groupName
+                    avatarUrl: g.avatarUrl,  // Đổi g.avatar -> g.avatarUrl
+                    coverUrl: g.coverUrl,    // Đổi cover: g.cover -> coverUrl: g.coverUrl
+                    memberCount: g.member ? g.member.length : 0,
+                    privacy: g.privacy,      // Trả thêm về cho Android
+                    description: g.description // Trả thêm về cho Android
                 }))
             }
         });
