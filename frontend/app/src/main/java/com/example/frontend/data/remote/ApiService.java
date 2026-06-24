@@ -17,12 +17,14 @@ import com.example.frontend.data.model.GroupPost;
 import com.example.frontend.data.model.LiveModel;
 import com.example.frontend.data.model.LoginResponse;
 import com.example.frontend.data.model.MindmapData;
+import com.example.frontend.data.model.SearchResponseData;
 import com.example.frontend.data.model.Story;
 import com.example.frontend.data.model.StoryGroup;
 import com.example.frontend.data.model.NotificationListResponse;
 import com.example.frontend.data.model.Notification;
 import com.example.frontend.data.model.PagedResponse;
 import com.example.frontend.data.model.ReactionItem;
+import com.example.frontend.data.model.TrendingTopic;
 import com.example.frontend.data.model.UpdateProfile;
 import com.example.frontend.data.model.User;
 import com.example.frontend.data.model.ProfileResponse;
@@ -377,4 +379,14 @@ public interface ApiService {
 
     @GET("posts/{id}")
     Call<ApiResponse<Post>> getPostById(@Path("id") String id);
+
+
+    @GET("search/trending")
+    Call<ApiResponse<List<TrendingTopic>>> getTrendingTopics();
+
+    @GET("search/results")
+    Call<ApiResponse<SearchResponseData>> searchEverything(
+            @Query("q") String query,
+            @Query("hashtag") String hashtag
+    );
 }
