@@ -37,10 +37,18 @@
         </LinearLayout>
 
         <Button android:id="@+id/btnJoin"
-            android:layout_width="wrap_content" android:layout_height="36dp"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:maxWidth="96dp"
+            android:minWidth="0dp"
+            android:minHeight="36dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
             android:text="Tham gia"
-            android:textSize="13sp"
+            android:textSize="12sp"
+            android:lineSpacingMultiplier="0.95"
             android:backgroundTint="@color/group_primary"
             android:textColor="@color/group_surface"
             style="@style/Widget.MaterialComponents.Button" />

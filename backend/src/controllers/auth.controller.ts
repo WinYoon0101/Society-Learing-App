@@ -101,11 +101,7 @@ export const googleLogin = async (req: Request, res: Response) => {
   }
 };
 /**
-<<<<<<< HEAD
  Dang nhap fb
-=======
-Dang nhap fb
->>>>>>> 2c8bafa87f91d43cde9bb86ad3b9bbb19595be6b
  */
 export const facebookLogin = async (
   req: Request,

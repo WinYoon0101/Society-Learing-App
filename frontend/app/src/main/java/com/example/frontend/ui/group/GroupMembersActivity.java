@@ -79,12 +79,11 @@ public class GroupMembersActivity extends AppCompatActivity {
         ImageButton btnBack = findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> finish());
 
-        // Nút Mời – chỉ hiện với admin
+        // Nút Mời – mọi thành viên đều được mời bạn bè (nhóm Private: lời mời sẽ
+        // thành yêu cầu chờ admin duyệt khi người được mời đồng ý)
         MaterialButton btnInvite = findViewById(R.id.btnInvite);
-        if (isAdmin) {
-            btnInvite.setVisibility(View.VISIBLE);
-            btnInvite.setOnClickListener(v -> openInviteDialog());
-        }
+        btnInvite.setVisibility(View.VISIBLE);
+        btnInvite.setOnClickListener(v -> openInviteDialog());
 
         rv = findViewById(R.id.rvMembers);
         rv.setLayoutManager(new LinearLayoutManager(this));

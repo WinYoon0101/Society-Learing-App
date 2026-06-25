@@ -65,13 +65,21 @@ public class DiscoverGroupsFragment extends Fragment {
         repository = new GroupRepository(requireContext());
 
         adapter = new DiscoverGroupAdapter(group -> {
-            // Click "Tham gia"
-            MutableLiveData<Result<Object>> joinLive = new MutableLiveData<>();
+            // Click "Tham gia" (Public) / "Yêu cầu tham gia" (Private)
+            MutableLiveData<Result<com.example.frontend.data.model.RequestJoinResult>> joinLive =
+                    new MutableLiveData<>();
             joinLive.observe(getViewLifecycleOwner(), r -> {
                 if (r == null) return;
                 if (r.status == Result.Status.SUCCESS) {
-                    Toast.makeText(requireContext(), "Đã tham gia nhóm!", Toast.LENGTH_SHORT).show();
-                    GroupState.onJoinedGroup();
+                    boolean pending = r.data != null && r.data.isPending();
+                    if (pending) {
+                        Toast.makeText(requireContext(),
+                                "Đã gửi yêu cầu tham gia, chờ duyệt", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(requireContext(), "Đã tham gia nhóm!", Toast.LENGTH_SHORT).show();
+                        GroupState.onJoinedGroup();
+                    }
+                    // refresh: nhóm đã join → biến mất; nhóm Private đã gửi yêu cầu → ở lại với nút "Đã gửi yêu cầu"
                     refresh();
                 } else if (r.status == Result.Status.ERROR) {
                     Toast.makeText(requireContext(),
@@ -79,7 +87,7 @@ public class DiscoverGroupsFragment extends Fragment {
                             Toast.LENGTH_SHORT).show();
                 }
             });
-            repository.joinGroup(group.getId(), joinLive);
+            repository.requestJoinGroup(group.getId(), joinLive);
         });
 
         // Click vào item → xem trước chi tiết nhóm (chưa là thành viên)

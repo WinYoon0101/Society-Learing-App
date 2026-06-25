@@ -77,13 +77,25 @@ public class InvitationsFragment extends Fragment {
     }
 
     private void respond(String invitationId, String action) {
-        MutableLiveData<Result<Object>> respondLive = new MutableLiveData<>();
+        MutableLiveData<Result<com.example.frontend.data.model.RequestJoinResult>> respondLive =
+                new MutableLiveData<>();
         respondLive.observe(getViewLifecycleOwner(), r -> {
             if (r == null) return;
             if (r.status == Result.Status.SUCCESS) {
-                String msg = "accept".equals(action) ? "Đã tham gia nhóm!" : "Đã từ chối lời mời";
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
-                if ("accept".equals(action)) GroupState.onJoinedGroup();
+                if ("accept".equals(action)) {
+                    boolean pending = r.data != null && r.data.isPending();
+                    if (pending) {
+                        // Nhóm Private: lời mời được chấp nhận → chuyển thành yêu cầu chờ admin duyệt
+                        Toast.makeText(requireContext(),
+                                "Đã gửi yêu cầu tham gia, chờ quản trị viên duyệt",
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(requireContext(), "Đã tham gia nhóm!", Toast.LENGTH_SHORT).show();
+                        GroupState.onJoinedGroup();
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Đã từ chối lời mời", Toast.LENGTH_SHORT).show();
+                }
                 load(); // reload list
             } else if (r.status == Result.Status.ERROR) {
                 Toast.makeText(requireContext(),

@@ -26,6 +26,11 @@ public class GroupActivity extends AppCompatActivity {
     private static final String[] TAB_TITLES =
             {"Nhóm của bạn", "Bài viết", "Khám phá", "Lời mời"};
 
+    /** Mở thẳng tới tab chỉ định (0..3), ví dụ từ thông báo lời mời → tab "Lời mời" (3). */
+    public static final String EXTRA_OPEN_TAB = "openTab";
+
+    private android.widget.TextView tvNotifyBadge;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,7 +44,10 @@ public class GroupActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
-        findViewById(R.id.btnAdd).setOnClickListener(v -> showCreateGroupSheet());
+        // Chuông thông báo → mở màn danh sách thông báo (tạo nhóm đã có nút riêng ở tab "Nhóm của bạn")
+        findViewById(R.id.btnNotify).setOnClickListener(v ->
+                startActivity(new Intent(this, com.example.frontend.ui.notify.NotificationsActivity.class)));
+        tvNotifyBadge = findViewById(R.id.tvNotifyBadge);
         // Tìm kiếm: chuyển sang tab Khám phá với focus vào ô search
         findViewById(R.id.btnSearch).setOnClickListener(v -> {
             ViewPager2 pager = findViewById(R.id.viewPagerGroup);
@@ -56,6 +64,19 @@ public class GroupActivity extends AppCompatActivity {
         new TabLayoutMediator(tabLayout, viewPager,
                 (tab, position) -> tab.setText(TAB_TITLES[position])
         ).attach();
+
+        // Mở thẳng tab chỉ định nếu được yêu cầu (vd từ thông báo lời mời)
+        int openTab = getIntent().getIntExtra(EXTRA_OPEN_TAB, -1);
+        if (openTab >= 0 && openTab < TAB_TITLES.length) {
+            viewPager.setCurrentItem(openTab, false);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Cập nhật badge số thông báo chưa đọc (đọc xong quay lại sẽ về số thực tế / 0)
+        com.example.frontend.ui.notify.NotificationBadge.refresh(this, tvNotifyBadge);
     }
 
     private void showCreateGroupSheet() {
