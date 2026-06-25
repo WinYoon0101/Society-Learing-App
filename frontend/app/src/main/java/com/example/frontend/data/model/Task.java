@@ -74,4 +74,5 @@ public class Task {
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
+    public void setId(String id){this.id = id;}
 }

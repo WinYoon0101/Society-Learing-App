@@ -223,6 +223,7 @@
                     android:background="@drawable/bg_circle_green"/>
 
                 <TextView
+                    android:id="@+id/txtDaily"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
@@ -258,6 +259,7 @@
                     android:background="@drawable/bg_circle_yellow"/>
 
                 <TextView
+                    android:id="@+id/txtImportant"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
@@ -293,6 +295,7 @@
                     android:background="@drawable/bg_circle_red"/>
 
                 <TextView
+                    android:id="@+id/txtUrgent"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
