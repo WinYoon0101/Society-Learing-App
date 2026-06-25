@@ -117,6 +117,9 @@
             android:name=".ui.group.PendingPostDetailActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.group.MyGroupPostsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.notify.NotificationsActivity"
             android:exported="false" />
         <activity

@@ -345,6 +345,14 @@ public interface ApiService {
             @Part MultipartBody.Part avatar
     );
 
+    // Cập nhật ảnh bìa nhóm (admin) - field "file"
+    @Multipart
+    @PATCH("groups/{groupId}/cover")
+    Call<ApiResponse<Object>> updateGroupCover(
+            @Path("groupId") String groupId,
+            @Part MultipartBody.Part cover
+    );
+
     // Tham gia nhóm public
     @POST("groups/{groupId}/join")
     Call<ApiResponse<Object>> joinGroup(@Path("groupId") String groupId);

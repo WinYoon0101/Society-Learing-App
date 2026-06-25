@@ -22,6 +22,7 @@ import {
     approveMember,
     rejectMember,
     getPendingPosts,
+    updateGroupCover,
 } from "../controllers/group.controller";
 
 const router = Router();
@@ -46,6 +47,7 @@ router.post("/", authenticate, uploadFile, createGroup);
 // --- Chi tiết nhóm + cập nhật + xóa (phải đặt TRƯỚC /:groupId/posts) ---
 router.get("/:groupId", authenticate, getGroupDetail);
 router.patch("/:groupId", authenticate, uploadFile, updateGroup);
+router.patch("/:groupId/cover", authenticate, uploadFile, updateGroupCover);
 router.delete("/:groupId", authenticate, deleteGroup);
 
 // --- Tham gia / rời nhóm ---

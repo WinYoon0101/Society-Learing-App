@@ -982,6 +982,47 @@ export const updateGroup = async (req: AuthRequest, res: Response): Promise<void
     }
 };
 // =====================================
+// CẬP NHẬT ẢNH BÌA NHÓM (chỉ admin)
+// PATCH /api/groups/:groupId/cover  (multipart, field "file")
+// =====================================
+export const updateGroupCover = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const member = group.member.find((m) => m.userId.toString() === userId);
+        if (!member || member.role !== "admin") {
+            res.status(403).json({ success: false, message: "Chỉ admin mới được đổi ảnh bìa" });
+            return;
+        }
+
+        const file = req.file as (Express.Multer.File & { path?: string }) | undefined;
+        if (!file?.path) {
+            res.status(400).json({ success: false, message: "Thiếu ảnh bìa" });
+            return;
+        }
+
+        group.coverUrl = file.path;
+        await group.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Cập nhật ảnh bìa thành công",
+            data: { _id: group._id, coverUrl: group.coverUrl },
+        });
+    } catch (error) {
+        console.error("updateGroupCover error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
 // LẤY DANH SÁCH THÀNH VIÊN
 // GET /api/groups/:groupId/members
 // =====================================

@@ -237,7 +237,11 @@ public class GroupDetailActivity extends AppCompatActivity {
                         () -> repository.deleteGroup(groupId, deleteLive));
                 break;
             case GroupOptionsBottomSheet.OPT_MANAGE_CONTENT:
+                openMyContent();
+                break;
             case GroupOptionsBottomSheet.OPT_MANAGE_NOTIF:
+                showNotifSheet();
+                break;
             default:
                 Toast.makeText(this, "Tính năng đang được phát triển", Toast.LENGTH_SHORT).show();
                 break;
@@ -265,6 +269,24 @@ public class GroupDetailActivity extends AppCompatActivity {
         startActivity(i);
     }
 
+    private void openMyContent() {
+        Intent i = new Intent(this, MyGroupPostsActivity.class);
+        i.putExtra(MyGroupPostsActivity.EXTRA_GROUP_ID, groupId);
+        startActivity(i);
+    }
+
+    private void showNotifSheet() {
+        String current = GroupState.getGroupNotifLevel(this, groupId);
+        GroupNotifBottomSheet sheet = GroupNotifBottomSheet.newInstance(current);
+        sheet.setOnLevelSelectedListener(level -> {
+            GroupState.setGroupNotifLevel(this, groupId, level);
+            String label = GroupState.NOTIF_ALL.equals(level) ? "Tất cả bài viết"
+                    : GroupState.NOTIF_HIGHLIGHT.equals(level) ? "Chỉ bài nổi bật" : "Tắt thông báo";
+            Toast.makeText(this, "Thông báo nhóm: " + label, Toast.LENGTH_SHORT).show();
+        });
+        sheet.show(getSupportFragmentManager(), "groupNotif");
+    }
+
     private void openSettings() {
         if (currentDetail == null) return;
         Intent i = new Intent(this, EditGroupActivity.class);
@@ -273,6 +295,7 @@ public class GroupDetailActivity extends AppCompatActivity {
         i.putExtra(EditGroupActivity.EXTRA_DESCRIPTION, currentDetail.getDescription());
         i.putExtra(EditGroupActivity.EXTRA_PRIVACY, currentDetail.getPrivacy());
         i.putExtra(EditGroupActivity.EXTRA_AVATAR_URL, currentDetail.getAvatarUrl());
+        i.putExtra(EditGroupActivity.EXTRA_COVER_URL, currentDetail.getCoverUrl());
         i.putExtra(EditGroupActivity.EXTRA_REQUIRE_APPROVAL, currentDetail.isRequirePostApproval());
         startActivityForResult(i, 100);
     }

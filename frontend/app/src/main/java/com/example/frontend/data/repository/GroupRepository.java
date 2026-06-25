@@ -166,6 +166,25 @@ public class GroupRepository {
                 });
     }
 
+    public void updateGroupCover(String groupId, File coverFile, MutableLiveData<Result<Object>> liveData) {
+        liveData.postValue(Result.loading());
+        if (coverFile == null || !coverFile.exists()) {
+            liveData.postValue(Result.error("Không đọc được ảnh bìa"));
+            return;
+        }
+        RequestBody fileBody = RequestBody.create(MediaType.parse("image/*"), coverFile);
+        MultipartBody.Part coverPart = MultipartBody.Part.createFormData("file", coverFile.getName(), fileBody);
+        apiService.updateGroupCover(groupId, coverPart).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
+                if (ok(r)) liveData.postValue(Result.success(null));
+                else liveData.postValue(Result.error(msg(r, "Cập nhật ảnh bìa thất bại")));
+            }
+            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+    }
+
     public void joinGroup(String groupId, MutableLiveData<Result<Object>> liveData) {
         liveData.postValue(Result.loading());
         apiService.joinGroup(groupId).enqueue(new Callback<ApiResponse<Object>>() {
