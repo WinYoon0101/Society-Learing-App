@@ -52,17 +52,34 @@
             app:tint="@color/group_text" />
 
         <ImageButton
-            android:id="@+id/btnAdd"
+            android:id="@+id/btnNotify"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_centerVertical="true"
             android:layout_toStartOf="@id/btnSearch"
             android:layout_marginEnd="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Tạo nhóm"
+            android:contentDescription="Thông báo"
             android:padding="8dp"
-            android:src="@drawable/ic_add"
+            android:src="@drawable/ic_notify"
             app:tint="@color/group_text" />
+
+        <TextView
+            android:id="@+id/tvNotifyBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@id/btnNotify"
+            android:layout_alignEnd="@id/btnNotify"
+            android:layout_marginTop="4dp"
+            android:minWidth="16dp"
+            android:minHeight="16dp"
+            android:paddingHorizontal="4dp"
+            android:gravity="center"
+            android:background="@drawable/bg_notification_badge"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
     </RelativeLayout>
 
     <!-- TAB LAYOUT (pill style) -->

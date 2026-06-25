@@ -7,7 +7,8 @@ export interface IPost extends Document {
     sharedPostId?: mongoose.Types.ObjectId;
     content: string;
     privacy: string;
-    tags: mongoose.Types.ObjectId[];  
+    status: string; // "approved" | "pending" — bài nhóm cần duyệt sẽ là "pending"
+    tags: mongoose.Types.ObjectId[];
     hashtags: string[];
     countReaction: number;
     countComment: number;
@@ -41,6 +42,12 @@ const PostSchema: Schema = new Schema<IPost>(
             type: String,
             default: "Public",
             enum: ['Public', 'Private', 'Friends'],
+        },
+        // Trạng thái duyệt: bài đăng vào nhóm bật "yêu cầu duyệt" (và không phải admin) sẽ là "pending"
+        status: {
+            type: String,
+            default: "approved",
+            enum: ['approved', 'pending'],
         },
         // Tagged users in the post
         tags: [{ type: Schema.Types.ObjectId, ref: 'User' }],

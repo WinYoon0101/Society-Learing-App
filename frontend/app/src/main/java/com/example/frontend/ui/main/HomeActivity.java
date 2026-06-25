@@ -64,6 +64,7 @@ public class HomeActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
     private BadgeDrawable notifyBadge;
+    private TextView tvNotifyBadge;
 
 
     private int currentTab = 0; // 0: Home, 1: Friend, 2: Chat, 3: Library, 4: Notify, 5: Profile
@@ -110,6 +111,7 @@ public class HomeActivity extends AppCompatActivity {
         imgLibrary = findViewById(R.id.imgLibrary);
         imgNotify = findViewById(R.id.imgNotify);
         imgProfile = findViewById(R.id.imgProfile);
+        tvNotifyBadge = findViewById(R.id.tvNotifyBadge);
 
         lineHome = findViewById(R.id.lineHome);
         lineFriend = findViewById(R.id.lineFriend);
@@ -239,6 +241,13 @@ public class HomeActivity extends AppCompatActivity {
 
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // Cập nhật badge số thông báo chưa đọc (về số thực tế / 0 sau khi đã đọc)
+        com.example.frontend.ui.notify.NotificationBadge.refresh(this, tvNotifyBadge);
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt("CURRENT_TAB", currentTab);
@@ -344,6 +353,9 @@ public class HomeActivity extends AppCompatActivity {
 
 
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
+
+        // Đổi tab → cập nhật lại badge (vd vừa đọc thông báo ở tab Notify rồi sang tab khác)
+        com.example.frontend.ui.notify.NotificationBadge.refresh(this, tvNotifyBadge);
     }
 
     private void resetTabs() {

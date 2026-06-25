@@ -15,7 +15,10 @@ public class Notification {
     @SerializedName("targetId")
     private String targetId;
 
- 
+    @SerializedName("postId")
+    private String postId;
+
+
     @SerializedName("content")
     private String content;
 
@@ -35,6 +38,7 @@ public class Notification {
     public User getSender() { return sender; }
     public String getType() { return type; }
     public String getTargetId() { return targetId; }
+    public String getPostId() { return postId; }
     public String getContent() { return content; } // Thêm getter cho content
     public boolean isRead() { return isRead; }
     public void setRead(boolean read) { isRead = read; }

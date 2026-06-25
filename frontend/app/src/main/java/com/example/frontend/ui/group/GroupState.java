@@ -85,4 +85,25 @@ public final class GroupState {
         String cur = lastUpdated == null ? "" : lastUpdated;
         return cur.equals(p.getString(key, null));
     }
+
+    // ── Mức nhận thông báo của nhóm (local, G-B4) ────────────────
+    // Hiện chỉ lưu lựa chọn (chưa lọc thông báo in-app vì noti là list chung).
+    private static final String KEY_NOTIF_PREFIX = "GROUP_NOTIF_";
+    public static final String NOTIF_ALL = "all";          // Tất cả bài viết
+    public static final String NOTIF_HIGHLIGHT = "highlight"; // Chỉ nổi bật
+    public static final String NOTIF_OFF = "off";          // Tắt thông báo
+
+    public static String getGroupNotifLevel(Context c, String groupId) {
+        if (groupId == null) return NOTIF_ALL;
+        return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getString(KEY_NOTIF_PREFIX + groupId, NOTIF_ALL);
+    }
+
+    public static void setGroupNotifLevel(Context c, String groupId, String level) {
+        if (groupId == null) return;
+        c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_NOTIF_PREFIX + groupId, level)
+                .apply();
+    }
 }

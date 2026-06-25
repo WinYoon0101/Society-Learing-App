@@ -14,6 +14,8 @@ import com.example.frontend.data.model.GroupDetail;
 import com.example.frontend.data.model.GroupInvitation;
 import com.example.frontend.data.model.GroupMember;
 import com.example.frontend.data.model.GroupPost;
+import com.example.frontend.data.model.PendingMember;
+import com.example.frontend.data.model.RequestJoinResult;
 import com.example.frontend.data.model.LiveModel;
 import com.example.frontend.data.model.LoginResponse;
 import com.example.frontend.data.model.MindmapData;
@@ -121,7 +123,7 @@ public interface ApiService {
     @PUT("notifications/{id}/read")
     Call<ApiResponse<Object>> markNotificationRead(@Path("id") String id);
 
-    @PUT("notifications/mark-all-read")
+    @PUT("notifications/read-all")
     Call<ApiResponse<Object>> markAllNotificationsRead();
 
     // ====== USER ======
@@ -310,7 +312,7 @@ public interface ApiService {
 
     // Phản hồi lời mời: body = { "action": "accept" | "decline" }
     @PATCH("groups/invitations/{invitationId}")
-    Call<ApiResponse<Object>> respondToInvitation(
+    Call<ApiResponse<RequestJoinResult>> respondToInvitation(
             @Path("invitationId") String invitationId,
             @Body Map<String, String> body
     );
@@ -341,12 +343,61 @@ public interface ApiService {
             @Part("groupName") RequestBody groupName,
             @Part("description") RequestBody description,
             @Part("privacy") RequestBody privacy,
+            @Part("requirePostApproval") RequestBody requirePostApproval,
             @Part MultipartBody.Part avatar
+    );
+
+    // Cập nhật ảnh bìa nhóm (admin) - field "file"
+    @Multipart
+    @PATCH("groups/{groupId}/cover")
+    Call<ApiResponse<Object>> updateGroupCover(
+            @Path("groupId") String groupId,
+            @Part MultipartBody.Part cover
     );
 
     // Tham gia nhóm public
     @POST("groups/{groupId}/join")
     Call<ApiResponse<Object>> joinGroup(@Path("groupId") String groupId);
+
+    // Yêu cầu tham gia nhóm (Public → vào thẳng; Private → chờ duyệt)
+    @POST("groups/{groupId}/request-join")
+    Call<ApiResponse<RequestJoinResult>> requestJoinGroup(@Path("groupId") String groupId);
+
+    // Rời nhóm
+    @POST("groups/{groupId}/leave")
+    Call<ApiResponse<Object>> leaveGroup(@Path("groupId") String groupId);
+
+    // Danh sách yêu cầu tham gia đang chờ (admin)
+    @GET("groups/{groupId}/pending-members")
+    Call<ApiResponse<List<PendingMember>>> getPendingMembers(@Path("groupId") String groupId);
+
+    // Danh sách bài viết chờ duyệt (admin)
+    @GET("groups/{groupId}/pending-posts")
+    Call<ApiResponse<List<GroupPost>>> getPendingPosts(@Path("groupId") String groupId);
+
+    // Duyệt / từ chối bài viết trong nhóm (admin)
+    @PATCH("posts/{postId}/approve")
+    Call<ApiResponse<Object>> approvePost(@Path("postId") String postId);
+
+    @PATCH("posts/{postId}/reject")
+    Call<ApiResponse<Object>> rejectPost(@Path("postId") String postId);
+
+    // Duyệt / từ chối yêu cầu tham gia (admin)
+    @PATCH("groups/{groupId}/members/{userId}/approve")
+    Call<ApiResponse<Object>> approveMember(
+            @Path("groupId") String groupId,
+            @Path("userId") String userId
+    );
+
+    @PATCH("groups/{groupId}/members/{userId}/reject")
+    Call<ApiResponse<Object>> rejectMember(
+            @Path("groupId") String groupId,
+            @Path("userId") String userId
+    );
+
+    // Xóa nhóm (creator/admin only)
+    @DELETE("groups/{groupId}")
+    Call<ApiResponse<Object>> deleteGroup(@Path("groupId") String groupId);
 
     // Bài viết của 1 nhóm cụ thể
     @GET("groups/{groupId}/posts")

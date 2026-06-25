@@ -321,7 +321,10 @@ public class CreatePostFragment extends Fragment {
         viewModel.getIsSuccess().observe(getViewLifecycleOwner(), isSuccess -> {
             if (Boolean.TRUE.equals(isSuccess)) {
                 viewModel.resetSuccess();
-                Toast.makeText(getContext(), "Đăng bài thành công!", Toast.LENGTH_SHORT).show();
+                String successMsg = viewModel.getSuccessMessage().getValue();
+                Toast.makeText(getContext(),
+                        successMsg != null && !successMsg.isEmpty() ? successMsg : "Đăng bài thành công!",
+                        Toast.LENGTH_SHORT).show();
 
                 if (getParentFragmentManager().getBackStackEntryCount() > 0) {
                     getParentFragmentManager().popBackStack();

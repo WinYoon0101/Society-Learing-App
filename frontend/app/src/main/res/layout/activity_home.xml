@@ -160,12 +160,30 @@
                 android:orientation="vertical"
                 android:gravity="center"
                 android:background="?attr/selectableItemBackground">
-                <ImageView
-                    android:id="@+id/imgNotify"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:src="@drawable/ic_notify"
-                    app:tint="@color/tab_icon_color" />
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:id="@+id/imgNotify"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@drawable/ic_notify"
+                        app:tint="@color/tab_icon_color" />
+                    <TextView
+                        android:id="@+id/tvNotifyBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|end"
+                        android:minWidth="16dp"
+                        android:minHeight="16dp"
+                        android:paddingHorizontal="4dp"
+                        android:gravity="center"
+                        android:background="@drawable/bg_notification_badge"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </FrameLayout>
                 <View
                     android:id="@+id/lineNotify"
                     android:layout_width="28dp"

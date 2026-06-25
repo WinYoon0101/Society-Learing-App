@@ -30,6 +30,8 @@ public class CreatePostViewModel extends ViewModel {
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> isSuccess = new MutableLiveData<>(false);
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>(null);
+    // Thông điệp thành công từ server (vd "Bài viết đã được gửi, đang chờ duyệt")
+    private final MutableLiveData<String> successMessage = new MutableLiveData<>(null);
 
     public LiveData<Boolean> getIsLoading() {
         return isLoading;
@@ -37,6 +39,10 @@ public class CreatePostViewModel extends ViewModel {
 
     public LiveData<Boolean> getIsSuccess() {
         return isSuccess;
+    }
+
+    public LiveData<String> getSuccessMessage() {
+        return successMessage;
     }
 
     public LiveData<String> getErrorMessage() {
@@ -85,6 +91,7 @@ public class CreatePostViewModel extends ViewModel {
             public void onResponse(Call<ApiResponse<Post>> call, Response<ApiResponse<Post>> response) {
                 isLoading.setValue(false);
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    successMessage.setValue(response.body().getMessage());
                     isSuccess.setValue(true);
                 } else {
                     errorMessage.setValue("Lỗi khi đăng bài: " + response.message());
