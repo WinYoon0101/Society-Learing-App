@@ -46,14 +46,9 @@ public final class ReactionPopupHelper {
         popup.setOutsideTouchable(true);
         popup.setElevation(dp(context, 8));
 
-        String myEmoji = findMyEmoji(message, currentUserId);
-
         for (int i = 0; i < EMOJI_IDS.length; i++) {
             TextView tv = content.findViewById(EMOJI_IDS[i]);
             String emoji = EMOJIS[i];
-            if (emoji.equals(myEmoji)) {
-                tv.setBackgroundResource(R.drawable.bg_reaction_chip_mine);
-            }
             tv.setOnClickListener(v -> {
                 if (listener != null) listener.onSelected(emoji);
                 popup.dismiss();

@@ -14,16 +14,29 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.frontend.R;
+import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Conversation;
 import com.example.frontend.data.model.User;
+import com.example.frontend.data.remote.ApiClient;
+import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.data.socket.ChatSocketManager;
+import com.example.frontend.ui.profile.FriendProfileActivity;
 import com.example.frontend.utils.Constants;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ChatDetailFragment extends Fragment {
     private static final int PICK_FILE_REQUEST = 101;
@@ -34,11 +47,21 @@ public class ChatDetailFragment extends Fragment {
     private EditText etMessage;
     private ImageButton btnSend;
     private ImageButton btnAttach;
+    private TextView tvChatName;
+    private ImageButton btnChatDetailMore;
 
     private String conversationId;
     private String currentUserId;
     private String token;
     private User otherMember;
+    private Map<String, String> nicknames;
+
+    // Reply state
+    private String replyingToMessageId;
+    private View replyPreviewBar;
+    private TextView tvReplyPreviewSender;
+    private TextView tvReplyPreviewText;
+    private ImageButton btnCancelReply;
 
     public static ChatDetailFragment newInstance(Conversation conversation, User otherMember) {
         ChatDetailFragment fragment = new ChatDetailFragment();
@@ -69,6 +92,7 @@ public class ChatDetailFragment extends Fragment {
             otherMember = (User) getArguments().getSerializable("otherMember");
             if (conversation != null) {
                 conversationId = conversation.getId();
+                nicknames = conversation.getNicknames();
                 if (otherMember == null) {
                     otherMember = getOtherMember(conversation);
                 }
@@ -87,7 +111,8 @@ public class ChatDetailFragment extends Fragment {
     }
 
     private void setupUI(View view) {
-        TextView tvChatName = view.findViewById(R.id.tvChatName);
+        tvChatName = view.findViewById(R.id.tvChatName);
+        btnChatDetailMore = view.findViewById(R.id.btnChatDetailMore);
         ImageButton btnBack = view.findViewById(R.id.btnChatDetailBack);
         rvMessages = view.findViewById(R.id.rvMessages);
         etMessage = view.findViewById(R.id.etMessage);
@@ -95,9 +120,20 @@ public class ChatDetailFragment extends Fragment {
         btnAttach = view.findViewById(R.id.btnAttach);
         btnAttach.setOnClickListener(v -> openFilePicker());
 
+        replyPreviewBar = view.findViewById(R.id.replyPreviewBar);
+        tvReplyPreviewSender = view.findViewById(R.id.tvReplyPreviewSender);
+        tvReplyPreviewText = view.findViewById(R.id.tvReplyPreviewText);
+        btnCancelReply = view.findViewById(R.id.btnCancelReply);
+        btnCancelReply.setOnClickListener(v -> clearReply());
+
         if (otherMember != null) {
-            tvChatName.setText(otherMember.getUsername());
+            tvChatName.setText(resolveDisplayName());
         }
+
+        // Click tên → mở trang cá nhân của đối phương
+        tvChatName.setOnClickListener(v -> openFriendProfile());
+        // Menu 3 chấm: xem trang cá nhân / đổi biệt danh
+        btnChatDetailMore.setOnClickListener(this::showChatOptionsMenu);
 
         btnBack.setOnClickListener(v -> requireActivity().onBackPressed());
 
@@ -112,6 +148,23 @@ public class ChatDetailFragment extends Fragment {
             @Override
             public void onReactionChipClick(com.example.frontend.data.model.Message message, String emoji) {
                 ChatSocketManager.INSTANCE.reactMessage(message.getId(), emoji);
+            }
+
+            @Override
+            public void onReplyClick(com.example.frontend.data.model.Message message) {
+                showReplyPreview(message);
+            }
+
+            @Override
+            public void onQuoteClick(String replyToMessageId) {
+                int pos = messageAdapter.indexOfMessage(replyToMessageId);
+                if (pos >= 0) {
+                    rvMessages.smoothScrollToPosition(pos);
+                    messageAdapter.flashMessage(pos);
+                } else {
+                    Toast.makeText(getContext(),
+                            "Tin nhắn gốc chưa được tải", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         rvMessages.setAdapter(messageAdapter);
@@ -198,8 +251,147 @@ public class ChatDetailFragment extends Fragment {
             return;
         }
 
-        ChatSocketManager.INSTANCE.sendMessage(conversationId, messageText, null);
+        ChatSocketManager.INSTANCE.sendMessage(conversationId, messageText, replyingToMessageId);
         etMessage.setText("");
+        clearReply();
+    }
+
+    /** Hiện thanh "Đang trả lời" + lưu id message gốc để gửi kèm. */
+    private void showReplyPreview(com.example.frontend.data.model.Message message) {
+        if (message == null) return;
+        replyingToMessageId = message.getId();
+
+        String senderName = (message.getSender() != null && message.getSender().getUsername() != null)
+                ? message.getSender().getUsername() : "";
+        tvReplyPreviewSender.setText("Đang trả lời " + senderName);
+
+        String snippet = message.getText();
+        if (snippet == null || snippet.isEmpty()) {
+            if (message.getMediaUrl() != null && !message.getMediaUrl().isEmpty()) {
+                String mt = message.getMediaType();
+                if ("image".equals(mt)) snippet = "[Ảnh]";
+                else if ("video".equals(mt)) snippet = "[Video]";
+                else snippet = "[Tệp]";
+            } else {
+                snippet = "";
+            }
+        }
+        tvReplyPreviewText.setText(snippet);
+        replyPreviewBar.setVisibility(View.VISIBLE);
+    }
+
+    /** Xoá trạng thái reply + ẩn thanh preview. */
+    private void clearReply() {
+        replyingToMessageId = null;
+        if (replyPreviewBar != null) {
+            replyPreviewBar.setVisibility(View.GONE);
+        }
+    }
+
+    // ─────────────────────── Header: profile + options ───────────────────────
+
+    /** Mở trang cá nhân của đối phương. Activity đã có sẵn (không sửa). */
+    private void openFriendProfile() {
+        if (otherMember == null || otherMember.getId() == null) {
+            Toast.makeText(getContext(), "Không có thông tin người dùng", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(requireContext(), FriendProfileActivity.class);
+        intent.putExtra("FRIEND_ID", otherMember.getId());
+        intent.putExtra("FRIEND_NAME", otherMember.getUsername());
+        intent.putExtra("FRIEND_AVATAR", otherMember.getAvatar());
+        startActivity(intent);
+    }
+
+    private void showChatOptionsMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(requireContext(), anchor);
+        popup.getMenuInflater().inflate(R.menu.menu_chat_options, popup.getMenu());
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.action_view_profile) {
+                openFriendProfile();
+                return true;
+            } else if (id == R.id.action_set_nickname) {
+                showNicknameDialog();
+                return true;
+            } else if (id == R.id.action_reset_nickname) {
+                resetNickname();
+                return true;
+            }
+            return false;
+        });
+        popup.show();
+    }
+
+    /** Dialog nhập biệt danh cho đối phương. */
+    private void showNicknameDialog() {
+        if (otherMember == null || otherMember.getId() == null || conversationId == null) {
+            Toast.makeText(getContext(), "Không thể đổi biệt danh lúc này", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final EditText input = new EditText(requireContext());
+        input.setHint("Biệt danh");
+        input.setText(tvChatName.getText());
+        input.setSelection(input.getText().length());
+
+        int pad = Math.round(getResources().getDisplayMetrics().density * 20);
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Đổi biệt danh")
+                .setView(input, pad, pad / 2, pad, 0)
+                .setPositiveButton("Lưu", (dialog, which) -> {
+                    String nickname = input.getText().toString().trim();
+                    setNickname(nickname);
+                })
+                .setNegativeButton("Huỷ", null)
+                .show();
+    }
+
+    /** Đặt lại biệt danh về username gốc (gửi nickname rỗng). */
+    private void resetNickname() {
+        if (otherMember == null || otherMember.getId() == null || conversationId == null) {
+            Toast.makeText(getContext(), "Không thể đặt lại biệt danh lúc này", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        setNickname("");
+    }
+
+    private void setNickname(String nickname) {
+        Map<String, String> body = new HashMap<>();
+        body.put("targetUserId", otherMember.getId());
+        body.put("nickname", nickname);
+
+        ApiService api = ApiClient.getApiService(requireContext().getApplicationContext());
+        api.setNickname(conversationId, body).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Object>> call,
+                                   @NonNull Response<ApiResponse<Object>> response) {
+                if (!isAdded()) return;
+                ApiResponse<Object> b = response.body();
+                if (response.isSuccessful() && b != null && b.isSuccess()) {
+                    // Đồng bộ map local để mọi nơi trong session dùng tên mới nhất
+                    if (nicknames == null) nicknames = new HashMap<>();
+                    if (nickname.isEmpty()) {
+                        nicknames.remove(otherMember.getId());
+                    } else {
+                        nicknames.put(otherMember.getId(), nickname);
+                    }
+                    // Cập nhật tên hiển thị ngay: nickname rỗng → quay về username gốc
+                    tvChatName.setText(resolveDisplayName());
+                    Toast.makeText(getContext(),
+                            nickname.isEmpty() ? "Đã đặt lại biệt danh" : "Đã đổi biệt danh",
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(),
+                            "Đổi biệt danh thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Object>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(getContext(), "Lỗi mạng khi đổi biệt danh", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void openFilePicker() {
@@ -293,6 +485,18 @@ public class ChatDetailFragment extends Fragment {
             Toast.makeText(getContext(), "Lỗi đọc file", Toast.LENGTH_SHORT).show();
             android.util.Log.e("ChatDetail", "File read error: " + e.getMessage());
         }
+    }
+
+    /** Ưu tiên biệt danh (nicknames[otherId]) nếu có, else username gốc. */
+    private String resolveDisplayName() {
+        if (otherMember == null) return "";
+        if (nicknames != null && otherMember.getId() != null) {
+            String nn = nicknames.get(otherMember.getId());
+            if (nn != null && !nn.trim().isEmpty()) {
+                return nn;
+            }
+        }
+        return otherMember.getUsername() != null ? otherMember.getUsername() : "";
     }
 
     private User getOtherMember(Conversation conversation) {

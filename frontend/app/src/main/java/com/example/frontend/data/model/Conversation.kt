@@ -14,6 +14,10 @@ data class Conversation(
     @SerializedName("lastMessage")
     val lastMessage: Message? = null,
 
+    // Map<userId, nickname> — biệt danh mỗi thành viên trong conversation (BE trả về)
+    @SerializedName("nicknames")
+    val nicknames: Map<String, String>? = null,
+
     @SerializedName("createdAt")
     val createdAt: Date? = null,
 

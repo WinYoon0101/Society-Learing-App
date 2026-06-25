@@ -8,13 +8,18 @@ import io.socket.client.Socket
 import io.socket.emitter.Emitter
 import org.json.JSONObject
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.example.frontend.data.model.Message
 import com.example.frontend.data.model.Reaction
+import com.example.frontend.data.remote.MessageDeserializer
 import java.net.URISyntaxException
 
 object ChatSocketManager {
     private var socket: Socket? = null
-    private val gson = Gson()
+    // Gson chịu được replyTo dạng STRING (replyTo lồng nhau BE chỉ populate 1 cấp)
+    private val gson = GsonBuilder()
+        .registerTypeAdapter(Message::class.java, MessageDeserializer())
+        .create()
     private val TAG = "ChatSocket"
 
     // Listeners

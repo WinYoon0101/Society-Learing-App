@@ -18,12 +18,16 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapter.ConversationViewHolder> {
 
     private List<Conversation> conversations = new ArrayList<>();
+    private Set<String> onlineIds = new HashSet<>();
     private String currentUserId;
 
     public interface OnConversationClickListener {
@@ -39,6 +43,11 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
 
     public void submitList(List<Conversation> list) {
         this.conversations = list != null ? list : new ArrayList<>();
+        notifyDataSetChanged();
+    }
+
+    public void setOnlineIds(Set<String> ids) {
+        this.onlineIds = ids != null ? ids : new HashSet<>();
         notifyDataSetChanged();
     }
 
@@ -79,8 +88,9 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
             User otherMember = getOtherMember(conversation);
 
             if (otherMember != null) {
-                tvName.setText(otherMember.getUsername());
-                viewOnlineDot.setVisibility(otherMember.isActive() ? View.VISIBLE : View.GONE);
+                tvName.setText(resolveDisplayName(conversation, otherMember));
+                boolean online = otherMember.getId() != null && onlineIds.contains(otherMember.getId());
+                viewOnlineDot.setVisibility(online ? View.VISIBLE : View.GONE);
 
                 Glide.with(itemView.getContext())
                         .load(otherMember.getAvatar())
@@ -132,6 +142,18 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
                     listener.onConversationClick(conversation, otherMember);
                 }
             });
+        }
+
+        /** Ưu tiên biệt danh (conversation.nicknames[otherId]) nếu có, else username gốc. */
+        private String resolveDisplayName(Conversation conversation, User otherMember) {
+            Map<String, String> nicknames = conversation.getNicknames();
+            if (nicknames != null && otherMember.getId() != null) {
+                String nn = nicknames.get(otherMember.getId());
+                if (nn != null && !nn.trim().isEmpty()) {
+                    return nn;
+                }
+            }
+            return otherMember.getUsername();
         }
 
         private User getOtherMember(Conversation conversation) {

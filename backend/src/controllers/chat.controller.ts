@@ -12,7 +12,10 @@ export const getConversations = async (
   try {
     const userId = req.user!.id;
 
-    const conversations = await Conversation.find({ members: userId })
+    const conversations = await Conversation.find({
+      members: userId,
+      deletedBy: { $ne: userId }, // ẩn conversation đã xóa-phía-mình
+    })
       .populate("members", "username avatar isActive _id")
       .populate({
         path: "lastMessage",
@@ -64,6 +67,13 @@ export const getOrCreateConversation = async (
       },
     });
 
+    // Mở lại 1 conversation từng xóa-phía-mình → un-hide
+    if (conversation && conversation.deletedBy?.length) {
+      await Conversation.findByIdAndUpdate(conversation._id, {
+        $pull: { deletedBy: userId },
+      });
+    }
+
     if (!conversation) {
       conversation = await Conversation.create({
         members: [userId, targetUserId],
@@ -111,7 +121,10 @@ export const getMessages = async (
       return;
     }
 
-    const messages = await Message.find({ conversationId })
+    const messages = await Message.find({
+      conversationId,
+      deletedFor: { $ne: userId }, // ẩn message đã xóa-phía-mình
+    })
       .populate("sender", "username avatar _id")
       .populate({
         path: "replyTo",
@@ -182,6 +195,250 @@ export const setColor = async (
     }
 
     res.json({ success: true, data: conversation });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// POST /api/chat/conversations/group - Tạo group chat
+export const createGroup = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const { name, memberIds } = req.body as { name?: string; memberIds?: string[] };
+
+    if (!Array.isArray(memberIds) || memberIds.length < 2) {
+      res.status(400).json({ success: false, message: "Nhóm cần ít nhất 3 thành viên" });
+      return;
+    }
+
+    // Gộp creator + members, loại trùng
+    const unique = Array.from(new Set([userId, ...memberIds.map(String)]));
+
+    let conversation = await Conversation.create({
+      members: unique,
+      isGroup: true,
+      name: name?.trim() || "",
+      admin: userId,
+    });
+
+    conversation = await conversation.populate([
+      { path: "members", select: "username avatar isActive _id" },
+      { path: "lastMessage", populate: { path: "sender", select: "username avatar _id" } },
+    ]);
+
+    res.status(201).json({ success: true, data: conversation });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// POST /api/chat/conversations/:conversationId/members - Thêm thành viên (1-1 sẽ thành group)
+export const addMembers = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const { conversationId } = req.params;
+    const { userIds } = req.body as { userIds?: string[] };
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      res.status(400).json({ success: false, message: "Thiếu userIds" });
+      return;
+    }
+
+    const conversation = await Conversation.findOne({ _id: conversationId, members: userId });
+    if (!conversation) {
+      res.status(403).json({ success: false, message: "Không có quyền truy cập" });
+      return;
+    }
+
+    const updates: Record<string, any> = {
+      $addToSet: { members: { $each: userIds } },
+    };
+    // Thêm người vào chat 1-1 → biến thành group
+    if (!conversation.isGroup) {
+      updates.isGroup = true;
+      if (!conversation.admin) updates.admin = userId;
+    }
+
+    const updated = await Conversation.findByIdAndUpdate(conversationId, updates, { new: true })
+      .populate("members", "username avatar isActive _id")
+      .populate({
+        path: "lastMessage",
+        populate: { path: "sender", select: "username avatar _id" },
+      });
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// POST /api/chat/conversations/:conversationId/leave - Rời nhóm
+export const leaveGroup = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const { conversationId } = req.params;
+
+    const conversation = await Conversation.findOne({ _id: conversationId, members: userId });
+    if (!conversation) {
+      res.status(403).json({ success: false, message: "Không có quyền truy cập" });
+      return;
+    }
+    if (!conversation.isGroup) {
+      res.status(400).json({ success: false, message: "Chỉ rời được nhóm" });
+      return;
+    }
+
+    const remaining = conversation.members.filter((m) => m.toString() !== userId);
+
+    // Nhóm rỗng → xóa hẳn
+    if (remaining.length === 0) {
+      await Conversation.findByIdAndDelete(conversationId);
+      res.json({ success: true, message: "Đã rời và xóa nhóm rỗng" });
+      return;
+    }
+
+    const update: Record<string, any> = { $pull: { members: userId } };
+    // Admin rời → chuyển cho thành viên còn lại đầu tiên
+    if (conversation.admin && conversation.admin.toString() === userId) {
+      update.admin = remaining[0];
+    }
+    await Conversation.findByIdAndUpdate(conversationId, update);
+
+    res.json({ success: true, message: "Đã rời nhóm" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// PATCH /api/chat/conversations/:conversationId/name - Đổi tên nhóm
+export const renameGroup = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const { conversationId } = req.params;
+    const { name } = req.body as { name?: string };
+
+    const conversation = await Conversation.findOneAndUpdate(
+      { _id: conversationId, members: userId, isGroup: true },
+      { name: name?.trim() || "" },
+      { new: true }
+    );
+    if (!conversation) {
+      res.status(403).json({ success: false, message: "Không có quyền truy cập" });
+      return;
+    }
+    // Trả tối giản (tránh members chưa populate)
+    res.json({ success: true, data: { name: conversation.name } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// DELETE /api/chat/conversations/:conversationId - Xóa đoạn chat (ẩn-phía-mình)
+export const deleteConversation = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const { conversationId } = req.params;
+
+    const conversation = await Conversation.findOne({ _id: conversationId, members: userId });
+    if (!conversation) {
+      res.status(403).json({ success: false, message: "Không có quyền truy cập" });
+      return;
+    }
+    await Conversation.findByIdAndUpdate(conversationId, {
+      $addToSet: { deletedBy: userId },
+    });
+    res.json({ success: true, message: "Đã xóa đoạn chat" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// PATCH /api/chat/conversations/:conversationId/mute - Tắt/bật thông báo (per-user)
+// Body: { messages?: boolean, calls?: boolean }  (true = tắt, false = bật lại)
+export const setMute = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const { conversationId } = req.params;
+    const { messages, calls } = req.body as { messages?: boolean; calls?: boolean };
+
+    const conversation = await Conversation.findOne({ _id: conversationId, members: userId });
+    if (!conversation) {
+      res.status(403).json({ success: false, message: "Không có quyền truy cập" });
+      return;
+    }
+
+    const addToSet: Record<string, any> = {};
+    const pull: Record<string, any> = {};
+    if (typeof messages === "boolean") {
+      if (messages) addToSet.mutedMessages = userId;
+      else pull.mutedMessages = userId;
+    }
+    if (typeof calls === "boolean") {
+      if (calls) addToSet.mutedCalls = userId;
+      else pull.mutedCalls = userId;
+    }
+    const update: Record<string, any> = {};
+    if (Object.keys(addToSet).length) update.$addToSet = addToSet;
+    if (Object.keys(pull).length) update.$pull = pull;
+    if (Object.keys(update).length) {
+      await Conversation.findByIdAndUpdate(conversationId, update);
+    }
+
+    const updated = await Conversation.findById(conversationId).select("mutedMessages mutedCalls");
+    res.json({
+      success: true,
+      data: {
+        mutedMessages: updated?.mutedMessages?.some((u) => u.toString() === userId) || false,
+        mutedCalls: updated?.mutedCalls?.some((u) => u.toString() === userId) || false,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// DELETE /api/chat/messages/:messageId/me - Xóa tin nhắn phía mình (ẩn riêng)
+export const deleteMessageForMe = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const { messageId } = req.params;
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      res.status(404).json({ success: false, message: "Không tìm thấy tin nhắn" });
+      return;
+    }
+    const conversation = await Conversation.findOne({
+      _id: message.conversationId,
+      members: userId,
+    });
+    if (!conversation) {
+      res.status(403).json({ success: false, message: "Không có quyền" });
+      return;
+    }
+    await Message.findByIdAndUpdate(messageId, { $addToSet: { deletedFor: userId } });
+    res.json({ success: true, message: "Đã xóa tin nhắn phía bạn" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server" });
   }

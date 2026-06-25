@@ -137,10 +137,11 @@ export function initChatSocket(io: Server) {
 
           const message = await Message.create(messageData);
 
-          // Cập nhật lastMessage của conversation
+          // Cập nhật lastMessage + un-hide cho mọi người đã xóa-phía-mình (tin mới → hiện lại)
           await Conversation.findByIdAndUpdate(conversationId, {
             lastMessage: message._id,
             updatedAt: new Date(),
+            deletedBy: [],
           });
 
           // Populate để gửi về client — đảm bảo _id là string

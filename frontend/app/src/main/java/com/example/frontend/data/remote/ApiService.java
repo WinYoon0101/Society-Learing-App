@@ -202,6 +202,14 @@ public interface ApiService {
     @GET("chat/conversations/{conversationId}/messages")
     Call<ApiResponse<List<Message>>> getMessages(@Path("conversationId") String conversationId);
 
+    // Body: { targetUserId, nickname } → đặt biệt danh mình gọi đối phương trong conversation.
+    // Trả ApiResponse<Object> (không phải Conversation) vì BE trả conversation chưa populate
+    // members (mảng ObjectId string) → parse Conversation.members:List<User> sẽ nổ. FE chỉ
+    // cần cờ success nên dùng Object cho an toàn.
+    @PATCH("chat/conversations/{conversationId}/nickname")
+    Call<ApiResponse<Object>> setNickname(@Path("conversationId") String conversationId,
+                                          @Body Map<String, String> body);
+
     @POST("chat/messages")
     Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);
 

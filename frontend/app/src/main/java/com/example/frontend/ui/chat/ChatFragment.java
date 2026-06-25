@@ -151,6 +151,8 @@ public class ChatFragment extends Fragment {
                         layoutEmpty.setVisibility(View.GONE);
                         rvConversations.setVisibility(View.VISIBLE);
                         conversationAdapter.submitList(conversations);
+                        // Đảm bảo chấm online đúng ngay khi list vừa load (Task A)
+                        refreshOnlineRail();
                     } else {
                         layoutEmpty.setVisibility(View.VISIBLE);
                         rvConversations.setVisibility(View.GONE);
@@ -282,5 +284,10 @@ public class ChatFragment extends Fragment {
         rail.addAll(railOffline);
         onlineUserAdapter.setOnlineIds(new HashSet<>(onlineIds));
         onlineUserAdapter.submitList(rail);
+
+        // Đồng bộ chấm online cho list "Tin nhắn gần đây" (Task A)
+        if (conversationAdapter != null) {
+            conversationAdapter.setOnlineIds(new HashSet<>(onlineIds));
+        }
     }
 }

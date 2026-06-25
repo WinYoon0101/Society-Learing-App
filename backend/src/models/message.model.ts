@@ -14,7 +14,8 @@ export interface IMessage extends Document {
   text: string;
   replyTo?: mongoose.Types.ObjectId; // reply tin nhắn
   reactions: IReaction[];            // thả cảm xúc
-  isDeleted: boolean;
+  isDeleted: boolean;                // thu hồi (xóa cho cả 2)
+  deletedFor: mongoose.Types.ObjectId[]; // xóa-phía-mình: user nào ẩn message này
   mediaUrl?: string;                 // Cloudinary URL nếu có đính kèm file
   mediaType?: "image" | "video" | "document"; // loại file đính kèm
   createdAt: Date;
@@ -74,6 +75,12 @@ const MessageSchema = new Schema<IMessage>(
       type: Boolean,
       default: false,
     },
+    deletedFor: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );
