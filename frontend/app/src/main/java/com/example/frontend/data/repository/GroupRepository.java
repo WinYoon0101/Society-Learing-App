@@ -142,17 +142,19 @@ public class GroupRepository {
     }
 
     public void updateGroup(String groupId, String groupName, String description, String privacy,
-                            File avatarFile, MutableLiveData<Result<GroupDetail>> liveData) {
+                            boolean requirePostApproval, File avatarFile,
+                            MutableLiveData<Result<GroupDetail>> liveData) {
         liveData.postValue(Result.loading());
         RequestBody nameBody = body(groupName != null ? groupName : "");
         RequestBody descBody = body(description != null ? description : "");
         RequestBody privacyBody = body(privacy != null ? privacy : "");
+        RequestBody approvalBody = body(requirePostApproval ? "true" : "false");
         MultipartBody.Part avatarPart = null;
         if (avatarFile != null && avatarFile.exists()) {
             RequestBody fileBody = RequestBody.create(MediaType.parse("image/*"), avatarFile);
             avatarPart = MultipartBody.Part.createFormData("file", avatarFile.getName(), fileBody);
         }
-        apiService.updateGroup(groupId, nameBody, descBody, privacyBody, avatarPart)
+        apiService.updateGroup(groupId, nameBody, descBody, privacyBody, approvalBody, avatarPart)
                 .enqueue(new Callback<ApiResponse<GroupDetail>>() {
                     @Override public void onResponse(Call<ApiResponse<GroupDetail>> call, Response<ApiResponse<GroupDetail>> r) {
                         if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
@@ -248,6 +250,45 @@ public class GroupRepository {
             @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
                 if (ok(r)) liveData.postValue(Result.success(null));
                 else liveData.postValue(Result.error(msg(r, "Xóa nhóm thất bại")));
+            }
+            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+    }
+
+    public void getPendingPosts(String groupId, MutableLiveData<Result<List<GroupPost>>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.getPendingPosts(groupId).enqueue(new Callback<ApiResponse<List<GroupPost>>>() {
+            @Override public void onResponse(Call<ApiResponse<List<GroupPost>>> call, Response<ApiResponse<List<GroupPost>>> r) {
+                if (ok(r)) liveData.postValue(Result.success(r.body().getData()));
+                else liveData.postValue(Result.error(msg(r, "Không tải được bài chờ duyệt"), null));
+            }
+            @Override public void onFailure(Call<ApiResponse<List<GroupPost>>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage(), null));
+            }
+        });
+    }
+
+    public void approvePost(String postId, MutableLiveData<Result<Object>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.approvePost(postId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
+                if (ok(r)) liveData.postValue(Result.success(null));
+                else liveData.postValue(Result.error(msg(r, "Duyệt bài thất bại")));
+            }
+            @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+    }
+
+    public void rejectPost(String postId, MutableLiveData<Result<Object>> liveData) {
+        liveData.postValue(Result.loading());
+        apiService.rejectPost(postId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {
+                if (ok(r)) liveData.postValue(Result.success(null));
+                else liveData.postValue(Result.error(msg(r, "Từ chối bài thất bại")));
             }
             @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                 liveData.postValue(Result.error(t.getMessage()));

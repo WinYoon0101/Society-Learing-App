@@ -220,6 +220,9 @@ public class GroupDetailActivity extends AppCompatActivity {
             case GroupOptionsBottomSheet.OPT_APPROVE_MEMBERS:
                 openPendingMembers();
                 break;
+            case GroupOptionsBottomSheet.OPT_APPROVE_POSTS:
+                openPendingPosts();
+                break;
             case GroupOptionsBottomSheet.OPT_NOT_INTERESTED:
                 GroupState.addNotInterested(this, groupId);
                 Toast.makeText(this, "Sẽ không gợi ý nhóm này cho bạn nữa", Toast.LENGTH_SHORT).show();
@@ -235,7 +238,6 @@ public class GroupDetailActivity extends AppCompatActivity {
                 break;
             case GroupOptionsBottomSheet.OPT_MANAGE_CONTENT:
             case GroupOptionsBottomSheet.OPT_MANAGE_NOTIF:
-            case GroupOptionsBottomSheet.OPT_APPROVE_POSTS:
             default:
                 Toast.makeText(this, "Tính năng đang được phát triển", Toast.LENGTH_SHORT).show();
                 break;
@@ -257,6 +259,12 @@ public class GroupDetailActivity extends AppCompatActivity {
         startActivity(i);
     }
 
+    private void openPendingPosts() {
+        Intent i = new Intent(this, PendingPostsActivity.class);
+        i.putExtra(PendingPostsActivity.EXTRA_GROUP_ID, groupId);
+        startActivity(i);
+    }
+
     private void openSettings() {
         if (currentDetail == null) return;
         Intent i = new Intent(this, EditGroupActivity.class);
@@ -265,6 +273,7 @@ public class GroupDetailActivity extends AppCompatActivity {
         i.putExtra(EditGroupActivity.EXTRA_DESCRIPTION, currentDetail.getDescription());
         i.putExtra(EditGroupActivity.EXTRA_PRIVACY, currentDetail.getPrivacy());
         i.putExtra(EditGroupActivity.EXTRA_AVATAR_URL, currentDetail.getAvatarUrl());
+        i.putExtra(EditGroupActivity.EXTRA_REQUIRE_APPROVAL, currentDetail.isRequirePostApproval());
         startActivityForResult(i, 100);
     }
 

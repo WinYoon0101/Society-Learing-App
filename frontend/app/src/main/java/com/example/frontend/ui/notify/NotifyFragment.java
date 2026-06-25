@@ -205,6 +205,19 @@ public class NotifyFragment extends Fragment {
                         com.example.frontend.ui.group.GroupActivity.class);
                 intent.putExtra(com.example.frontend.ui.group.GroupActivity.EXTRA_OPEN_TAB, 3);
                 break;
+            case "group_post_rejected":
+                // Bài bị từ chối (đã xoá) → mở chi tiết nhóm (targetId = groupId)
+                intent = new android.content.Intent(requireContext(),
+                        com.example.frontend.ui.group.GroupDetailActivity.class);
+                intent.putExtra(com.example.frontend.ui.group.GroupDetailActivity.EXTRA_GROUP_ID, targetId);
+                break;
+            case "group_post_pending":
+                // Admin: có bài chờ duyệt → mở màn "Duyệt bài" (targetId = groupId), làm nổi bật bài (postId)
+                intent = new android.content.Intent(requireContext(),
+                        com.example.frontend.ui.group.PendingPostsActivity.class);
+                intent.putExtra(com.example.frontend.ui.group.PendingPostsActivity.EXTRA_GROUP_ID, targetId);
+                intent.putExtra(com.example.frontend.ui.group.PendingPostsActivity.EXTRA_HIGHLIGHT_POST_ID, n.getPostId());
+                break;
             default:
                 // post_reaction / post_comment / comment_reply → mở chi tiết bài viết
                 intent = new android.content.Intent(requireContext(),

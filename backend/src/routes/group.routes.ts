@@ -21,6 +21,7 @@ import {
     getPendingMembers,
     approveMember,
     rejectMember,
+    getPendingPosts,
 } from "../controllers/group.controller";
 
 const router = Router();
@@ -54,6 +55,9 @@ router.post("/:groupId/leave", authenticate, leaveGroup);
 
 // --- Feed bài viết của 1 nhóm cụ thể ---
 router.get("/:groupId/posts", authenticate, getPostsByGroup);
+
+// --- Bài viết chờ duyệt (admin) ---
+router.get("/:groupId/pending-posts", authenticate, getPendingPosts);
 
 // --- Thành viên nhóm ---
 router.get("/:groupId/members", authenticate, getGroupMembers);

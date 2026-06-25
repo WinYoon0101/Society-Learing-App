@@ -111,6 +111,12 @@
             android:name=".ui.group.PendingMembersActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.group.PendingPostsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.group.PendingPostDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.notify.NotificationsActivity"
             android:exported="false" />
         <activity

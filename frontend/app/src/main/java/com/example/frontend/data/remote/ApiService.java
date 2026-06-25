@@ -341,6 +341,7 @@ public interface ApiService {
             @Part("groupName") RequestBody groupName,
             @Part("description") RequestBody description,
             @Part("privacy") RequestBody privacy,
+            @Part("requirePostApproval") RequestBody requirePostApproval,
             @Part MultipartBody.Part avatar
     );
 
@@ -359,6 +360,17 @@ public interface ApiService {
     // Danh sách yêu cầu tham gia đang chờ (admin)
     @GET("groups/{groupId}/pending-members")
     Call<ApiResponse<List<PendingMember>>> getPendingMembers(@Path("groupId") String groupId);
+
+    // Danh sách bài viết chờ duyệt (admin)
+    @GET("groups/{groupId}/pending-posts")
+    Call<ApiResponse<List<GroupPost>>> getPendingPosts(@Path("groupId") String groupId);
+
+    // Duyệt / từ chối bài viết trong nhóm (admin)
+    @PATCH("posts/{postId}/approve")
+    Call<ApiResponse<Object>> approvePost(@Path("postId") String postId);
+
+    @PATCH("posts/{postId}/reject")
+    Call<ApiResponse<Object>> rejectPost(@Path("postId") String postId);
 
     // Duyệt / từ chối yêu cầu tham gia (admin)
     @PATCH("groups/{groupId}/members/{userId}/approve")

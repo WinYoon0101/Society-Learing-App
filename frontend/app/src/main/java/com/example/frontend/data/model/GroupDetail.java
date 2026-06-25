@@ -23,6 +23,8 @@ public class GroupDetail {
     private boolean isAdmin;
     @SerializedName("hasPendingRequest")
     private boolean hasPendingRequest;
+    @SerializedName("requirePostApproval")
+    private boolean requirePostApproval;
     @SerializedName("createdAt")
     private String createdAt;
 
@@ -40,5 +42,6 @@ public class GroupDetail {
     public boolean isMember() { return isMember; }
     public boolean isAdmin() { return isAdmin; }
     public boolean hasPendingRequest() { return hasPendingRequest; }
+    public boolean isRequirePostApproval() { return requirePostApproval; }
     public String getCreatedAt() { return createdAt; }
 }

@@ -24,6 +24,7 @@ export interface IGroup extends Document{
     member: IGroupMember[];
     pendingRequests: IPendingRequest[];
     privacy: GroupPrivacy;
+    requirePostApproval: boolean; // true → bài của member thường cần admin duyệt
     createdAt: Date;
     updatedAt: Date;
 }
@@ -92,6 +93,10 @@ const GroupSchema = new Schema<IGroup>(
         type: String,
         enum: ["Private", "Public"],
         require: true,
+    },
+    requirePostApproval:{
+        type: Boolean,
+        default: false,
     },
 },
 {timestamps:true},

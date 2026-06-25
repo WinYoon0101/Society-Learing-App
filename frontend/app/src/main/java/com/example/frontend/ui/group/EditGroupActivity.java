@@ -31,6 +31,7 @@ public class EditGroupActivity extends AppCompatActivity {
     public static final String EXTRA_DESCRIPTION = "description";
     public static final String EXTRA_PRIVACY    = "privacy";
     public static final String EXTRA_AVATAR_URL = "avatarUrl";
+    public static final String EXTRA_REQUIRE_APPROVAL = "requirePostApproval";
 
     private String groupId;
     private Uri selectedAvatarUri = null;
@@ -39,6 +40,7 @@ public class EditGroupActivity extends AppCompatActivity {
     private CircleImageView imgAvatar;
     private EditText etName, etDescription;
     private TextView tvPrivacyLabel;
+    private androidx.appcompat.widget.SwitchCompat switchRequireApproval;
     private Button btnSave;
     private ImageButton btnBack;
 
@@ -65,6 +67,7 @@ public class EditGroupActivity extends AppCompatActivity {
         etName        = findViewById(R.id.etGroupName);
         etDescription = findViewById(R.id.etDescription);
         tvPrivacyLabel= findViewById(R.id.tvPrivacyLabel);
+        switchRequireApproval = findViewById(R.id.switchRequireApproval);
         btnSave       = findViewById(R.id.btnSave);
         btnBack       = findViewById(R.id.btnBack);
 
@@ -79,6 +82,7 @@ public class EditGroupActivity extends AppCompatActivity {
         if (avatarUrl != null && !avatarUrl.isEmpty()) {
             Glide.with(this).load(avatarUrl).placeholder(R.drawable.ic_group).into(imgAvatar);
         }
+        switchRequireApproval.setChecked(getIntent().getBooleanExtra(EXTRA_REQUIRE_APPROVAL, false));
 
         btnBack.setOnClickListener(v -> finish());
 
@@ -125,6 +129,6 @@ public class EditGroupActivity extends AppCompatActivity {
         btnSave.setEnabled(false);
         repository.updateGroup(groupId, name,
                 etDescription.getText().toString().trim(),
-                selectedPrivacy, avatarFile, updateLive);
+                selectedPrivacy, switchRequireApproval.isChecked(), avatarFile, updateLive);
     }
 }

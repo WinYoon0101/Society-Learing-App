@@ -8,6 +8,7 @@ import Comment from '../models/comment.model';
 import Reaction from '../models/reaction.model'; 
 import User from '../models/user.model';
 import Friend from '../models/friend.model';
+import Notification from '../models/notification.model';
 
 // =====================================
 // API ĐĂNG BÀI
@@ -16,6 +17,12 @@ export const createPost = async (req: AuthRequest, res: Response) => {
     try {
         const { content, privacy, groupId, tags, initialReaction } = req.body;
         const authorId = req.user?.id;
+
+        // Mặc định bài được duyệt; với nhóm bật "yêu cầu duyệt" và người đăng không phải admin → pending
+        let postStatus = "approved";
+        // Lưu lại để thông báo cho admin nếu bài cần duyệt
+        let pendingAdminIds: any[] = [];
+        let pendingGroupName = "";
 
         // Nếu đăng vào nhóm, kiểm tra user có phải thành viên không
         if (groupId) {
@@ -27,6 +34,14 @@ export const createPost = async (req: AuthRequest, res: Response) => {
             if (!isMember) {
                 return res.status(403).json({ success: false, message: "Bạn không phải thành viên của nhóm này" });
             }
+            const isAdmin = group.member.some(
+                (m) => m.userId.toString() === authorId && m.role === "admin"
+            );
+            if (group.requirePostApproval && !isAdmin) {
+                postStatus = "pending";
+                pendingAdminIds = group.member.filter((m) => m.role === "admin").map((m) => m.userId);
+                pendingGroupName = group.groupName as string;
+            }
         }
 
         const newPost = new Post({
@@ -34,6 +49,7 @@ export const createPost = async (req: AuthRequest, res: Response) => {
             groupId: groupId || null,
             content: content,
             privacy: privacy || "Public",
+            status: postStatus,
             tags: tags ? (Array.isArray(tags) ? tags : JSON.parse(tags)) : []
         });
 
@@ -67,9 +83,32 @@ export const createPost = async (req: AuthRequest, res: Response) => {
             }
         }
 
+        // Thông báo cho admin nếu bài đang chờ duyệt
+        if (postStatus === "pending" && pendingAdminIds.length > 0) {
+            try {
+                const author = await User.findById(authorId).select("username");
+                const authorName = author?.username || "Một thành viên";
+                await Notification.insertMany(
+                    pendingAdminIds.map((adminId) => ({
+                        recipient: adminId,
+                        sender: authorId,
+                        type: "group_post_pending",
+                        targetId: groupId,
+                        postId: savePost._id, // để màn duyệt bài làm nổi bật đúng bài này
+                        content: `${authorName} đã đăng một bài viết chờ duyệt trong nhóm ${pendingGroupName}`,
+                    }))
+                );
+            } catch (err) {
+                console.error("Lỗi tạo thông báo bài chờ duyệt:", err);
+            }
+        }
+
         res.status(201).json({
             success: true,
-            message: "Đăng bài thành công",
+            message: postStatus === "pending"
+                ? "Bài viết đã được gửi, đang chờ quản trị viên duyệt"
+                : "Đăng bài thành công",
+            status: postStatus,
             PostId: savePost._id,
         });
 
@@ -117,11 +156,12 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
         // - Hoặc là bài viết của CHÍNH MÌNH ngoài nhóm (hiển thị tất cả Public, Friends, Private).
         // - Hoặc là bài viết của BẠN BÈ ngoài nhóm (chỉ hiển thị nếu bài viết đó ở chế độ Public hoặc Friends).
         const posts = await Post.find({
+            status: { $ne: "pending" }, // bài đang chờ duyệt không lọt feed chung
             $or: [
                 { privacy: "Public", groupId: null },
                 { groupId: { $in: groupIds } },
-                { authorId: currentUserId, groupId: null }, 
-                { authorId: { $in: friendIds }, privacy: { $in: ["Public", "Friends"] }, groupId: null } 
+                { authorId: currentUserId, groupId: null },
+                { authorId: { $in: friendIds }, privacy: { $in: ["Public", "Friends"] }, groupId: null }
             ]
         })
             .sort({ createdAt: -1 })
@@ -311,7 +351,7 @@ export const getPostsByUser = async (req: AuthRequest, res: Response) => {
     try {
         const { userId } = req.params;
         const currentUserId = req.user?.id;
-        const posts = await Post.find({ authorId: userId, privacy: { $in: ["Public", "Friends"] } })
+        const posts = await Post.find({ authorId: userId, privacy: { $in: ["Public", "Friends"] }, status: { $ne: "pending" } })
             .sort({ createdAt: -1 })
             .populate('authorId', 'username avatar')
             .lean();
@@ -396,6 +436,103 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<any>
         return res.status(200).json({ success: true, data: postDetail });
     } catch (error) {
         console.error("Lỗi lấy chi tiết bài viết:", error);
+        return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+};
+
+// =====================================
+// DUYỆT BÀI VIẾT TRONG NHÓM (admin)
+// PATCH /api/posts/:id/approve
+// =====================================
+export const approvePost = async (req: AuthRequest, res: Response): Promise<any> => {
+    try {
+        const adminId = req.user?.id;
+        const { id } = req.params;
+
+        const post = await Post.findById(id);
+        if (!post) return res.status(404).json({ success: false, message: "Không tìm thấy bài viết" });
+        if (!post.groupId) return res.status(400).json({ success: false, message: "Bài viết không thuộc nhóm nào" });
+
+        const group = await Group.findById(post.groupId);
+        if (!group) return res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+
+        const isAdmin = group.member.some(
+            (m) => m.userId.toString() === adminId && m.role === "admin"
+        );
+        if (!isAdmin) return res.status(403).json({ success: false, message: "Chỉ admin mới được duyệt bài" });
+
+        post.status = "approved";
+        await post.save();
+
+        // Thông báo tác giả
+        try {
+            await Notification.create({
+                recipient: post.authorId,
+                sender: adminId,
+                type: "group_post_approved",
+                targetId: post._id,
+                content: `Bài viết của bạn trong nhóm ${group.groupName} đã được duyệt`,
+            });
+        } catch (err) {
+            console.error("Lỗi tạo thông báo duyệt bài:", err);
+        }
+
+        return res.status(200).json({ success: true, message: "Đã duyệt bài viết" });
+    } catch (error) {
+        console.error("Lỗi duyệt bài:", error);
+        return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+};
+
+// =====================================
+// TỪ CHỐI BÀI VIẾT TRONG NHÓM (admin) — xoá bài + dọn dữ liệu
+// PATCH /api/posts/:id/reject
+// =====================================
+export const rejectPost = async (req: AuthRequest, res: Response): Promise<any> => {
+    try {
+        const adminId = req.user?.id;
+        const { id } = req.params;
+
+        const post = await Post.findById(id);
+        if (!post) return res.status(404).json({ success: false, message: "Không tìm thấy bài viết" });
+        if (!post.groupId) return res.status(400).json({ success: false, message: "Bài viết không thuộc nhóm nào" });
+
+        const group = await Group.findById(post.groupId);
+        if (!group) return res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+
+        const isAdmin = group.member.some(
+            (m) => m.userId.toString() === adminId && m.role === "admin"
+        );
+        if (!isAdmin) return res.status(403).json({ success: false, message: "Chỉ admin mới được từ chối bài" });
+
+        const authorId = post.authorId;
+
+        // Dọn dữ liệu liên quan rồi xoá bài
+        const comments = await Comment.find({ postId: post._id }).select("_id").lean();
+        const commentIds = comments.map((c) => c._id);
+        await Promise.all([
+            Media.deleteMany({ targetId: post._id }),
+            Comment.deleteMany({ postId: post._id }),
+            Reaction.deleteMany({ targetId: { $in: [post._id, ...commentIds] } }),
+        ]);
+        await Post.findByIdAndDelete(post._id);
+
+        // Thông báo tác giả (dẫn về nhóm vì bài đã bị xoá)
+        try {
+            await Notification.create({
+                recipient: authorId,
+                sender: adminId,
+                type: "group_post_rejected",
+                targetId: group._id,
+                content: `Bài viết của bạn trong nhóm ${group.groupName} đã bị từ chối`,
+            });
+        } catch (err) {
+            console.error("Lỗi tạo thông báo từ chối bài:", err);
+        }
+
+        return res.status(200).json({ success: true, message: "Đã từ chối bài viết" });
+    } catch (error) {
+        console.error("Lỗi từ chối bài:", error);
         return res.status(500).json({ success: false, message: "Lỗi server" });
     }
 };

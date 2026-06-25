@@ -27,11 +27,12 @@ export const getMyGroups = async (req: AuthRequest, res: Response): Promise<void
                 // Đếm bài post mới trong 7 ngày gần nhất
                 const newPostCount = await Post.countDocuments({
                     groupId: group._id,
+                    status: { $ne: "pending" },
                     createdAt: { $gte: sevenDaysAgo },
                 });
 
-                // Lấy thời điểm bài post mới nhất
-                const latestPost = await Post.findOne({ groupId: group._id })
+                // Lấy thời điểm bài post mới nhất (bỏ bài đang chờ duyệt)
+                const latestPost = await Post.findOne({ groupId: group._id, status: { $ne: "pending" } })
                     .sort({ createdAt: -1 })
                     .select("createdAt")
                     .lean();
@@ -69,9 +70,10 @@ export const getGroupPosts = async (req: AuthRequest, res: Response): Promise<vo
         const myGroups = await Group.find({ "member.userId": userId }).select("_id").lean();
         const groupIds = myGroups.map((g) => g._id);
 
-        const total = await Post.countDocuments({ groupId: { $in: groupIds } });
+        const feedFilter = { groupId: { $in: groupIds }, status: { $ne: "pending" } };
+        const total = await Post.countDocuments(feedFilter);
 
-        const posts = await Post.find({ groupId: { $in: groupIds } })
+        const posts = await Post.find(feedFilter)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
@@ -705,6 +707,7 @@ export const createGroup = async (req: AuthRequest, res: Response): Promise<void
             avatarUrl,
             creatorId: new mongoose.Types.ObjectId(userId),
             privacy,
+            requirePostApproval: privacy === "Private", // mặc định nhóm Private cần duyệt bài
             member: [
                 {
                     userId: new mongoose.Types.ObjectId(userId),
@@ -757,9 +760,9 @@ export const getPostsByGroup = async (req: AuthRequest, res: Response): Promise<
             return;
         }
 
-        const total = await Post.countDocuments({ groupId });
+        const total = await Post.countDocuments({ groupId, status: { $ne: "pending" } });
 
-        const posts = await Post.find({ groupId })
+        const posts = await Post.find({ groupId, status: { $ne: "pending" } })
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
@@ -810,19 +813,59 @@ export const getPostsByGroup = async (req: AuthRequest, res: Response): Promise<
         });
     } catch (error) {
         console.error("getPostsByGroup error:", error);
-        console.log(JSON.stringify({
-            success: true,
-            data: postsWithDetails,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-        }, null, 2));
         res.status(500).json({ success: false, message: "Lỗi hệ thống" });
     }
 };
+// =====================================
+// LẤY BÀI VIẾT CHỜ DUYỆT CỦA NHÓM (admin)
+// GET /api/groups/:groupId/pending-posts
+// =====================================
+export const getPendingPosts = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId).lean();
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const isAdmin = group.member.some(
+            (m) => m.userId.toString() === userId && m.role === "admin"
+        );
+        if (!isAdmin) {
+            res.status(403).json({ success: false, message: "Chỉ admin mới xem được bài chờ duyệt" });
+            return;
+        }
+
+        const posts = await Post.find({ groupId, status: "pending" })
+            .sort({ createdAt: -1 })
+            .populate("authorId", "username avatar")
+            .lean();
+
+        const postsWithDetails = await Promise.all(
+            posts.map(async (post) => {
+                const mediaList = await Media.find({ targetId: post._id, fileType: "image" }).lean();
+                return {
+                    ...post,
+                    images: mediaList.map((m) => m.url),
+                    countComment: 0,
+                    countReaction: 0,
+                    myReaction: null,
+                    topReactions: [],
+                };
+            })
+        );
+
+        res.status(200).json({ success: true, data: postsWithDetails });
+    } catch (error) {
+        console.error("getPendingPosts error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
 // LẤY CHI TIẾT NHÓM
 // GET /api/groups/:groupId
 // =====================================
@@ -865,6 +908,7 @@ export const getGroupDetail = async (req: AuthRequest, res: Response): Promise<v
                 isMember,
                 isAdmin,
                 hasPendingRequest,
+                requirePostApproval: group.requirePostApproval ?? false,
                 createdAt: group.createdAt,
             },
         });
@@ -896,7 +940,7 @@ export const updateGroup = async (req: AuthRequest, res: Response): Promise<void
             return;
         }
 
-        const { groupName, description, privacy } = req.body;
+        const { groupName, description, privacy, requirePostApproval } = req.body;
 
         if (groupName !== undefined) group.groupName = groupName;
         if (description !== undefined) group.description = description;
@@ -906,6 +950,10 @@ export const updateGroup = async (req: AuthRequest, res: Response): Promise<void
                 return;
             }
             group.privacy = privacy;
+        }
+        // requirePostApproval gửi qua multipart là chuỗi "true"/"false"
+        if (requirePostApproval !== undefined) {
+            group.requirePostApproval = requirePostApproval === true || requirePostApproval === "true";
         }
 
         // Nếu có upload ảnh mới
@@ -925,6 +973,7 @@ export const updateGroup = async (req: AuthRequest, res: Response): Promise<void
                 description: group.description,
                 avatarUrl: group.avatarUrl,
                 privacy: group.privacy,
+                requirePostApproval: group.requirePostApproval,
             },
         });
     } catch (error) {
@@ -1099,7 +1148,7 @@ export const kickMember = async (req: AuthRequest, res: Response): Promise<void>
         }
 
         await Group.findByIdAndUpdate(groupId, {
-            $pull: { member: { userId: new mongoose.Types.ObjectId(memberId) } },
+            $pull: { member: { userId: new mongoose.Types.ObjectId(String(memberId)) } },
         });
 
         res.status(200).json({ success: true, message: "Đã xóa thành viên khỏi nhóm" });
