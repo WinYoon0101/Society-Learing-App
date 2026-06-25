@@ -136,6 +136,7 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
         })
             .sort({ createdAt: -1 })
             .populate('authorId', 'username avatar')
+            .populate('tags', 'username')
             .lean();
 
         // 4. Map nạp thêm dữ liệu tương tác chi tiết (Ảnh, Reaction, Comment)
@@ -283,6 +284,7 @@ export const getMyPosts = async (req: AuthRequest, res: Response) => {
         const userId = req.user?.id;
         const posts = await Post.find({ authorId: userId })
             .sort({ createdAt: -1 })
+            .populate('tags', 'username')
             .populate('authorId', 'username avatar')
             .lean();
 
@@ -324,6 +326,7 @@ export const getPostsByUser = async (req: AuthRequest, res: Response) => {
         const posts = await Post.find({ authorId: userId, privacy: { $in: ["Public", "Friends"] } })
             .sort({ createdAt: -1 })
             .populate('authorId', 'username avatar')
+            .populate('tags', 'username')
             .lean();
 
         const postsWithDetails = await Promise.all(posts.map(async (post) => {
@@ -363,6 +366,7 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<any>
         const currentUserId = req.user?.id;
 
         const post = await Post.findById(id)
+            .populate('tags', 'username avatar')
             .populate('authorId', 'username avatar')
             .lean();
 
