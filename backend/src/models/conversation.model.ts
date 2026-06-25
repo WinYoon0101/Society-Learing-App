@@ -9,6 +9,7 @@ export interface IConversation extends Document {
   nicknames: Map<string, string>;
   color: string;
   lastMessage?: mongoose.Types.ObjectId;
+  lastRead: Map<string, Date>;
   deletedBy: mongoose.Types.ObjectId[];
   mutedMessages: mongoose.Types.ObjectId[];
   mutedCalls: mongoose.Types.ObjectId[];
@@ -42,6 +43,12 @@ const ConversationSchema = new Schema<IConversation>(
     nicknames: {
       type: Map,
       of: String,
+      default: {},
+    },
+    // Thời điểm mỗi user đọc conversation gần nhất (để tính số tin chưa xem)
+    lastRead: {
+      type: Map,
+      of: Date,
       default: {},
     },
     color: {

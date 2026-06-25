@@ -34,10 +34,20 @@
                 android:id="@+id/btnReact"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="2dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_emoji_react"
                 android:contentDescription="React" />
+
+            <ImageButton
+                android:id="@+id/btnMore"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_more_vert"
+                android:tint="#888888"
+                android:contentDescription="Thêm" />
         </LinearLayout>
 
         <LinearLayout

@@ -84,6 +84,10 @@ public class ChatFragment extends Fragment {
         // Xin snapshot online mỗi lần quay lại màn list — nếu socket chưa connect,
         // setOnConnectedListener bên dưới sẽ tự xin lại lúc connect thành công.
         ChatSocketManager.INSTANCE.getOnlineUsers();
+        // Cập nhật badge tin chưa xem (vd vừa đọc 1 chat rồi quay lại list)
+        if (getActivity() instanceof com.example.frontend.ui.main.HomeActivity) {
+            ((com.example.frontend.ui.main.HomeActivity) getActivity()).refreshChatBadge();
+        }
     }
 
     @Override

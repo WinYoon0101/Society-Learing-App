@@ -267,6 +267,25 @@ export function initChatSocket(io: Server) {
       }
     );
 
+    // ─── ĐÁNH DẤU ĐÃ ĐỌC (badge unread) ─────────────────────────────
+    socket.on(
+      "conversation:read",
+      async (data: { conversationId: string } | string) => {
+        try {
+          const conversationId =
+            typeof data === "string" ? data : data?.conversationId;
+          if (!conversationId) return;
+          await Conversation.updateOne(
+            { _id: conversationId, members: userId },
+            { $set: { [`lastRead.${userId}`]: new Date() } },
+            { timestamps: false } // KHÔNG bump updatedAt (xem ≠ tin mới)
+          );
+        } catch (err) {
+          console.error("conversation:read error:", err);
+        }
+      }
+    );
+
     // ─── ĐANG GÕ ────────────────────────────────────────────────────
     socket.on("typing:start", (data: { conversationId: string }) => {
       socket.to(data.conversationId).emit("typing:start", {

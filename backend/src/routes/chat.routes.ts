@@ -7,6 +7,7 @@ import {
   setNickname,
   setColor,
   deleteMessage,
+  getUnreadCount,
   createGroup,
   addMembers,
   kickMember,
@@ -24,6 +25,7 @@ router.use(authenticate);
 
 // Conversations
 router.get("/conversations", getConversations);
+router.get("/unread-count", getUnreadCount);
 router.post("/conversations", getOrCreateConversation);
 router.post("/conversations/group", createGroup);
 

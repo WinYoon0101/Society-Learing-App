@@ -79,11 +79,21 @@
 
         <View
             android:id="@+id/viewUnreadDot"
-            android:layout_width="10dp"
-            android:layout_height="10dp"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
             android:layout_marginTop="6dp"
             android:layout_gravity="center"
-            android:background="@drawable/bg_online_dot"
+            android:background="@drawable/bg_unread_dot_blue"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/imgConvMuted"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginTop="6dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_notifications_off"
+            android:contentDescription="Đã tắt thông báo"
             android:visibility="gone" />
     </LinearLayout>
 

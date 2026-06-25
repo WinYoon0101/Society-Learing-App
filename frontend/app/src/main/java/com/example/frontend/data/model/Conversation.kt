@@ -40,6 +40,14 @@ data class Conversation(
     @SerializedName("mutedCalls")
     val mutedCalls: List<String>? = null,
 
+    // Cờ chưa đọc (BE tính từ lastMessage vs lastRead) → chấm xanh kiểu Messenger
+    @SerializedName("unread")
+    val unread: Boolean = false,
+
+    // Đã tắt thông báo tin nhắn cho mình (BE tính từ mutedMessages) → hiện icon chuông gạch
+    @SerializedName("muted")
+    val muted: Boolean = false,
+
     @SerializedName("createdAt")
     val createdAt: Date? = null,
 

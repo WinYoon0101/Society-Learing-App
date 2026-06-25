@@ -125,6 +125,15 @@ public class ChatDetailFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Rời chat → đánh dấu đã đọc (kể cả tin đến khi đang xem) để badge unread chuẩn
+        if (conversationId != null) {
+            ChatSocketManager.INSTANCE.markRead(conversationId);
+        }
+    }
+
     private void setupUI(View view) {
         tvChatName = view.findViewById(R.id.tvChatName);
         btnChatDetailMore = view.findViewById(R.id.btnChatDetailMore);
@@ -182,6 +191,11 @@ public class ChatDetailFragment extends Fragment {
                     Toast.makeText(getContext(),
                             "Tin nhắn gốc chưa được tải", Toast.LENGTH_SHORT).show();
                 }
+            }
+
+            @Override
+            public void onMoreClick(com.example.frontend.data.model.Message message, View anchor) {
+                showMessageOptions(message, anchor);
             }
         });
         rvMessages.setAdapter(messageAdapter);
@@ -251,6 +265,14 @@ public class ChatDetailFragment extends Fragment {
             return kotlin.Unit.INSTANCE;
         });
 
+        // Thu hồi (cả 2) → đánh dấu placeholder realtime
+        ChatSocketManager.INSTANCE.setOnMessageDeletedListener(messageId -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> messageAdapter.markRecalled(messageId));
+            }
+            return kotlin.Unit.INSTANCE;
+        });
+
         ChatSocketManager.INSTANCE.setOnErrorListener(error -> {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() ->
@@ -271,6 +293,74 @@ public class ChatDetailFragment extends Fragment {
         ChatSocketManager.INSTANCE.sendMessage(conversationId, messageText, replyingToMessageId);
         etMessage.setText("");
         clearReply();
+    }
+
+    // ─────────────────────── Xóa / thu hồi từng message ───────────────────────
+
+    private void showMessageOptions(com.example.frontend.data.model.Message message, View anchor) {
+        if (message == null || message.getId() == null) return;
+        PopupMenu popup = new PopupMenu(requireContext(), anchor);
+        popup.getMenuInflater().inflate(R.menu.menu_message_options, popup.getMenu());
+
+        // "Thu hồi với mọi người" chỉ cho người gửi
+        boolean isMine = message.getSender() != null && message.getSender().getId() != null
+                && message.getSender().getId().trim().equals(currentUserId != null ? currentUserId.trim() : "");
+        popup.getMenu().findItem(R.id.action_recall).setVisible(isMine);
+
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.action_delete_for_me) {
+                confirmDeleteMessageForMe(message.getId());
+            } else if (id == R.id.action_recall) {
+                confirmRecallMessage(message.getId());
+            } else {
+                return false;
+            }
+            return true;
+        });
+        popup.show();
+    }
+
+    private void confirmDeleteMessageForMe(String messageId) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Xóa tin nhắn")
+                .setMessage("Tin nhắn sẽ bị xóa ở phía bạn (người khác vẫn thấy).")
+                .setPositiveButton("Xóa", (d, w) -> deleteMessageForMe(messageId))
+                .setNegativeButton("Huỷ", null)
+                .show();
+    }
+
+    private void deleteMessageForMe(String messageId) {
+        ApiService api = ApiClient.getApiService(requireContext().getApplicationContext());
+        api.deleteMessageForMe(messageId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Object>> call,
+                                   @NonNull Response<ApiResponse<Object>> response) {
+                if (!isAdded()) return;
+                ApiResponse<Object> b = response.body();
+                if (response.isSuccessful() && b != null && b.isSuccess()) {
+                    messageAdapter.removeMessage(messageId);
+                } else {
+                    Toast.makeText(getContext(), "Xóa tin nhắn thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Object>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(getContext(), "Lỗi mạng khi xóa tin nhắn", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void confirmRecallMessage(String messageId) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Thu hồi")
+                .setMessage("Thu hồi tin nhắn với mọi người?")
+                .setPositiveButton("Thu hồi", (d, w) ->
+                        ChatSocketManager.INSTANCE.deleteMessage(messageId))
+                .setNegativeButton("Huỷ", null)
+                .show();
     }
 
     /** Hiện thanh "Đang trả lời" + lưu id message gốc để gửi kèm. */
