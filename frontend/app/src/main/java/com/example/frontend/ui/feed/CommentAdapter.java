@@ -96,15 +96,20 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                     .into(holder.imgAvatar);
         }
 
-        // LOGIC THỤT LỀ CHO BÌNH LUẬN TRẢ LỜI
+        // 👉 LOGIC THỤT LỀ BẬC THANG THEO ĐỘ SÂU (DEPTH)
         ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) holder.itemView.getLayoutParams();
-        if (comment.getParentId() != null && !comment.getParentId().isEmpty()) {
-            int marginInPx = (int) (48 * context.getResources().getDisplayMetrics().density);
-            params.setMarginStart(marginInPx);
-            holder.imgAvatar.getLayoutParams().width = (int) (30 * context.getResources().getDisplayMetrics().density);
-            holder.imgAvatar.getLayoutParams().height = (int) (30 * context.getResources().getDisplayMetrics().density);
+        int depth = comment.getDepth();
+
+        // Giới hạn thụt tối đa 4 cấp để màn hình không bị đẩy tràn chữ
+        int maxVisualDepth = Math.min(depth, 4);
+        int marginInPx = (int) (32 * maxVisualDepth * context.getResources().getDisplayMetrics().density);
+        params.setMarginStart(marginInPx);
+
+        // Resize Avatar: Root (40dp), Reply con cháu (28dp)
+        if (depth > 0) {
+            holder.imgAvatar.getLayoutParams().width = (int) (28 * context.getResources().getDisplayMetrics().density);
+            holder.imgAvatar.getLayoutParams().height = (int) (28 * context.getResources().getDisplayMetrics().density);
         } else {
-            params.setMarginStart(0);
             holder.imgAvatar.getLayoutParams().width = (int) (40 * context.getResources().getDisplayMetrics().density);
             holder.imgAvatar.getLayoutParams().height = (int) (40 * context.getResources().getDisplayMetrics().density);
         }
@@ -115,8 +120,8 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             String finalUserName = userName;
             holder.btnReply.setOnClickListener(v -> {
                 if (replyClickListener != null) {
-                    String targetId = (comment.getParentId() != null && !comment.getParentId().isEmpty()) ? comment.getParentId() : comment.getId();
-                    replyClickListener.onReplyClick(targetId, finalUserName);
+                    // Truyền ID của comment được click để làm parentId cho bình luận mới
+                    replyClickListener.onReplyClick(comment.getId(), finalUserName);
                 }
             });
         }
@@ -172,40 +177,30 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         return commentList == null ? 0 : commentList.size();
     }
 
-    // ==========================================
-    // 👉 ĐÃ SỬA: CHỐNG SPAM CLICK & SỬA LỖI ĐẾM TIM
-    // ==========================================
     private void handleReactionUpdate(CommentViewHolder holder, Comment comment, String newReactionType) {
-        // 1. Khóa tạm thời nút bấm trong 1 giây để tránh spam click làm Server bị ngợp
         if (holder.btnLike != null) {
             holder.btnLike.setEnabled(false);
-            holder.btnLike.postDelayed(() -> holder.btnLike.setEnabled(true), 1000); // Mở lại sau 1s
+            holder.btnLike.postDelayed(() -> holder.btnLike.setEnabled(true), 1000);
         }
 
         String oldReaction = comment.getMyReaction();
-
-        // 2. Nếu người dùng mở popup lên rồi chọn lại đúng cảm xúc cũ đang có -> Bỏ qua không gọi API
-        if (oldReaction != null && oldReaction.equals(newReactionType)) {
-            return;
-        }
+        if (oldReaction != null && oldReaction.equals(newReactionType)) return;
 
         int currentCount = comment.getCountReaction();
-
-        // 3. Tính toán số lượng tim chuẩn xác
         if (oldReaction == null && newReactionType != null) {
-            currentCount++; // Chưa có tim, giờ thả tim -> Cộng 1
+            currentCount++;
         } else if (oldReaction != null && newReactionType == null) {
-            currentCount--; // Đang có tim, giờ bấm hủy -> Trừ 1
+            currentCount--;
         }
-        // Trường hợp đổi từ Like sang Love (old != null && new != null) -> Giữ nguyên số lượng
 
         comment.setMyReaction(newReactionType);
-        comment.setCountReaction(Math.max(0, currentCount)); // Tránh số âm
+        comment.setCountReaction(Math.max(0, currentCount));
 
         updateReactionUI(holder, comment);
 
         if (reactionClickListener != null) {
-            reactionClickListener.onReactClick(comment.getId(), newReactionType);
+            String typeToSend = (newReactionType != null) ? newReactionType : oldReaction;
+            reactionClickListener.onReactClick(comment.getId(), typeToSend);
         }
     }
 
@@ -260,10 +255,8 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             tvContent = itemView.findViewById(R.id.tvContent);
             tvTime = itemView.findViewById(R.id.tvTime);
             btnOptions = itemView.findViewById(R.id.btnOptions);
-
             btnReply = itemView.findViewById(R.id.btnReply);
             btnLike = itemView.findViewById(R.id.btnLike);
-
             imgReact1 = itemView.findViewById(R.id.imgReact1_comment);
             imgReact2 = itemView.findViewById(R.id.imgReact2_comment);
             tvReactionCount = itemView.findViewById(R.id.tvCommentReactionCount);

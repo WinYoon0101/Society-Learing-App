@@ -59,12 +59,17 @@ public class PostDetailViewModel extends AndroidViewModel {
                 isLoading.setValue(false);
                 if (response.isSuccessful() && response.body() != null) {
                     List<Comment> rootComments = response.body().getData();
+
+                    // Cấp độ 0 cho bình luận gốc
+                    for (Comment c : rootComments) c.setDepth(0);
+
                     List<Comment> flatList = new ArrayList<>(rootComments);
                     commentsLiveData.setValue(flatList);
                     commentCountLiveData.setValue(flatList.size());
 
+                    // Gọi API lấy phản hồi cấp 1
                     for (Comment root : rootComments) {
-                        fetchRepliesForComment(root.getId());
+                        fetchRepliesForComment(root.getId(), 1);
                     }
                 } else {
                     messageLiveData.setValue("Không thể tải bình luận");
@@ -79,28 +84,47 @@ public class PostDetailViewModel extends AndroidViewModel {
         });
     }
 
-    private void fetchRepliesForComment(String parentId) {
+    // 👉 THUẬT TOÁN ĐỆ QUY TÌM VÀ LẮP RÁP BÌNH LUẬN N-CẤP
+    private void fetchRepliesForComment(String parentId, int currentDepth) {
         repository.getReplies(parentId).enqueue(new Callback<ApiResponse<List<Comment>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Comment>>> call, Response<ApiResponse<List<Comment>>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Comment> replies = response.body().getData();
                     if (replies != null && !replies.isEmpty()) {
+
                         List<Comment> current = commentsLiveData.getValue();
                         if (current == null) return;
 
+                        List<Comment> newList = new ArrayList<>(current);
+                        for (Comment r : replies) r.setDepth(currentDepth); // Đặt cấp độ
+
                         int insertIndex = -1;
-                        for (int i = 0; i < current.size(); i++) {
-                            if (current.get(i).getId().equals(parentId)) {
+                        int parentDepth = -1;
+
+                        // Tìm bình luận cha
+                        for (int i = 0; i < newList.size(); i++) {
+                            if (newList.get(i).getId().equals(parentId)) {
                                 insertIndex = i + 1;
+                                parentDepth = newList.get(i).getDepth();
+
+                                // Bỏ qua các comment con/cháu chắt hiện tại để chèn xuống cuối cùng của nhánh
+                                while (insertIndex < newList.size() && newList.get(insertIndex).getDepth() > parentDepth) {
+                                    insertIndex++;
+                                }
                                 break;
                             }
                         }
 
                         if (insertIndex != -1) {
-                            current.addAll(insertIndex, replies);
-                            commentsLiveData.setValue(current);
-                            commentCountLiveData.setValue(current.size());
+                            newList.addAll(insertIndex, replies);
+                            commentsLiveData.setValue(newList);
+                            commentCountLiveData.setValue(newList.size());
+
+                            // 👉 GỌI ĐỆ QUY: Tìm tiếp phản hồi của các phản hồi này (Cấp 3, Cấp 4...)
+                            for (Comment r : replies) {
+                                fetchRepliesForComment(r.getId(), currentDepth + 1);
+                            }
                         }
                     }
                 }
@@ -125,39 +149,40 @@ public class PostDetailViewModel extends AndroidViewModel {
                         String myId = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("USER_ID", null);
                         String myName = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("USERNAME", null);
                         String myAvatar = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("USER_AVATAR", null);
-
-                        if (created.getUserId() == null) {
-                            created.setUserId(new User(myId, myName, myAvatar));
-                        } else {
-                            User u = created.getUserId();
-                            created.setUserId(new User(u.getId(), u.getUsername() != null ? u.getUsername() : myName, myAvatar));
-                        }
+                        created.setUserId(new User(myId, myName, myAvatar));
                     }
 
                     List<Comment> current = commentsLiveData.getValue();
-                    if (current == null) current = new ArrayList<>();
+                    List<Comment> newList = (current == null) ? new ArrayList<>() : new ArrayList<>(current);
 
                     if (created != null) {
                         if (parentId == null) {
-                            current.add(0, created);
+                            created.setDepth(0);
+                            newList.add(0, created);
                         } else {
-                            int insertPos = current.size();
-                            for (int i = 0; i < current.size(); i++) {
-                                if (current.get(i).getId().equals(parentId)) {
-                                    insertPos = i + 1;
-                                    while (insertPos < current.size() && current.get(insertPos).getParentId() != null && current.get(insertPos).getParentId().equals(parentId)) {
-                                        insertPos++;
+                            int insertIndex = -1;
+                            int parentDepth = 0;
+                            for (int i = 0; i < newList.size(); i++) {
+                                if (newList.get(i).getId().equals(parentId)) {
+                                    insertIndex = i + 1;
+                                    parentDepth = newList.get(i).getDepth();
+                                    while (insertIndex < newList.size() && newList.get(insertIndex).getDepth() > parentDepth) {
+                                        insertIndex++;
                                     }
                                     break;
                                 }
                             }
-                            current.add(insertPos, created);
+                            if (insertIndex != -1) {
+                                created.setDepth(parentDepth + 1);
+                                newList.add(insertIndex, created);
+                            } else {
+                                newList.add(created); // Fallback
+                            }
                         }
                     }
 
-                    commentsLiveData.setValue(current);
-                    commentCountLiveData.setValue(current.size());
-
+                    commentsLiveData.setValue(newList);
+                    commentCountLiveData.setValue(newList.size());
                 } else {
                     messageLiveData.setValue("Lỗi đăng bình luận");
                 }
@@ -204,20 +229,14 @@ public class PostDetailViewModel extends AndroidViewModel {
         });
     }
 
-    // 👉 LOGIC 5: GỌI API THẢ CẢM XÚC (ĐÃ SỬA LẠI SỬ DỤNG TRỰC TIẾP APISERVICE)
     public void toggleCommentReaction(String commentId, String reactionType) {
-        ReactionRequest request = new ReactionRequest(commentId, "Comment", reactionType);
-
-        // Gọi ApiService thông qua ApiClient, interceptor sẽ tự đính kèm token
-        ApiService apiService = ApiClient.getApiService(getApplication().getApplicationContext());
-
-        apiService.toggleReaction(request).enqueue(new Callback<ApiResponse<Object>>() {
+        postRepository.toggleReaction(commentId, "Comment", reactionType, new Callback<ApiResponse<Object>>() {
             @Override
             public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                 if (!response.isSuccessful()) {
+                    messageLiveData.setValue("Lỗi lưu cảm xúc: " + response.code());
                 }
             }
-
             @Override
             public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                 messageLiveData.setValue("Lỗi mạng: " + t.getMessage());
