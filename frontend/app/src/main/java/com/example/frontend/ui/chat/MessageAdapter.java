@@ -39,6 +39,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         void onReactionChipClick(Message message, String emoji);
         void onReplyClick(Message message);
         void onQuoteClick(String replyToMessageId);
+        void onMoreClick(Message message, View anchor);
     }
 
     private List<Message> messages = new ArrayList<>();
@@ -288,9 +289,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    /** Action bar (react + reply) ẩn mặc định; hiện khi long-press (mobile) / hover (chuột). */
+    /** Action bar (reply + react + more) ẩn mặc định; hiện khi long-press (mobile) / hover (chuột). */
     private void wireActionBar(Message message, View bubble, View itemRoot,
-                               View actionBar, ImageButton btnReact, ImageButton btnReply) {
+                               View actionBar, ImageButton btnReact, ImageButton btnReply,
+                               ImageButton btnMore) {
         actionBar.setVisibility(View.GONE);
 
         bubble.setOnLongClickListener(v -> {
@@ -318,6 +320,62 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 reactionClickListener.onReplyClick(message);
             }
         });
+        btnMore.setOnClickListener(v -> {
+            if (reactionClickListener != null) {
+                reactionClickListener.onMoreClick(message, v);
+            }
+        });
+    }
+
+    /** Nếu message đã thu hồi → render placeholder, ẩn mọi tương tác. Trả true nếu đã xử lý. */
+    private boolean bindRecalled(Message message, View itemRoot, TextView tvMessage, TextView tvTime,
+                                 View actionBar, View reactionScroll, View replyQuote,
+                                 View imgMedia, View fileLayout) {
+        if (!message.isDeleted()) {
+            tvMessage.setTypeface(null, android.graphics.Typeface.NORMAL);
+            return false;
+        }
+        tvMessage.setVisibility(View.VISIBLE);
+        tvMessage.setText("Tin nhắn đã bị thu hồi");
+        tvMessage.setTypeface(null, android.graphics.Typeface.ITALIC);
+        if (message.getCreatedAt() != null) tvTime.setText(formatTime(message.getCreatedAt()));
+        actionBar.setVisibility(View.GONE);
+        reactionScroll.setVisibility(View.GONE);
+        if (replyQuote != null) replyQuote.setVisibility(View.GONE);
+        imgMedia.setVisibility(View.GONE);
+        fileLayout.setVisibility(View.GONE);
+        tvMessage.setOnLongClickListener(null);
+        itemRoot.setOnHoverListener(null);
+        return true;
+    }
+
+    /** Xóa 1 message khỏi list (xóa-phía-mình). */
+    public void removeMessage(String messageId) {
+        if (messageId == null) return;
+        for (int i = 0; i < messages.size(); i++) {
+            if (messageId.equals(messages.get(i).getId())) {
+                messages.remove(i);
+                notifyItemRemoved(i);
+                return;
+            }
+        }
+    }
+
+    /** Đánh dấu 1 message đã thu hồi (cả 2) → hiển thị placeholder. */
+    public void markRecalled(String messageId) {
+        if (messageId == null) return;
+        for (int i = 0; i < messages.size(); i++) {
+            Message m = messages.get(i);
+            if (messageId.equals(m.getId())) {
+                Message updated = new Message(
+                        m.getId(), m.getConversationId(), m.getSender(),
+                        "Tin nhắn đã bị thu hồi", m.getReplyTo(), new ArrayList<>(),
+                        true, m.isSystem(), null, null, m.getCreatedAt(), m.getUpdatedAt());
+                messages.set(i, updated);
+                notifyItemChanged(i);
+                return;
+            }
+        }
     }
 
     private void bindMedia(Message message, ImageView imgPreview,
@@ -352,7 +410,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         View reactionScroll;
         LinearLayout reactionContainer;
         View messageActionBar;
-        ImageButton btnReact, btnReply;
+        ImageButton btnReact, btnReply, btnMore;
         View replyQuote;
         TextView tvReplyQuoteSender, tvReplyQuoteText;
         ImageView imgMediaPreview;
@@ -368,6 +426,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             messageActionBar = itemView.findViewById(R.id.messageActionBar);
             btnReact = itemView.findViewById(R.id.btnReact);
             btnReply = itemView.findViewById(R.id.btnReply);
+            btnMore = itemView.findViewById(R.id.btnMore);
             replyQuote = itemView.findViewById(R.id.replyQuote);
             tvReplyQuoteSender = itemView.findViewById(R.id.tvReplyQuoteSender);
             tvReplyQuoteText = itemView.findViewById(R.id.tvReplyQuoteText);
@@ -378,6 +437,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
 
         void bind(Message message) {
+            if (bindRecalled(message, itemView, tvMessage, tvTime, messageActionBar,
+                    reactionScroll, replyQuote, imgMediaPreview, layoutFilePreview)) {
+                return;
+            }
             String text = message.getText();
             if (text == null || text.isEmpty()) {
                 tvMessage.setVisibility(View.GONE);
@@ -388,7 +451,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (message.getCreatedAt() != null) {
                 tvTime.setText(formatTime(message.getCreatedAt()));
             }
-            wireActionBar(message, tvMessage, itemView, messageActionBar, btnReact, btnReply);
+            wireActionBar(message, tvMessage, itemView, messageActionBar, btnReact, btnReply, btnMore);
             bindReplyQuote(message, replyQuote, tvReplyQuoteSender, tvReplyQuoteText);
             bindMedia(message, imgMediaPreview, layoutFilePreview, tvFileIcon, tvFileName);
             bindReactions(message, reactionScroll, reactionContainer);
@@ -401,7 +464,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         View reactionScroll;
         LinearLayout reactionContainer;
         View messageActionBar;
-        ImageButton btnReact, btnReply;
+        ImageButton btnReact, btnReply, btnMore;
         View replyQuote;
         TextView tvReplyQuoteSender, tvReplyQuoteText;
         ImageView imgMediaPreview;
@@ -418,6 +481,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             messageActionBar = itemView.findViewById(R.id.messageActionBar);
             btnReact = itemView.findViewById(R.id.btnReact);
             btnReply = itemView.findViewById(R.id.btnReply);
+            btnMore = itemView.findViewById(R.id.btnMore);
             replyQuote = itemView.findViewById(R.id.replyQuote);
             tvReplyQuoteSender = itemView.findViewById(R.id.tvReplyQuoteSender);
             tvReplyQuoteText = itemView.findViewById(R.id.tvReplyQuoteText);
@@ -428,17 +492,6 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
 
         void bind(Message message) {
-            String text = message.getText();
-            if (text == null || text.isEmpty()) {
-                tvMessage.setVisibility(View.GONE);
-            } else {
-                tvMessage.setVisibility(View.VISIBLE);
-                tvMessage.setText(text);
-            }
-            if (message.getCreatedAt() != null) {
-                tvTime.setText(formatTime(message.getCreatedAt()));
-            }
-
             User sender = message.getSender();
             if (sender != null && sender.getAvatar() != null) {
                 Glide.with(itemView.getContext())
@@ -451,7 +504,22 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 imgAvatar.setImageResource(R.drawable.ic_user);
             }
 
-            wireActionBar(message, tvMessage, itemView, messageActionBar, btnReact, btnReply);
+            if (bindRecalled(message, itemView, tvMessage, tvTime, messageActionBar,
+                    reactionScroll, replyQuote, imgMediaPreview, layoutFilePreview)) {
+                return;
+            }
+            String text = message.getText();
+            if (text == null || text.isEmpty()) {
+                tvMessage.setVisibility(View.GONE);
+            } else {
+                tvMessage.setVisibility(View.VISIBLE);
+                tvMessage.setText(text);
+            }
+            if (message.getCreatedAt() != null) {
+                tvTime.setText(formatTime(message.getCreatedAt()));
+            }
+
+            wireActionBar(message, tvMessage, itemView, messageActionBar, btnReact, btnReply, btnMore);
             bindReplyQuote(message, replyQuote, tvReplyQuoteSender, tvReplyQuoteText);
             bindMedia(message, imgMediaPreview, layoutFilePreview, tvFileIcon, tvFileName);
             bindReactions(message, reactionScroll, reactionContainer);

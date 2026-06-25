@@ -65,7 +65,34 @@ export const getConversations = async (
       })
       .sort({ updatedAt: -1 });
 
-    res.json({ success: true, data: conversations });
+    // Tính cờ "unread" cho từng conversation (chấm xanh kiểu Messenger) — không query thêm:
+    // chưa đọc nếu lastMessage do người khác gửi (không phải system) & mới hơn lastRead của mình.
+    const result = conversations.map((conv) => {
+      const obj: any = conv.toObject({ flattenMaps: true });
+      const last: any = obj.lastMessage;
+      // Đã tắt thông báo tin nhắn cho user này?
+      const muted =
+        Array.isArray(obj.mutedMessages) &&
+        obj.mutedMessages.some((u: any) => u.toString() === userId.toString());
+
+      let unread = false;
+      // Conversation đã mute thì KHÔNG tính chưa-đọc (không chấm xanh / không in đậm)
+      if (!muted && last && !last.isSystem && last.sender) {
+        const senderId = (last.sender._id || last.sender).toString();
+        if (senderId !== userId.toString()) {
+          const lastReadRaw = obj.lastRead ? obj.lastRead[userId.toString()] : null;
+          const lastReadAt = lastReadRaw ? new Date(lastReadRaw) : null;
+          if (!lastReadAt || new Date(last.createdAt) > lastReadAt) {
+            unread = true;
+          }
+        }
+      }
+      obj.unread = unread;
+      obj.muted = muted;
+      return obj;
+    });
+
+    res.json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
@@ -163,6 +190,14 @@ export const getMessages = async (
       return;
     }
 
+    // Mở chat = đánh dấu đã đọc tới hiện tại (badge unread về 0). timestamps:false để KHÔNG
+    // bump updatedAt → tránh conversation bị đẩy lên đầu list chỉ vì xem.
+    await Conversation.updateOne(
+      { _id: conversationId },
+      { $set: { [`lastRead.${userId}`]: new Date() } },
+      { timestamps: false }
+    );
+
     const messages = await Message.find({
       conversationId,
       deletedFor: { $ne: userId }, // ẩn message đã xóa-phía-mình
@@ -244,6 +279,40 @@ export const setColor = async (
     }
 
     res.json({ success: true, data: conversation });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// GET /api/chat/unread-count - Tổng số tin nhắn chưa xem (1-1 + group)
+export const getUnreadCount = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const conversations = await Conversation.find({
+      members: userId,
+      deletedBy: { $ne: userId },
+      mutedMessages: { $ne: userId }, // bỏ qua conversation đã tắt thông báo tin nhắn
+    }).select("_id lastRead");
+
+    let total = 0;
+    await Promise.all(
+      conversations.map(async (conv) => {
+        const lastRead = conv.lastRead?.get(userId.toString()) || new Date(0);
+        const count = await Message.countDocuments({
+          conversationId: conv._id,
+          sender: { $ne: userId },
+          isSystem: { $ne: true },
+          deletedFor: { $ne: userId },
+          createdAt: { $gt: lastRead },
+        });
+        total += count;
+      })
+    );
+
+    res.json({ success: true, data: { count: total } });
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server" });
   }

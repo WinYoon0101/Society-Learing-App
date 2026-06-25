@@ -196,6 +196,10 @@ public interface ApiService {
     @GET("chat/conversations")
     Call<ApiResponse<List<Conversation>>> getConversations();
 
+    // Tổng số tin nhắn chưa xem (1-1 + group) → badge tab chat
+    @GET("chat/unread-count")
+    Call<ApiResponse<com.example.frontend.data.model.UnreadCount>> getUnreadCount();
+
     @POST("chat/conversations")
     Call<ApiResponse<Conversation>> getOrCreateConversation(@Body Map<String, String> body);
 

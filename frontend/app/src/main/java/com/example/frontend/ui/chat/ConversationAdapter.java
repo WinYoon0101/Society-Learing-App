@@ -70,7 +70,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
     }
 
     class ConversationViewHolder extends RecyclerView.ViewHolder {
-        ImageView imgAvatar;
+        ImageView imgAvatar, imgConvMuted;
         TextView tvName, tvLastMessage, tvTime;
         View viewOnlineDot, viewUnreadDot;
 
@@ -82,6 +82,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
             tvTime = itemView.findViewById(R.id.tvConvTime);
             viewOnlineDot = itemView.findViewById(R.id.viewConvOnlineDot);
             viewUnreadDot = itemView.findViewById(R.id.viewUnreadDot);
+            imgConvMuted = itemView.findViewById(R.id.imgConvMuted);
         }
 
         void bind(Conversation conversation) {
@@ -121,15 +122,20 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
                     senderName = "Bạn: ";
                 }
                 tvLastMessage.setText(senderName + (text != null ? text : ""));
-
-                // Show unread dot if last message is from other person (bỏ qua system message)
-                boolean isFromOther = !isSystem && sender != null
-                        && !sender.getId().equals(currentUserId);
-                viewUnreadDot.setVisibility(isFromOther ? View.VISIBLE : View.GONE);
             } else {
                 tvLastMessage.setText("Bắt đầu cuộc trò chuyện...");
-                viewUnreadDot.setVisibility(View.GONE);
             }
+
+            // Đã tắt thông báo → hiện icon chuông gạch (BE đã set unread=false khi muted)
+            boolean muted = conversation.getMuted();
+            imgConvMuted.setVisibility(muted ? View.VISIBLE : View.GONE);
+
+            // Chấm xanh dương "chưa đọc" (kiểu Messenger) — BE tính sẵn cờ unread (đã loại muted)
+            boolean unread = conversation.getUnread();
+            viewUnreadDot.setVisibility(unread ? View.VISIBLE : View.GONE);
+            // Chưa đọc → preview tin nhắn đậm + tối hơn (giống Messenger); tên giữ nguyên
+            tvLastMessage.setTypeface(null, unread ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+            tvLastMessage.setTextColor(unread ? 0xFF1A1A1A : 0xFF888888);
 
             // Time
             Date timeDate = conversation.getUpdatedAt();

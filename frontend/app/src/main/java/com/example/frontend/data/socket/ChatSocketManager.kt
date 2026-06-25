@@ -228,6 +228,13 @@ object ChatSocketManager {
     // EMIT EVENTS
     // ═══════════════════════════════════════════════════════════════════════
 
+    /** Đánh dấu đã đọc conversation (badge unread về 0 cho conversation này). */
+    fun markRead(conversationId: String) {
+        if (socket != null && socket!!.connected()) {
+            socket?.emit("conversation:read", JSONObject().apply { put("conversationId", conversationId) })
+        }
+    }
+
     /** Chủ động join room conversation (để nhận realtime, kể cả nhóm vừa tạo/được add sau connect). */
     fun joinConversation(conversationId: String) {
         currentRoom = conversationId
