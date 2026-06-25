@@ -26,6 +26,9 @@ data class Message(
     @SerializedName("isDeleted")
     val isDeleted: Boolean = false,
 
+    @SerializedName("isSystem")
+    val isSystem: Boolean = false,
+
     @SerializedName("mediaUrl")
     val mediaUrl: String? = null,
 

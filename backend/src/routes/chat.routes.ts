@@ -9,6 +9,7 @@ import {
   deleteMessage,
   createGroup,
   addMembers,
+  kickMember,
   leaveGroup,
   renameGroup,
   deleteConversation,
@@ -36,6 +37,7 @@ router.patch("/conversations/:conversationId/name", renameGroup);
 
 // Group management
 router.post("/conversations/:conversationId/members", addMembers);
+router.delete("/conversations/:conversationId/members/:userId", kickMember);
 router.post("/conversations/:conversationId/leave", leaveGroup);
 
 // Mute & delete conversation (ẩn-phía-mình)

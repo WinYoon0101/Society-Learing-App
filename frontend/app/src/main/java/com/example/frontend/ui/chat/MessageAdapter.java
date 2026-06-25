@@ -32,6 +32,7 @@ import java.util.Map;
 public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int VIEW_TYPE_SENT = 1;
     private static final int VIEW_TYPE_RECEIVED = 2;
+    private static final int VIEW_TYPE_SYSTEM = 3;
 
     public interface OnReactionClickListener {
         void onLongPress(Message message, View anchor);
@@ -81,6 +82,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         m.getReplyTo(),
                         reactions != null ? reactions : new ArrayList<>(),
                         m.isDeleted(),
+                        m.isSystem(),
                         m.getMediaUrl(),
                         m.getMediaType(),
                         m.getCreatedAt(),
@@ -96,6 +98,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public int getItemViewType(int position) {
         Message msg = messages.get(position);
+        if (msg.isSystem()) {
+            return VIEW_TYPE_SYSTEM;
+        }
         if (msg.getSender() != null && msg.getSender().getId() != null) {
             String senderId = msg.getSender().getId().trim();
             String myId = currentUserId != null ? currentUserId.trim() : "";
@@ -112,7 +117,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        if (viewType == VIEW_TYPE_SENT) {
+        if (viewType == VIEW_TYPE_SYSTEM) {
+            View view = inflater.inflate(R.layout.item_message_system, parent, false);
+            return new SystemViewHolder(view);
+        } else if (viewType == VIEW_TYPE_SENT) {
             View view = inflater.inflate(R.layout.item_message_sent, parent, false);
             return new SentViewHolder(view);
         } else {
@@ -124,7 +132,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Message msg = messages.get(position);
-        if (holder instanceof SentViewHolder) {
+        if (holder instanceof SystemViewHolder) {
+            ((SystemViewHolder) holder).bind(msg);
+            return;
+        } else if (holder instanceof SentViewHolder) {
             ((SentViewHolder) holder).bind(msg);
         } else {
             ((ReceivedViewHolder) holder).bind(msg);
@@ -444,6 +455,20 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             bindReplyQuote(message, replyQuote, tvReplyQuoteSender, tvReplyQuoteText);
             bindMedia(message, imgMediaPreview, layoutFilePreview, tvFileIcon, tvFileName);
             bindReactions(message, reactionScroll, reactionContainer);
+        }
+    }
+
+    /** Tin nhắn hệ thống: chữ xám nhỏ căn giữa, không tương tác. */
+    static class SystemViewHolder extends RecyclerView.ViewHolder {
+        TextView tvSystem;
+
+        SystemViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvSystem = itemView.findViewById(R.id.tvSystemMessage);
+        }
+
+        void bind(Message message) {
+            tvSystem.setText(message.getText());
         }
     }
 

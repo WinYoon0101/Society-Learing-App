@@ -87,7 +87,13 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
         void bind(Conversation conversation) {
             User otherMember = getOtherMember(conversation);
 
-            if (otherMember != null) {
+            if (conversation.isGroup()) {
+                // Group: tên ghép thành viên (hoặc tên đặt), không có chấm online, avatar nhóm
+                tvName.setText(ChatNameUtils.groupDisplayName(
+                        conversation.getName(), conversation.getMembers(), currentUserId));
+                viewOnlineDot.setVisibility(View.GONE);
+                imgAvatar.setImageResource(R.drawable.ic_group);
+            } else if (otherMember != null) {
                 tvName.setText(resolveDisplayName(conversation, otherMember));
                 boolean online = otherMember.getId() != null && onlineIds.contains(otherMember.getId());
                 viewOnlineDot.setVisibility(online ? View.VISIBLE : View.GONE);
@@ -107,15 +113,18 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
             // Last message
             if (conversation.getLastMessage() != null) {
                 String text = conversation.getLastMessage().getText();
+                boolean isSystem = conversation.getLastMessage().isSystem();
                 String senderName = "";
                 User sender = conversation.getLastMessage().getSender();
-                if (sender != null && sender.getId() != null && sender.getId().equals(currentUserId)) {
+                if (!isSystem && sender != null && sender.getId() != null
+                        && sender.getId().equals(currentUserId)) {
                     senderName = "Bạn: ";
                 }
                 tvLastMessage.setText(senderName + (text != null ? text : ""));
 
-                // Show unread dot if last message is from other person
-                boolean isFromOther = sender != null && !sender.getId().equals(currentUserId);
+                // Show unread dot if last message is from other person (bỏ qua system message)
+                boolean isFromOther = !isSystem && sender != null
+                        && !sender.getId().equals(currentUserId);
                 viewUnreadDot.setVisibility(isFromOther ? View.VISIBLE : View.GONE);
             } else {
                 tvLastMessage.setText("Bắt đầu cuộc trò chuyện...");

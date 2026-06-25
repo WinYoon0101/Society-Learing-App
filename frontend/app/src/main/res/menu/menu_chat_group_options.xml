@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_members"
+        android:title="Thành viên" />
+    <item
+        android:id="@+id/action_rename_group"
+        android:title="Đổi tên nhóm" />
+    <item
+        android:id="@+id/action_add_people"
+        android:title="Thêm người" />
+    <item
+        android:id="@+id/action_mute"
+        android:title="Tắt thông báo" />
+    <item
+        android:id="@+id/action_leave_group"
+        android:title="Rời nhóm" />
+    <item
+        android:id="@+id/action_delete_chat"
+        android:title="Xóa đoạn chat" />
+</menu>

@@ -101,6 +101,23 @@ public class ChatFragment extends Fragment {
         viewModel.openConversation(userId);
     }
 
+    /** Mở thẳng 1 conversation (vd group vừa tạo). */
+    public void openConversation(Conversation conversation) {
+        if (conversation == null || !isAdded()) return;
+        ChatDetailFragment fragment = ChatDetailFragment.newInstance(conversation, null);
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    /** Mở sheet tạo nhóm (child của ChatFragment để callback openConversation hoạt động). */
+    public void openCreateGroup() {
+        CreateGroupBottomSheet.newInstance()
+                .show(getChildFragmentManager(), CreateGroupBottomSheet.TAG);
+    }
+
     private void setupNewChatFab(View view) {
         com.google.android.material.floatingactionbutton.FloatingActionButton fab =
                 view.findViewById(R.id.fabNewChat);

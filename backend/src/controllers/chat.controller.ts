@@ -3,6 +3,48 @@ import mongoose from "mongoose";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import Conversation from "../models/conversation.model";
 import Message from "../models/message.model";
+import User from "../models/user.model";
+import { emitToConversation } from "../socket/chat.socket";
+
+// Lấy username (dùng cho nội dung system message)
+const getUserName = async (userId: any): Promise<string> => {
+  try {
+    const u = await User.findById(userId).select("username");
+    return u?.username || "Người dùng";
+  } catch {
+    return "Người dùng";
+  }
+};
+
+/**
+ * Tạo 1 tin nhắn hệ thống (isSystem) trong conversation rồi broadcast qua socket.
+ * Hiển thị chữ xám giữa màn, không tương tác. `actorId` = người gây ra sự kiện (làm sender).
+ */
+const sendSystemMessage = async (
+  conversationId: any,
+  actorId: any,
+  text: string
+): Promise<void> => {
+  try {
+    const message = await Message.create({
+      conversationId,
+      sender: actorId,
+      text,
+      isSystem: true,
+    });
+    await Conversation.findByIdAndUpdate(conversationId, {
+      lastMessage: message._id,
+      updatedAt: new Date(),
+      deletedBy: [],
+    });
+    const populated = await Message.findById(message._id)
+      .populate("sender", "username avatar _id")
+      .lean();
+    emitToConversation(conversationId.toString(), "message:new", populated);
+  } catch (err) {
+    console.error("sendSystemMessage error:", err);
+  }
+};
 
 // GET /api/chat/conversations - Lấy danh sách cuộc trò chuyện của user
 export const getConversations = async (
@@ -167,6 +209,13 @@ export const setNickname = async (
     conversation.nicknames.set(targetUserId, nickname);
     await conversation.save();
 
+    const actorName = await getUserName(userId);
+    const targetName = await getUserName(targetUserId);
+    const text = nickname && nickname.trim()
+      ? `${actorName} đã đặt biệt danh cho ${targetName} là "${nickname.trim()}"`
+      : `${actorName} đã đặt lại biệt danh của ${targetName}`;
+    await sendSystemMessage(conversationId, userId, text);
+
     res.json({ success: true, data: conversation });
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server" });
@@ -229,6 +278,9 @@ export const createGroup = async (
       { path: "lastMessage", populate: { path: "sender", select: "username avatar _id" } },
     ]);
 
+    const creatorName = await getUserName(userId);
+    await sendSystemMessage(conversation._id, userId, `${creatorName} đã tạo nhóm`);
+
     res.status(201).json({ success: true, data: conversation });
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server" });
@@ -255,22 +307,73 @@ export const addMembers = async (
       res.status(403).json({ success: false, message: "Không có quyền truy cập" });
       return;
     }
-
-    const updates: Record<string, any> = {
-      $addToSet: { members: { $each: userIds } },
-    };
-    // Thêm người vào chat 1-1 → biến thành group
+    // Chỉ thêm người vào GROUP (thêm người vào 1-1 → dùng luồng tạo nhóm mới riêng)
     if (!conversation.isGroup) {
-      updates.isGroup = true;
-      if (!conversation.admin) updates.admin = userId;
+      res.status(400).json({ success: false, message: "Chỉ thêm người vào nhóm" });
+      return;
     }
 
-    const updated = await Conversation.findByIdAndUpdate(conversationId, updates, { new: true })
+    const updated = await Conversation.findByIdAndUpdate(
+      conversationId,
+      { $addToSet: { members: { $each: userIds } } },
+      { new: true }
+    )
       .populate("members", "username avatar isActive _id")
       .populate({
         path: "lastMessage",
         populate: { path: "sender", select: "username avatar _id" },
       });
+
+    const actorName = await getUserName(userId);
+    const addedNames = (await Promise.all(userIds.map((id) => getUserName(id)))).join(", ");
+    await sendSystemMessage(conversationId, userId, `${actorName} đã thêm ${addedNames}`);
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// DELETE /api/chat/conversations/:conversationId/members/:userId - Kick thành viên (chỉ admin)
+export const kickMember = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const adminId = req.user!.id;
+    const { conversationId, userId: targetId } = req.params;
+
+    const conversation = await Conversation.findOne({ _id: conversationId, members: adminId });
+    if (!conversation) {
+      res.status(403).json({ success: false, message: "Không có quyền truy cập" });
+      return;
+    }
+    if (!conversation.isGroup) {
+      res.status(400).json({ success: false, message: "Chỉ áp dụng cho nhóm" });
+      return;
+    }
+    if (!conversation.admin || conversation.admin.toString() !== adminId) {
+      res.status(403).json({ success: false, message: "Chỉ admin mới xóa được thành viên" });
+      return;
+    }
+    if (targetId === adminId) {
+      res.status(400).json({ success: false, message: "Không thể tự xóa — dùng rời nhóm" });
+      return;
+    }
+    if (!conversation.members.some((m) => m.toString() === targetId)) {
+      res.status(404).json({ success: false, message: "Thành viên không có trong nhóm" });
+      return;
+    }
+
+    await Conversation.findByIdAndUpdate(conversationId, { $pull: { members: targetId } });
+
+    const actorName = await getUserName(adminId);
+    const targetName = await getUserName(targetId);
+    await sendSystemMessage(conversationId, adminId, `${actorName} đã xóa ${targetName} khỏi nhóm`);
+
+    const updated = await Conversation.findById(conversationId)
+      .populate("members", "username avatar isActive _id")
+      .populate({ path: "lastMessage", populate: { path: "sender", select: "username avatar _id" } });
 
     res.json({ success: true, data: updated });
   } catch (error) {
@@ -313,6 +416,9 @@ export const leaveGroup = async (
     }
     await Conversation.findByIdAndUpdate(conversationId, update);
 
+    const leaverName = await getUserName(userId);
+    await sendSystemMessage(conversationId, userId, `${leaverName} đã rời nhóm`);
+
     res.json({ success: true, message: "Đã rời nhóm" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server" });
@@ -338,6 +444,14 @@ export const renameGroup = async (
       res.status(403).json({ success: false, message: "Không có quyền truy cập" });
       return;
     }
+
+    const actorName = await getUserName(userId);
+    await sendSystemMessage(
+      conversationId,
+      userId,
+      `${actorName} đã đổi tên nhóm thành "${conversation.name}"`
+    );
+
     // Trả tối giản (tránh members chưa populate)
     res.json({ success: true, data: { name: conversation.name } });
   } catch (error) {

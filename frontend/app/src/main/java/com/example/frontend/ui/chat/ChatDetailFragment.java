@@ -32,6 +32,7 @@ import com.example.frontend.ui.profile.FriendProfileActivity;
 import com.example.frontend.utils.Constants;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -55,6 +56,12 @@ public class ChatDetailFragment extends Fragment {
     private String token;
     private User otherMember;
     private Map<String, String> nicknames;
+    private boolean isGroup;
+    private List<User> members;
+    private String groupName;
+    private String adminId;
+    private List<String> mutedMessages;
+    private List<String> mutedCalls;
 
     // Reply state
     private String replyingToMessageId;
@@ -93,6 +100,12 @@ public class ChatDetailFragment extends Fragment {
             if (conversation != null) {
                 conversationId = conversation.getId();
                 nicknames = conversation.getNicknames();
+                isGroup = conversation.isGroup();
+                members = conversation.getMembers();
+                groupName = conversation.getName();
+                adminId = conversation.getAdmin();
+                mutedMessages = conversation.getMutedMessages();
+                mutedCalls = conversation.getMutedCalls();
                 if (otherMember == null) {
                     otherMember = getOtherMember(conversation);
                 }
@@ -107,6 +120,8 @@ public class ChatDetailFragment extends Fragment {
         if (conversationId != null) {
             viewModel.fetchMessages(conversationId);
             setupSocketListeners();
+            // Chủ động join room để nhận realtime (kể cả nhóm vừa tạo / vừa được add)
+            ChatSocketManager.INSTANCE.joinConversation(conversationId);
         }
     }
 
@@ -130,8 +145,10 @@ public class ChatDetailFragment extends Fragment {
             tvChatName.setText(resolveDisplayName());
         }
 
-        // Click tên → mở trang cá nhân của đối phương
-        tvChatName.setOnClickListener(v -> openFriendProfile());
+        // Click tên → mở trang cá nhân của đối phương (group: G3 sẽ mở list thành viên)
+        tvChatName.setOnClickListener(v -> {
+            if (!isGroup) openFriendProfile();
+        });
         // Menu 3 chấm: xem trang cá nhân / đổi biệt danh
         btnChatDetailMore.setOnClickListener(this::showChatOptionsMenu);
 
@@ -305,22 +322,307 @@ public class ChatDetailFragment extends Fragment {
 
     private void showChatOptionsMenu(View anchor) {
         PopupMenu popup = new PopupMenu(requireContext(), anchor);
-        popup.getMenuInflater().inflate(R.menu.menu_chat_options, popup.getMenu());
+        popup.getMenuInflater().inflate(
+                isGroup ? R.menu.menu_chat_group_options : R.menu.menu_chat_options,
+                popup.getMenu());
         popup.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
             if (id == R.id.action_view_profile) {
                 openFriendProfile();
-                return true;
             } else if (id == R.id.action_set_nickname) {
                 showNicknameDialog();
-                return true;
             } else if (id == R.id.action_reset_nickname) {
                 resetNickname();
-                return true;
+            } else if (id == R.id.action_members) {
+                openMembers();
+            } else if (id == R.id.action_rename_group) {
+                showRenameGroupDialog();
+            } else if (id == R.id.action_add_people) {
+                openAddMembers();
+            } else if (id == R.id.action_leave_group) {
+                confirmLeaveGroup();
+            } else if (id == R.id.action_mute) {
+                showMuteDialog();
+            } else if (id == R.id.action_delete_chat) {
+                confirmDeleteConversation();
+            } else {
+                return false;
             }
-            return false;
+            return true;
         });
         popup.show();
+    }
+
+    private void openAddMembers() {
+        if (conversationId == null) return;
+        AddMembersBottomSheet.newInstance(conversationId, collectMemberIds())
+                .show(getChildFragmentManager(), AddMembersBottomSheet.TAG);
+    }
+
+    private void openMembers() {
+        GroupMembersBottomSheet.newInstance()
+                .show(getChildFragmentManager(), GroupMembersBottomSheet.TAG);
+    }
+
+    private java.util.ArrayList<String> collectMemberIds() {
+        java.util.ArrayList<String> ids = new java.util.ArrayList<>();
+        if (members != null) {
+            for (User m : members) {
+                if (m != null && m.getId() != null) ids.add(m.getId());
+            }
+        }
+        return ids;
+    }
+
+    /** Cập nhật state khi thêm/kick thành viên thành công. */
+    void onConversationUpdated(Conversation updated) {
+        if (updated == null || !isAdded()) return;
+        isGroup = updated.isGroup();
+        members = updated.getMembers();
+        groupName = updated.getName();
+        adminId = updated.getAdmin();
+        if (updated.getNicknames() != null) nicknames = new HashMap<>(updated.getNicknames());
+        tvChatName.setText(resolveDisplayName());
+        Toast.makeText(getContext(), "Đã cập nhật thành viên", Toast.LENGTH_SHORT).show();
+    }
+
+    // ── getters cho GroupMembersBottomSheet ──
+    List<User> getMembers() { return members; }
+    String getCurrentUserIdValue() { return currentUserId; }
+    boolean isCurrentUserAdmin() {
+        return adminId != null && adminId.equals(currentUserId);
+    }
+
+    /** Kick 1 thành viên khỏi nhóm (admin). Trả về cập nhật members cho sheet refresh. */
+    void kickMember(User member) {
+        if (member == null || member.getId() == null || conversationId == null) return;
+        ApiService api = ApiClient.getApiService(requireContext().getApplicationContext());
+        api.kickConversationMember(conversationId, member.getId()).enqueue(new Callback<ApiResponse<Conversation>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Conversation>> call,
+                                   @NonNull Response<ApiResponse<Conversation>> response) {
+                if (!isAdded()) return;
+                ApiResponse<Conversation> b = response.body();
+                if (response.isSuccessful() && b != null && b.isSuccess() && b.getData() != null) {
+                    onConversationUpdated(b.getData());
+                } else {
+                    Toast.makeText(getContext(), "Xóa thành viên thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Conversation>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(getContext(), "Lỗi mạng khi xóa thành viên", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    String getMemberDisplayName(User member) {
+        if (member == null) return "";
+        if (nicknames != null && member.getId() != null) {
+            String nn = nicknames.get(member.getId());
+            if (nn != null && !nn.trim().isEmpty()) return nn;
+        }
+        return member.getUsername() != null ? member.getUsername() : "";
+    }
+
+    /** Mở trang cá nhân của 1 thành viên bất kỳ (dùng từ GroupMembersBottomSheet). */
+    void openProfileFor(User member) {
+        if (member == null || member.getId() == null) return;
+        Intent intent = new Intent(requireContext(), FriendProfileActivity.class);
+        intent.putExtra("FRIEND_ID", member.getId());
+        intent.putExtra("FRIEND_NAME", member.getUsername());
+        intent.putExtra("FRIEND_AVATAR", member.getAvatar());
+        startActivity(intent);
+    }
+
+    /** Đổi biệt danh cho 1 thành viên bất kỳ (dùng từ GroupMembersBottomSheet). */
+    void showNicknameDialogFor(User member) {
+        if (member == null || member.getId() == null || conversationId == null) return;
+        final EditText input = new EditText(requireContext());
+        input.setHint("Biệt danh");
+        input.setText(getMemberDisplayName(member));
+        input.setSelection(input.getText().length());
+
+        int pad = Math.round(getResources().getDisplayMetrics().density * 20);
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Đổi biệt danh")
+                .setView(input, pad, pad / 2, pad, 0)
+                .setPositiveButton("Lưu", (d, w) ->
+                        setNicknameFor(member.getId(), input.getText().toString().trim()))
+                .setNegativeButton("Huỷ", null)
+                .show();
+    }
+
+    // ─────────────────────── Đổi tên nhóm ───────────────────────
+
+    private void showRenameGroupDialog() {
+        if (conversationId == null) return;
+        final EditText input = new EditText(requireContext());
+        input.setHint("Tên nhóm");
+        if (groupName != null) input.setText(groupName);
+        input.setSelection(input.getText().length());
+
+        int pad = Math.round(getResources().getDisplayMetrics().density * 20);
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Đổi tên nhóm")
+                .setView(input, pad, pad / 2, pad, 0)
+                .setPositiveButton("Lưu", (d, w) -> renameGroup(input.getText().toString().trim()))
+                .setNegativeButton("Huỷ", null)
+                .show();
+    }
+
+    private void renameGroup(String name) {
+        Map<String, String> body = new HashMap<>();
+        body.put("name", name);
+        ApiService api = ApiClient.getApiService(requireContext().getApplicationContext());
+        api.renameGroup(conversationId, body).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Object>> call,
+                                   @NonNull Response<ApiResponse<Object>> response) {
+                if (!isAdded()) return;
+                ApiResponse<Object> b = response.body();
+                if (response.isSuccessful() && b != null && b.isSuccess()) {
+                    groupName = name;
+                    tvChatName.setText(resolveDisplayName());
+                    Toast.makeText(getContext(), "Đã đổi tên nhóm", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Đổi tên nhóm thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Object>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(getContext(), "Lỗi mạng khi đổi tên nhóm", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // ─────────────────────── Rời nhóm ───────────────────────
+
+    private void confirmLeaveGroup() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Rời nhóm")
+                .setMessage("Bạn sẽ không nhận tin nhắn của nhóm này nữa.")
+                .setPositiveButton("Rời nhóm", (d, w) -> leaveConversation())
+                .setNegativeButton("Huỷ", null)
+                .show();
+    }
+
+    private void leaveConversation() {
+        ApiService api = ApiClient.getApiService(requireContext().getApplicationContext());
+        api.leaveConversation(conversationId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Object>> call,
+                                   @NonNull Response<ApiResponse<Object>> response) {
+                if (!isAdded()) return;
+                ApiResponse<Object> b = response.body();
+                if (response.isSuccessful() && b != null && b.isSuccess()) {
+                    Toast.makeText(getContext(), "Đã rời nhóm", Toast.LENGTH_SHORT).show();
+                    requireActivity().onBackPressed();
+                } else {
+                    Toast.makeText(getContext(), "Rời nhóm thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Object>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(getContext(), "Lỗi mạng khi rời nhóm", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // ─────────────────────── Xóa đoạn chat (ẩn-phía-mình) ───────────────────────
+
+    private void confirmDeleteConversation() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Xóa đoạn chat")
+                .setMessage("Đoạn chat sẽ bị ẩn khỏi danh sách của bạn. Tin nhắn mới sẽ hiện lại.")
+                .setPositiveButton("Xóa", (d, w) -> deleteConversation())
+                .setNegativeButton("Huỷ", null)
+                .show();
+    }
+
+    private void deleteConversation() {
+        ApiService api = ApiClient.getApiService(requireContext().getApplicationContext());
+        api.deleteConversation(conversationId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Object>> call,
+                                   @NonNull Response<ApiResponse<Object>> response) {
+                if (!isAdded()) return;
+                ApiResponse<Object> b = response.body();
+                if (response.isSuccessful() && b != null && b.isSuccess()) {
+                    Toast.makeText(getContext(), "Đã xóa đoạn chat", Toast.LENGTH_SHORT).show();
+                    requireActivity().onBackPressed();
+                } else {
+                    Toast.makeText(getContext(), "Xóa thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Object>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(getContext(), "Lỗi mạng khi xóa", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // ─────────────────────── Tắt thông báo ───────────────────────
+
+    private boolean iMuted(List<String> list) {
+        return list != null && currentUserId != null && list.contains(currentUserId);
+    }
+
+    private void showMuteDialog() {
+        final boolean[] checked = { iMuted(mutedMessages), iMuted(mutedCalls) };
+        final String[] options = { "Tin nhắn", "Cuộc gọi" };
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Tắt thông báo")
+                .setMultiChoiceItems(options, checked, (d, which, isChecked) -> checked[which] = isChecked)
+                .setPositiveButton("Lưu", (d, w) -> setMute(checked[0], checked[1]))
+                .setNegativeButton("Huỷ", null)
+                .show();
+    }
+
+    private void setMute(boolean muteMessages, boolean muteCalls) {
+        Map<String, Boolean> body = new HashMap<>();
+        body.put("messages", muteMessages);
+        body.put("calls", muteCalls);
+        ApiService api = ApiClient.getApiService(requireContext().getApplicationContext());
+        api.setMute(conversationId, body).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Object>> call,
+                                   @NonNull Response<ApiResponse<Object>> response) {
+                if (!isAdded()) return;
+                ApiResponse<Object> b = response.body();
+                if (response.isSuccessful() && b != null && b.isSuccess()) {
+                    // cập nhật state local
+                    mutedMessages = applyMute(mutedMessages, muteMessages);
+                    mutedCalls = applyMute(mutedCalls, muteCalls);
+                    Toast.makeText(getContext(), "Đã cập nhật thông báo", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Object>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(getContext(), "Lỗi mạng", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private List<String> applyMute(List<String> list, boolean muted) {
+        List<String> result = list != null ? new java.util.ArrayList<>(list) : new java.util.ArrayList<>();
+        if (muted) {
+            if (currentUserId != null && !result.contains(currentUserId)) result.add(currentUserId);
+        } else {
+            if (currentUserId != null) result.remove(currentUserId);
+        }
+        return result;
     }
 
     /** Dialog nhập biệt danh cho đối phương. */
@@ -356,8 +658,15 @@ public class ChatDetailFragment extends Fragment {
     }
 
     private void setNickname(String nickname) {
+        if (otherMember == null) return;
+        setNicknameFor(otherMember.getId(), nickname);
+    }
+
+    /** Đổi biệt danh cho 1 userId bất kỳ trong conversation (1-1 hoặc thành viên group). */
+    private void setNicknameFor(String targetUserId, String nickname) {
+        if (targetUserId == null || conversationId == null) return;
         Map<String, String> body = new HashMap<>();
-        body.put("targetUserId", otherMember.getId());
+        body.put("targetUserId", targetUserId);
         body.put("nickname", nickname);
 
         ApiService api = ApiClient.getApiService(requireContext().getApplicationContext());
@@ -371,12 +680,14 @@ public class ChatDetailFragment extends Fragment {
                     // Đồng bộ map local để mọi nơi trong session dùng tên mới nhất
                     if (nicknames == null) nicknames = new HashMap<>();
                     if (nickname.isEmpty()) {
-                        nicknames.remove(otherMember.getId());
+                        nicknames.remove(targetUserId);
                     } else {
-                        nicknames.put(otherMember.getId(), nickname);
+                        nicknames.put(targetUserId, nickname);
                     }
-                    // Cập nhật tên hiển thị ngay: nickname rỗng → quay về username gốc
-                    tvChatName.setText(resolveDisplayName());
+                    // Cập nhật tên header nếu là 1-1 (đổi biệt danh đối phương)
+                    if (!isGroup) {
+                        tvChatName.setText(resolveDisplayName());
+                    }
                     Toast.makeText(getContext(),
                             nickname.isEmpty() ? "Đã đặt lại biệt danh" : "Đã đổi biệt danh",
                             Toast.LENGTH_SHORT).show();
@@ -487,8 +798,11 @@ public class ChatDetailFragment extends Fragment {
         }
     }
 
-    /** Ưu tiên biệt danh (nicknames[otherId]) nếu có, else username gốc. */
+    /** Group → tên ghép/đặt; 1-1 → biệt danh nếu có, else username gốc. */
     private String resolveDisplayName() {
+        if (isGroup) {
+            return ChatNameUtils.groupDisplayName(groupName, members, currentUserId);
+        }
         if (otherMember == null) return "";
         if (nicknames != null && otherMember.getId() != null) {
             String nn = nicknames.get(otherMember.getId());

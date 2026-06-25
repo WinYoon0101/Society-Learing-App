@@ -22,6 +22,9 @@ object ChatSocketManager {
         .create()
     private val TAG = "ChatSocket"
 
+    // Conversation đang mở — để join lại room sau khi (re)connect
+    private var currentRoom: String? = null
+
     // Listeners
     private var onMessageNew: ((Message) -> Unit)? = null
     private var onMessageReacted: ((String, List<Reaction>) -> Unit)? = null
@@ -85,6 +88,10 @@ object ChatSocketManager {
     private fun setupListeners() {
         socket?.on(Socket.EVENT_CONNECT) {
             Log.d(TAG, "✅ Connected to server")
+            // Join lại room conversation đang mở (vd nhóm vừa tạo / vừa được add sau connect)
+            currentRoom?.let { room ->
+                socket?.emit("conversation:join", JSONObject().apply { put("conversationId", room) })
+            }
             onConnected?.invoke()
         }
 
@@ -220,6 +227,15 @@ object ChatSocketManager {
     // ═══════════════════════════════════════════════════════════════════════
     // EMIT EVENTS
     // ═══════════════════════════════════════════════════════════════════════
+
+    /** Chủ động join room conversation (để nhận realtime, kể cả nhóm vừa tạo/được add sau connect). */
+    fun joinConversation(conversationId: String) {
+        currentRoom = conversationId
+        if (socket != null && socket!!.connected()) {
+            socket?.emit("conversation:join", JSONObject().apply { put("conversationId", conversationId) })
+            Log.d(TAG, "Joined conversation room $conversationId")
+        }
+    }
 
     @JvmOverloads
     fun sendMessage(
