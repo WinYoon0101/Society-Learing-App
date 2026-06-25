@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import Reaction from '../models/reaction.model';
 import Post from '../models/post.model';
 import Notification from '../models/notification.model';
+import User from '../models/user.model';
 
 export const toggleReaction = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -50,12 +51,17 @@ export const toggleReaction = async (req: Request, res: Response): Promise<void>
                 
                 // 2. Kẻ vạch an toàn: Phải có đủ cả người nhận, người gửi và không tự thả tim chính mình
                 if (post && authorOfPost && senderOfReaction && authorOfPost.toString() !== senderOfReaction.toString()) {
+                    // Tìm thông tin người gửi để lấy tên
+                    const senderInfo = await User.findById(senderOfReaction).select('username');
+                    // Nếu không tìm thấy tên thì để mặc định là 'Ai đó'
+                    const senderName = senderInfo?.username || 'Ai đó';
+                    
                     await Notification.create({
                         recipient: authorOfPost, 
                         sender: senderOfReaction,
                         type: 'post_reaction',
                         targetId: targetId,
-                        content: 'đã bày tỏ cảm xúc về bài viết của bạn'
+                        content: `${senderName} đã bày tỏ cảm xúc về bài viết của bạn`
                     }).catch(err => console.error("Lỗi Mongoose khi lưu thông báo:", err.message));
                 } else {
                     console.log("Bỏ qua tạo thông báo (Do thiếu ID bài viết hoặc tự thả tim chính mình)");

@@ -8,7 +8,7 @@ import cloudinary from "../config/cloudinary";
 
 import { GoogleGenerativeAI, SchemaType, Schema } from "@google/generative-ai";
 import axios from "axios";
-import pdfParse = require("pdf-parse"); 
+// Đã xóa import pdfParse - Không cần thiết nữa!
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -424,16 +424,9 @@ export const generateDocumentMindmap = async (req: AuthRequest, res: Response): 
       return;
     }
 
+    // Tải file về dưới dạng Buffer
     const fileResponse = await axios.get(media.url, { responseType: "arraybuffer" });
     const buffer = Buffer.from(fileResponse.data);
-
-    const pdfData = await (pdfParse as any)(buffer);
-    const textContent = pdfData.text;
-
-    if (!textContent || textContent.trim().length === 0) {
-      res.status(400).json({ success: false, message: "Không thể trích xuất chữ từ file PDF này." });
-      return;
-    }
 
     const apiKey = process.env.GEMINI_API_KEY; 
     if (!apiKey) {
@@ -474,7 +467,6 @@ export const generateDocumentMindmap = async (req: AuthRequest, res: Response): 
       required: ["topic", "summary", "nodes"],
     };
 
-  
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       generationConfig: {
@@ -484,10 +476,19 @@ export const generateDocumentMindmap = async (req: AuthRequest, res: Response): 
       },
     });
 
-    const prompt = `Bạn là một trợ lý học tập. Đọc nội dung sau và trích xuất thành sơ đồ tư duy phân cấp:\n${textContent.substring(0, 30000)}`;
-    const aiResult = await model.generateContent(prompt);
+    // CHUYỂN ĐỔI PDF SANG DẠNG BASE64
+    const pdfPart = {
+      inlineData: {
+        data: buffer.toString("base64"),
+        mimeType: "application/pdf"
+      }
+    };
+
+    const prompt = "Bạn là một trợ lý học tập. Đọc toàn bộ nội dung trong file PDF đính kèm và trích xuất thành sơ đồ tư duy phân cấp.";
     
-   
+    // TRUYỀN CẢ PROMPT VÀ FILE PDF GỐC CHO AI
+    const aiResult = await model.generateContent([prompt, pdfPart]);
+    
     let rawText = aiResult.response.text();
     rawText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
 
@@ -507,7 +508,16 @@ export const generateDocumentMindmap = async (req: AuthRequest, res: Response): 
   } catch (error: any) {
     console.error("generateDocumentMindmap error:", error);
     
-  
+    // 1. Xử lý lỗi API quá tải từ Google (Lỗi 503)
+    if (error.status === 503 || (error.message && error.message.includes("503"))) {
+       res.status(503).json({
+         success: false,
+         message: "Hệ thống AI của Google hiện đang quá tải. Vui lòng thử lại sau ít phút.",
+       });
+       return;
+    }
+
+    // 2. Xử lý lỗi AI trả về định dạng sai
     if (error instanceof SyntaxError) {
        res.status(500).json({
          success: false,
@@ -516,6 +526,7 @@ export const generateDocumentMindmap = async (req: AuthRequest, res: Response): 
        return;
     }
 
+    // 3. Các lỗi còn lại
     res.status(500).json({
       success: false,
       message: "Đã xảy ra lỗi khi tạo sơ đồ tư duy, vui lòng thử lại sau.",

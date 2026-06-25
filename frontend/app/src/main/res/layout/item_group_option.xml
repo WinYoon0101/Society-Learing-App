@@ -18,13 +18,13 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:contentDescription="@null"
-        app:tint="#283633" />
+        app:tint="@color/group_text" />
 
     <TextView
         android:id="@+id/tvOptionLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="18dp"
-        android:textColor="#283633"
+        android:textColor="@color/group_text"
         android:textSize="16sp" />
 </LinearLayout>

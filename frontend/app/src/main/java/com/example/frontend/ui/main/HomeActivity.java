@@ -43,6 +43,7 @@ import com.example.frontend.ui.pomodoro.PomodoroActivity;
 import com.example.frontend.ui.profile.ProfileFragment;
 import com.example.frontend.ui.quiz.QuizListActivity;
 import com.example.frontend.ui.feed.SavedActivity;
+import com.example.frontend.ui.scanner.ScanActivity;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
@@ -63,6 +64,7 @@ public class HomeActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
     private BadgeDrawable notifyBadge;
+    private TextView tvNotifyBadge;
 
 
     private int currentTab = 0; // 0: Home, 1: Friend, 2: Chat, 3: Library, 4: Notify, 5: Profile
@@ -109,6 +111,7 @@ public class HomeActivity extends AppCompatActivity {
         imgLibrary = findViewById(R.id.imgLibrary);
         imgNotify = findViewById(R.id.imgNotify);
         imgProfile = findViewById(R.id.imgProfile);
+        tvNotifyBadge = findViewById(R.id.tvNotifyBadge);
 
         lineHome = findViewById(R.id.lineHome);
         lineFriend = findViewById(R.id.lineFriend);
@@ -155,7 +158,7 @@ public class HomeActivity extends AppCompatActivity {
                 else if (id == R.id.nav_live) intent = new Intent(this, LiveStartActivity.class);
                 else if (id == R.id.nav_quiz) intent = new Intent(this, QuizListActivity.class);
                 else if (id == R.id.nav_pomodoro) intent = new Intent(this, PomodoroActivity.class);
-                else if (id == R.id.nav_calendar) intent = new Intent(this, CalendarActivity.class);
+                else if (id == R.id.nav_scan) intent = new Intent(this, ScanActivity.class);
 
                 if (intent != null) {
                     startActivity(intent);
@@ -236,6 +239,13 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Cập nhật badge số thông báo chưa đọc (về số thực tế / 0 sau khi đã đọc)
+        com.example.frontend.ui.notify.NotificationBadge.refresh(this, tvNotifyBadge);
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -343,6 +353,9 @@ public class HomeActivity extends AppCompatActivity {
 
 
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
+
+        // Đổi tab → cập nhật lại badge (vd vừa đọc thông báo ở tab Notify rồi sang tab khác)
+        com.example.frontend.ui.notify.NotificationBadge.refresh(this, tvNotifyBadge);
     }
 
     private void resetTabs() {

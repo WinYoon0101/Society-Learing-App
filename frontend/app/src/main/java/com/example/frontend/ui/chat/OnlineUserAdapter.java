@@ -14,11 +14,14 @@ import com.example.frontend.R;
 import com.example.frontend.data.model.User;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class OnlineUserAdapter extends RecyclerView.Adapter<OnlineUserAdapter.OnlineUserViewHolder> {
 
     private List<User> users = new ArrayList<>();
+    private Set<String> onlineIds = new HashSet<>();
     private String currentUserId;
     private String currentUserAvatar;
 
@@ -39,6 +42,11 @@ public class OnlineUserAdapter extends RecyclerView.Adapter<OnlineUserAdapter.On
         notifyDataSetChanged();
     }
 
+    public void setOnlineIds(Set<String> ids) {
+        this.onlineIds = ids != null ? ids : new HashSet<>();
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public OnlineUserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -53,7 +61,8 @@ public class OnlineUserAdapter extends RecyclerView.Adapter<OnlineUserAdapter.On
             holder.bind(null, "Bạn", currentUserAvatar, true);
         } else {
             User user = users.get(position - 1);
-            holder.bind(user, user.getUsername(), user.getAvatar(), true);
+            boolean online = user.getId() != null && onlineIds.contains(user.getId());
+            holder.bind(user, user.getUsername(), user.getAvatar(), online);
         }
     }
 

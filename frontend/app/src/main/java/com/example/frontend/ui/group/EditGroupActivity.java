@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,25 +32,39 @@ public class EditGroupActivity extends AppCompatActivity {
     public static final String EXTRA_DESCRIPTION = "description";
     public static final String EXTRA_PRIVACY    = "privacy";
     public static final String EXTRA_AVATAR_URL = "avatarUrl";
+    public static final String EXTRA_COVER_URL  = "coverUrl";
+    public static final String EXTRA_REQUIRE_APPROVAL = "requirePostApproval";
 
     private String groupId;
     private Uri selectedAvatarUri = null;
+    private Uri selectedCoverUri = null;
     private String selectedPrivacy;
 
     private CircleImageView imgAvatar;
+    private ImageView imgCoverPreview;
     private EditText etName, etDescription;
     private TextView tvPrivacyLabel;
+    private androidx.appcompat.widget.SwitchCompat switchRequireApproval;
     private Button btnSave;
     private ImageButton btnBack;
 
     private GroupRepository repository;
     private final MutableLiveData<Result<GroupDetail>> updateLive = new MutableLiveData<>();
+    private final MutableLiveData<Result<Object>> coverLive = new MutableLiveData<>();
 
     private final ActivityResultLauncher<String> pickImage =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
                     selectedAvatarUri = uri;
                     Glide.with(this).load(uri).into(imgAvatar);
+                }
+            });
+
+    private final ActivityResultLauncher<String> pickCover =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri != null) {
+                    selectedCoverUri = uri;
+                    Glide.with(this).load(uri).into(imgCoverPreview);
                 }
             });
 
@@ -62,9 +77,11 @@ public class EditGroupActivity extends AppCompatActivity {
         if (groupId == null) { finish(); return; }
 
         imgAvatar     = findViewById(R.id.imgAvatarPreview);
+        imgCoverPreview = findViewById(R.id.imgCoverPreview);
         etName        = findViewById(R.id.etGroupName);
         etDescription = findViewById(R.id.etDescription);
         tvPrivacyLabel= findViewById(R.id.tvPrivacyLabel);
+        switchRequireApproval = findViewById(R.id.switchRequireApproval);
         btnSave       = findViewById(R.id.btnSave);
         btnBack       = findViewById(R.id.btnBack);
 
@@ -79,10 +96,17 @@ public class EditGroupActivity extends AppCompatActivity {
         if (avatarUrl != null && !avatarUrl.isEmpty()) {
             Glide.with(this).load(avatarUrl).placeholder(R.drawable.ic_group).into(imgAvatar);
         }
+        String coverUrl = getIntent().getStringExtra(EXTRA_COVER_URL);
+        if (coverUrl != null && !coverUrl.isEmpty()) {
+            Glide.with(this).load(coverUrl)
+                    .placeholder(R.drawable.bg_group_cover_default).into(imgCoverPreview);
+        }
+        switchRequireApproval.setChecked(getIntent().getBooleanExtra(EXTRA_REQUIRE_APPROVAL, false));
 
         btnBack.setOnClickListener(v -> finish());
 
         findViewById(R.id.btnPickAvatar).setOnClickListener(v -> pickImage.launch("image/*"));
+        findViewById(R.id.btnPickCover).setOnClickListener(v -> pickCover.launch("image/*"));
 
         findViewById(R.id.btnSelectPrivacy).setOnClickListener(v -> {
             PrivacyBottomSheet sheet = PrivacyBottomSheet.newInstance(selectedPrivacy);
@@ -97,14 +121,36 @@ public class EditGroupActivity extends AppCompatActivity {
 
         updateLive.observe(this, r -> {
             if (r == null) return;
-            btnSave.setEnabled(r.status != Result.Status.LOADING);
+            if (r.status == Result.Status.SUCCESS) {
+                // Thông tin (tên/mô tả/privacy/avatar) đã lưu; nếu có chọn ảnh bìa thì upload tiếp
+                if (selectedCoverUri != null) {
+                    File coverFile = FileUtils.getFileFromUri(this, selectedCoverUri);
+                    repository.updateGroupCover(groupId, coverFile, coverLive);
+                } else {
+                    Toast.makeText(this, "Cập nhật nhóm thành công!", Toast.LENGTH_SHORT).show();
+                    setResult(RESULT_OK);
+                    finish();
+                }
+            } else if (r.status == Result.Status.ERROR) {
+                btnSave.setEnabled(true);
+                Toast.makeText(this, r.message != null ? r.message : "Có lỗi xảy ra",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        coverLive.observe(this, r -> {
+            if (r == null) return;
             if (r.status == Result.Status.SUCCESS) {
                 Toast.makeText(this, "Cập nhật nhóm thành công!", Toast.LENGTH_SHORT).show();
                 setResult(RESULT_OK);
                 finish();
             } else if (r.status == Result.Status.ERROR) {
-                Toast.makeText(this, r.message != null ? r.message : "Có lỗi xảy ra",
-                        Toast.LENGTH_SHORT).show();
+                btnSave.setEnabled(true);
+                // Thông tin đã lưu, chỉ ảnh bìa lỗi
+                Toast.makeText(this, "Đã lưu nhóm nhưng đổi ảnh bìa thất bại: "
+                        + (r.message != null ? r.message : ""), Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
+                finish();
             }
         });
     }
@@ -125,6 +171,6 @@ public class EditGroupActivity extends AppCompatActivity {
         btnSave.setEnabled(false);
         repository.updateGroup(groupId, name,
                 etDescription.getText().toString().trim(),
-                selectedPrivacy, avatarFile, updateLive);
+                selectedPrivacy, switchRequireApproval.isChecked(), avatarFile, updateLive);
     }
 }

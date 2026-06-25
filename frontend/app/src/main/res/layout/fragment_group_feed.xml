@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F4F7EE">
+    android:background="@color/group_bg">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
@@ -25,7 +25,7 @@
                 android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
                 android:gravity="center"
-                android:textColor="#888888" android:textSize="14sp"
+                android:textColor="@color/group_text_secondary" android:textSize="14sp"
                 android:visibility="gone"
                 android:text="Chưa có bài viết nào" />
         </RelativeLayout>

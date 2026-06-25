@@ -84,10 +84,24 @@ public class FriendRepository {
         apiService.sendFriendRequest(userId).enqueue(new Callback<ApiResponse<Object>>() {
             @Override
             public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                // Log code và message để kiểm tra
+                android.util.Log.d("API_DEBUG", "Code: " + response.code() + " | Body: " + response.body());
+
                 if (response.isSuccessful()) {
+                    // Nếu body là null mà vẫn báo thành công, hãy xử lý riêng
                     resultLiveData.postValue(Result.success(response.body()));
                 } else {
-                    resultLiveData.postValue(Result.error("Lỗi khi gửi lời mời", null));
+                    // Đọc lỗi thật sự từ Backend
+                    String errorMsg = "Lỗi không xác định";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorMsg = "Không thể đọc lỗi từ server";
+                    }
+                    android.util.Log.e("API_DEBUG", "Error: " + errorMsg);
+                    resultLiveData.postValue(Result.error("Backend trả về lỗi: " + errorMsg, null));
                 }
             }
 

@@ -18,6 +18,6 @@
         android:id="@+id/rvFriendPick"
         android:layout_width="match_parent"
         android:layout_height="320dp"
-        android:clipToPadding="false"/>
+        android:clipToPadding="false" />
 
 </LinearLayout>

@@ -41,7 +41,8 @@ public class StoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     }
 
     @Override public int getItemViewType(int pos) { return pos == 0 ? TYPE_CREATE : TYPE_STORY; }
-    @Override public int getItemCount() { return items.size() + 1; } // +1 for "Create" card
+
+    @Override public int getItemCount() { return items.size() + 1; } // +1 dành cho thẻ "Tạo tin" đầu tiên
 
     @NonNull @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -57,36 +58,50 @@ public class StoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int pos) {
         if (holder instanceof CreateVH) {
-            // Load my avatar as background
+            // Lấy avatar người dùng
             SharedPreferences prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
             String myAvatar = prefs.getString("USER_AVATAR", "");
+
+            CreateVH createVH = (CreateVH) holder;
+
             if (!myAvatar.isEmpty()) {
                 Glide.with(context).load(myAvatar)
-                        .centerCrop().into(((CreateVH) holder).imgBg);
+                        .placeholder(R.drawable.ic_launcher_background)
+                        .centerCrop()
+                        .into(createVH.imgBg);
+            } else {
+                createVH.imgBg.setImageResource(R.drawable.ic_launcher_background);
             }
+
+            // Xử lý sự kiện click mở màn hình Tạo tin mới
             holder.itemView.setOnClickListener(v ->
                     context.startActivity(new Intent(context, CreateStoryActivity.class)));
         } else {
             StoryGroup g = items.get(pos - 1);
             StoryVH h = (StoryVH) holder;
             h.tvName.setText(g.getAuthor() != null ? g.getAuthor().getUsername() : "");
-            // Avatar
+
+            // Load Avatar của người đăng Story
             if (g.getAuthor() != null && g.getAuthor().getAvatar() != null) {
                 Glide.with(context).load(g.getAuthor().getAvatar())
                         .placeholder(R.drawable.ic_user).into(h.imgAvatar);
             }
-            // Background (thumbnail of latest story)
+
+            // Load Background (ảnh của story mới nhất)
             if (g.getLatestMediaUrl() != null) {
                 Glide.with(context).load(g.getLatestMediaUrl())
                         .centerCrop().into(h.imgBg);
             }
+
+            // Xử lý sự kiện click mở màn hình Xem tin
             holder.itemView.setOnClickListener(v -> {
                 Intent intent = new Intent(context, StoryViewActivity.class);
                 intent.putExtra("STORY_GROUP_AUTHOR_ID",
                         g.getAuthor() != null ? g.getAuthor().getId() : "");
                 intent.putExtra("STORY_GROUP_AUTHOR_NAME",
                         g.getAuthor() != null ? g.getAuthor().getUsername() : "");
-                // Pass first story id to view
+
+                // Truyền ID của story đầu tiên sang màn hình View
                 if (g.getStories() != null && !g.getStories().isEmpty()) {
                     intent.putExtra("STORY_ID", g.getStories().get(0).getId());
                 }

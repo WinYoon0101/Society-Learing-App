@@ -16,7 +16,7 @@
             android:id="@+id/imgGroupAvatar"
             android:layout_width="56dp" android:layout_height="56dp"
             android:src="@drawable/ic_group"
-            android:background="#E5E7DD" />
+            android:background="@color/group_divider" />
 
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" android:layout_marginStart="12dp"
@@ -24,25 +24,33 @@
 
             <TextView android:id="@+id/tvGroupName"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:textColor="#283633" android:textSize="15sp" android:textStyle="bold" />
+                android:textColor="@color/group_text" android:textSize="15sp" android:textStyle="bold" />
 
             <TextView android:id="@+id/tvGroupMeta"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:textColor="#43634B" android:textSize="12sp" android:layout_marginTop="2dp" />
+                android:textColor="@color/group_primary" android:textSize="12sp" android:layout_marginTop="2dp" />
 
             <TextView android:id="@+id/tvGroupDescription"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="2dp"
+                android:textColor="@color/group_text_secondary" android:textSize="12sp" android:layout_marginTop="2dp"
                 android:maxLines="2" android:ellipsize="end" />
         </LinearLayout>
 
         <Button android:id="@+id/btnJoin"
-            android:layout_width="wrap_content" android:layout_height="36dp"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:maxWidth="96dp"
+            android:minWidth="0dp"
+            android:minHeight="36dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
             android:text="Tham gia"
-            android:textSize="13sp"
-            android:backgroundTint="#43634B"
-            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:lineSpacingMultiplier="0.95"
+            android:backgroundTint="@color/group_primary"
+            android:textColor="@color/group_surface"
             style="@style/Widget.MaterialComponents.Button" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

@@ -36,13 +36,13 @@
 
         <ImageButton
             android:id="@+id/btnSelectFriendClose"
-
-            android:layout_width="16dp"
-            android:layout_height="16dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close"
             android:tint="#10B981"
-
             android:contentDescription="Đóng" />
     </LinearLayout>
 
@@ -104,14 +104,24 @@
         tools:listitem="@layout/item_friend_pick"
         tools:visibility="visible" />
 
-    <!-- Empty state (visible until BE friend list API available) -->
+    <!-- Loading -->
+    <ProgressBar
+        android:id="@+id/progressFriendPick"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginVertical="32dp"
+        android:visibility="gone" />
+
+    <!-- Empty state -->
     <LinearLayout
         android:id="@+id/layoutEmptyFriendPick"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
-        android:paddingVertical="32dp">
+        android:paddingVertical="32dp"
+        android:visibility="gone">
 
         <ImageView
             android:layout_width="56dp"
@@ -122,10 +132,11 @@
             android:contentDescription="Empty" />
 
         <TextView
+            android:id="@+id/tvEmptyFriendPick"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Danh sách bạn bè sẽ hiển thị ở đây"
+            android:text="Chưa có bạn bè"
             android:textColor="#8A9E94"
             android:textSize="13sp" />
     </LinearLayout>

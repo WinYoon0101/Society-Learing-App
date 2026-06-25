@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="72dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="16dp"
+    android:background="?attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/tvRank"
+        android:layout_width="36dp"
+        android:layout_height="wrap_content"
+        android:text="01"
+        android:textStyle="bold"
+        android:textColor="#9CA3AF"
+        android:textSize="15sp"
+        android:gravity="start" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginEnd="8dp">
+
+        <TextView
+            android:id="@+id/tvTopicName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="#DesignSystem"
+            android:textStyle="bold"
+            android:textColor="#111827"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/tvMentions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12,450 đề cập"
+            android:textColor="#6B7280"
+            android:textSize="13sp"
+            android:layout_marginTop="2dp" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/imgTrendLine"
+        android:layout_width="70dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="16dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_trend_line_up" /> <com.google.android.material.card.MaterialCardView
+    android:id="@+id/cardTrendBadge"
+    android:layout_width="72dp"
+    android:layout_height="28dp"
+    app:cardCornerRadius="6dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp"
+    app:cardBackgroundColor="#E6F4EA"> <TextView
+    android:id="@+id/tvTrendPercentage"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:text="↑ 24%"
+    android:textStyle="bold"
+    android:textColor="#10B981" android:textSize="12sp"
+    android:gravity="center" />
+</com.google.android.material.card.MaterialCardView>
+</LinearLayout>

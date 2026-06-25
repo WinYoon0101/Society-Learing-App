@@ -30,7 +30,7 @@
                 <ImageView
                     android:layout_width="200dp"
                     android:layout_height="55dp"
-                    android:src="@drawable/ic_logo"
+                    android:src="@drawable/ic_text_logo"
                     android:layout_gravity="center"
                     android:layout_marginBottom="10dp"
                     android:scaleType="centerInside" />

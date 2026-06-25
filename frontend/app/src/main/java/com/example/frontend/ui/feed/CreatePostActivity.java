@@ -18,10 +18,21 @@ public class CreatePostActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             String groupId = getIntent().getStringExtra("groupId");
 
+            String scannedContent = getIntent().getStringExtra("SCANNED_CONTENT");
+
             CreatePostFragment fragment = new CreatePostFragment();
+            Bundle args = new Bundle();
             if (groupId != null && !groupId.isEmpty()) {
-                Bundle args = new Bundle();
                 args.putString("groupId", groupId);
+            }
+
+            // Thêm SCANNED_CONTENT vào Bundle
+            if (scannedContent != null && !scannedContent.isEmpty()) {
+                args.putString("SCANNED_CONTENT", scannedContent);
+            }
+
+            // Nếu Bundle có chứa dữ liệu thì truyền cho Fragment
+            if (!args.isEmpty()) {
                 fragment.setArguments(args);
             }
 

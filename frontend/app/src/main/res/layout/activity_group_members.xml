@@ -4,12 +4,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F4F7EE">
+    android:background="@color/group_bg">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#FFFFFF"
+        android:background="@color/group_surface"
         android:elevation="2dp"
         android:paddingStart="8dp"
         android:paddingEnd="8dp">
@@ -23,14 +23,14 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="8dp"
             android:src="@drawable/ic_arrow_back"
-            app:tint="#283633" />
+            app:tint="@color/group_text" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Thành viên nhóm"
-            android:textColor="#283633"
+            android:textColor="@color/group_text"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -42,7 +42,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:text="Mời"
-            android:textColor="#059669"
+            android:textColor="@color/group_primary"
             android:textSize="14sp"
             android:textAllCaps="false"
             android:visibility="gone"/>

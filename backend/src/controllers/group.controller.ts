@@ -7,6 +7,8 @@ import Media from "../models/media.model";
 import Comment from "../models/comment.model";
 import Reaction from "../models/reaction.model";
 import GroupInvitation from "../models/groupInvitation.model";
+import Notification from "../models/notification.model";
+import User from "../models/user.model";
 
 // =====================================
 // TAB 1: NHÓM CỦA BẠN
@@ -25,11 +27,12 @@ export const getMyGroups = async (req: AuthRequest, res: Response): Promise<void
                 // Đếm bài post mới trong 7 ngày gần nhất
                 const newPostCount = await Post.countDocuments({
                     groupId: group._id,
+                    status: { $ne: "pending" },
                     createdAt: { $gte: sevenDaysAgo },
                 });
 
-                // Lấy thời điểm bài post mới nhất
-                const latestPost = await Post.findOne({ groupId: group._id })
+                // Lấy thời điểm bài post mới nhất (bỏ bài đang chờ duyệt)
+                const latestPost = await Post.findOne({ groupId: group._id, status: { $ne: "pending" } })
                     .sort({ createdAt: -1 })
                     .select("createdAt")
                     .lean();
@@ -67,9 +70,10 @@ export const getGroupPosts = async (req: AuthRequest, res: Response): Promise<vo
         const myGroups = await Group.find({ "member.userId": userId }).select("_id").lean();
         const groupIds = myGroups.map((g) => g._id);
 
-        const total = await Post.countDocuments({ groupId: { $in: groupIds } });
+        const feedFilter = { groupId: { $in: groupIds }, status: { $ne: "pending" } };
+        const total = await Post.countDocuments(feedFilter);
 
-        const posts = await Post.find({ groupId: { $in: groupIds } })
+        const posts = await Post.find(feedFilter)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
@@ -136,9 +140,9 @@ export const discoverGroups = async (req: AuthRequest, res: Response): Promise<v
         const skip = (page - 1) * limit;
         const search = req.query.search as string | undefined;
 
-        // Chỉ lấy group Public mà user chưa là thành viên
+        // Lấy group mà user chưa là thành viên (gồm cả Public lẫn Private).
+        // Nhóm đã gửi yêu cầu vẫn hiện (nút "Đã gửi yêu cầu, chờ duyệt") qua cờ hasPendingRequest.
         const filter: Record<string, unknown> = {
-            privacy: "Public",
             "member.userId": { $ne: userId },
         };
 
@@ -158,6 +162,9 @@ export const discoverGroups = async (req: AuthRequest, res: Response): Promise<v
             description: group.description,
             memberCount: group.member.length,
             privacy: group.privacy,
+            hasPendingRequest: (group.pendingRequests ?? []).some(
+                (p) => p.userId.toString() === userId.toString()
+            ),
         }));
 
         res.status(200).json({
@@ -242,10 +249,33 @@ export const respondToInvitation = async (req: AuthRequest, res: Response): Prom
         }
 
         if (action === "accept") {
-            // Thêm user vào group
-            await Promise.all([
-                GroupInvitation.findByIdAndUpdate(invitationId, { status: "accepted" }),
-                Group.findByIdAndUpdate(invitation.groupId, {
+            const group = await Group.findById(invitation.groupId);
+            if (!group) {
+                res.status(404).json({ success: false, message: "Nhóm không còn tồn tại" });
+                return;
+            }
+
+            await GroupInvitation.findByIdAndUpdate(invitationId, { status: "accepted" });
+
+            const alreadyMember = group.member.some((m) => m.userId.toString() === userId);
+            if (alreadyMember) {
+                res.status(200).json({
+                    success: true,
+                    message: "Bạn đã là thành viên của nhóm",
+                    data: { status: "joined" },
+                });
+                return;
+            }
+
+            // Lời mời từ admin = đã được duyệt sẵn → vào thẳng (kể cả nhóm Private).
+            const inviterIsAdmin = group.member.some(
+                (m) => m.userId.toString() === invitation.inviterId.toString() && m.role === "admin"
+            );
+
+            // Nhóm Public, hoặc người mời là admin → vào thẳng.
+            // Nhóm Private + người mời là thành viên thường → chuyển thành yêu cầu chờ admin duyệt.
+            if ((group.privacy as string) === "Public" || inviterIsAdmin) {
+                await Group.findByIdAndUpdate(invitation.groupId, {
                     $push: {
                         member: {
                             userId: new mongoose.Types.ObjectId(userId),
@@ -253,9 +283,50 @@ export const respondToInvitation = async (req: AuthRequest, res: Response): Prom
                             joinAt: new Date(),
                         },
                     },
-                }),
-            ]);
-            res.status(200).json({ success: true, message: "Đã tham gia nhóm thành công" });
+                });
+                res.status(200).json({
+                    success: true,
+                    message: "Đã tham gia nhóm thành công",
+                    data: { status: "joined" },
+                });
+                return;
+            }
+
+            // Private + người mời là thành viên thường → đẩy vào pendingRequests (nếu chưa có) + thông báo admin
+            const alreadyPending = (group.pendingRequests ?? []).some(
+                (p) => p.userId.toString() === userId
+            );
+            if (!alreadyPending) {
+                await Group.findByIdAndUpdate(invitation.groupId, {
+                    $push: {
+                        pendingRequests: {
+                            userId: new mongoose.Types.ObjectId(userId),
+                            requestedAt: new Date(),
+                        },
+                    },
+                });
+                try {
+                    const requester = await User.findById(userId).select("username");
+                    const requesterName = requester?.username || "Một người dùng";
+                    const admins = group.member.filter((m) => m.role === "admin");
+                    await Notification.insertMany(
+                        admins.map((a) => ({
+                            recipient: a.userId,
+                            sender: new mongoose.Types.ObjectId(userId),
+                            type: "group_join_request",
+                            targetId: group._id,
+                            content: `${requesterName} đã yêu cầu tham gia nhóm ${group.groupName}`,
+                        }))
+                    );
+                } catch (err) {
+                    console.error("Lỗi tạo thông báo yêu cầu tham gia (từ lời mời):", err);
+                }
+            }
+            res.status(200).json({
+                success: true,
+                message: "Đã gửi yêu cầu tham gia, chờ quản trị viên duyệt",
+                data: { status: "pending" },
+            });
         } else {
             await GroupInvitation.findByIdAndUpdate(invitationId, { status: "declined" });
             res.status(200).json({ success: true, message: "Đã từ chối lời mời" });
@@ -287,14 +358,12 @@ export const sendInvitation = async (req: AuthRequest, res: Response): Promise<v
             return;
         }
 
-        // Kiểm tra quyền mời: Private chỉ admin, Public thì member cũng được
+        // Bất kỳ thành viên nào (kể cả nhóm Private) đều được mời bạn bè.
+        // Lời mời chỉ là "đề cử"; với nhóm Private, khi người được mời đồng ý sẽ
+        // chuyển thành yêu cầu chờ admin duyệt (xem respondToInvitation).
         const inviterMember = group.member.find((m) => m.userId.toString() === inviterId);
         if (!inviterMember) {
             res.status(403).json({ success: false, message: "Bạn không phải thành viên của nhóm này" });
-            return;
-        }
-        if (group.privacy === ("Private" as string) && inviterMember.role !== "admin") {
-            res.status(403).json({ success: false, message: "Chỉ admin mới được mời vào nhóm riêng tư" });
             return;
         }
 
@@ -313,6 +382,21 @@ export const sendInvitation = async (req: AuthRequest, res: Response): Promise<v
             status: "pending",
         });
         await invitation.save();
+
+        // Thông báo cho người được mời
+        try {
+            const inviter = await User.findById(inviterId).select("username");
+            const inviterName = inviter?.username || "Một người dùng";
+            await Notification.create({
+                recipient: new mongoose.Types.ObjectId(inviteeId),
+                sender: new mongoose.Types.ObjectId(inviterId),
+                type: "group_invitation",
+                targetId: group._id,
+                content: `${inviterName} đã mời bạn vào nhóm ${group.groupName}`,
+            });
+        } catch (err) {
+            console.error("Lỗi tạo thông báo lời mời:", err);
+        }
 
         res.status(201).json({ success: true, message: "Đã gửi lời mời thành công" });
     } catch (error: any) {
@@ -370,6 +454,229 @@ export const joinPublicGroup = async (req: AuthRequest, res: Response): Promise<
 };
 
 // =====================================
+// YÊU CẦU THAM GIA NHÓM
+// POST /api/groups/:groupId/request-join
+// - Nhóm Public: vào thẳng (status "joined")
+// - Nhóm Private: đẩy vào pendingRequests chờ admin duyệt (status "pending")
+// =====================================
+export const requestJoinGroup = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const alreadyMember = group.member.some((m) => m.userId.toString() === userId);
+        if (alreadyMember) {
+            res.status(400).json({ success: false, message: "Bạn đã là thành viên của nhóm này" });
+            return;
+        }
+
+        // Nhóm Public → tham gia ngay
+        if ((group.privacy as string) === "Public") {
+            await Group.findByIdAndUpdate(groupId, {
+                $push: {
+                    member: {
+                        userId: new mongoose.Types.ObjectId(userId),
+                        role: "member",
+                        joinAt: new Date(),
+                    },
+                },
+            });
+            res.status(200).json({
+                success: true,
+                message: "Tham gia nhóm thành công",
+                data: { status: "joined" },
+            });
+            return;
+        }
+
+        // Nhóm Private → gửi yêu cầu chờ duyệt
+        const alreadyRequested = (group.pendingRequests ?? []).some(
+            (p) => p.userId.toString() === userId
+        );
+        if (alreadyRequested) {
+            res.status(400).json({ success: false, message: "Bạn đã gửi yêu cầu tham gia nhóm này" });
+            return;
+        }
+
+        await Group.findByIdAndUpdate(groupId, {
+            $push: {
+                pendingRequests: {
+                    userId: new mongoose.Types.ObjectId(userId),
+                    requestedAt: new Date(),
+                },
+            },
+        });
+
+        // Thông báo cho tất cả admin của nhóm về yêu cầu tham gia
+        try {
+            const requester = await User.findById(userId).select("username");
+            const requesterName = requester?.username || "Một người dùng";
+            const admins = group.member.filter((m) => m.role === "admin");
+            await Notification.insertMany(
+                admins.map((a) => ({
+                    recipient: a.userId,
+                    sender: new mongoose.Types.ObjectId(userId),
+                    type: "group_join_request",
+                    targetId: group._id,
+                    content: `${requesterName} đã yêu cầu tham gia nhóm ${group.groupName}`,
+                }))
+            );
+        } catch (err) {
+            console.error("Lỗi tạo thông báo yêu cầu tham gia:", err);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Đã gửi yêu cầu tham gia, chờ quản trị viên duyệt",
+            data: { status: "pending" },
+        });
+    } catch (error) {
+        console.error("requestJoinGroup error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
+// DANH SÁCH YÊU CẦU THAM GIA ĐANG CHỜ (chỉ admin)
+// GET /api/groups/:groupId/pending-members
+// =====================================
+export const getPendingMembers = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId)
+            .populate("pendingRequests.userId", "username avatar")
+            .lean();
+
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const isAdmin = group.member.some(
+            (m: any) => m.userId.toString() === userId && m.role === "admin"
+        );
+        if (!isAdmin) {
+            res.status(403).json({ success: false, message: "Chỉ admin mới xem được yêu cầu tham gia" });
+            return;
+        }
+
+        const pending = (group.pendingRequests ?? []).map((p: any) => ({
+            userId: p.userId?._id || p.userId,
+            username: p.userId?.username,
+            avatar: p.userId?.avatar,
+            requestedAt: p.requestedAt,
+        }));
+
+        res.status(200).json({ success: true, data: pending });
+    } catch (error) {
+        console.error("getPendingMembers error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
+// DUYỆT YÊU CẦU THAM GIA (chỉ admin)
+// PATCH /api/groups/:groupId/members/:userId/approve
+// =====================================
+export const approveMember = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const adminId = req.user!.id;
+        const { groupId, userId } = req.params;
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const isAdmin = group.member.some(
+            (m) => m.userId.toString() === adminId && m.role === "admin"
+        );
+        if (!isAdmin) {
+            res.status(403).json({ success: false, message: "Chỉ admin mới được duyệt thành viên" });
+            return;
+        }
+
+        const isPending = (group.pendingRequests ?? []).some((p) => p.userId.toString() === userId);
+        if (!isPending) {
+            res.status(404).json({ success: false, message: "Không tìm thấy yêu cầu tham gia" });
+            return;
+        }
+
+        await Group.findByIdAndUpdate(groupId, {
+            $pull: { pendingRequests: { userId: new mongoose.Types.ObjectId(String(userId)) } },
+            $push: {
+                member: {
+                    userId: new mongoose.Types.ObjectId(String(userId)),
+                    role: "member",
+                    joinAt: new Date(),
+                },
+            },
+        });
+
+        // Thông báo cho người được duyệt
+        try {
+            await Notification.create({
+                recipient: new mongoose.Types.ObjectId(String(userId)),
+                sender: new mongoose.Types.ObjectId(adminId),
+                type: "group_request_approved",
+                targetId: group._id,
+                content: `Yêu cầu tham gia nhóm ${group.groupName} của bạn đã được duyệt`,
+            });
+        } catch (err) {
+            console.error("Lỗi tạo thông báo duyệt thành viên:", err);
+        }
+
+        res.status(200).json({ success: true, message: "Đã duyệt thành viên" });
+    } catch (error) {
+        console.error("approveMember error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
+// TỪ CHỐI YÊU CẦU THAM GIA (chỉ admin)
+// PATCH /api/groups/:groupId/members/:userId/reject
+// =====================================
+export const rejectMember = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const adminId = req.user!.id;
+        const { groupId, userId } = req.params;
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const isAdmin = group.member.some(
+            (m) => m.userId.toString() === adminId && m.role === "admin"
+        );
+        if (!isAdmin) {
+            res.status(403).json({ success: false, message: "Chỉ admin mới được từ chối thành viên" });
+            return;
+        }
+
+        await Group.findByIdAndUpdate(groupId, {
+            $pull: { pendingRequests: { userId: new mongoose.Types.ObjectId(String(userId)) } },
+        });
+
+        res.status(200).json({ success: true, message: "Đã từ chối yêu cầu tham gia" });
+    } catch (error) {
+        console.error("rejectMember error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
 // TẠO NHÓM MỚI
 // POST /api/groups
 // Body: { groupName, description, privacy }
@@ -400,6 +707,7 @@ export const createGroup = async (req: AuthRequest, res: Response): Promise<void
             avatarUrl,
             creatorId: new mongoose.Types.ObjectId(userId),
             privacy,
+            requirePostApproval: privacy === "Private", // mặc định nhóm Private cần duyệt bài
             member: [
                 {
                     userId: new mongoose.Types.ObjectId(userId),
@@ -452,9 +760,9 @@ export const getPostsByGroup = async (req: AuthRequest, res: Response): Promise<
             return;
         }
 
-        const total = await Post.countDocuments({ groupId });
+        const total = await Post.countDocuments({ groupId, status: { $ne: "pending" } });
 
-        const posts = await Post.find({ groupId })
+        const posts = await Post.find({ groupId, status: { $ne: "pending" } })
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
@@ -505,19 +813,59 @@ export const getPostsByGroup = async (req: AuthRequest, res: Response): Promise<
         });
     } catch (error) {
         console.error("getPostsByGroup error:", error);
-        console.log(JSON.stringify({
-            success: true,
-            data: postsWithDetails,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-        }, null, 2));
         res.status(500).json({ success: false, message: "Lỗi hệ thống" });
     }
 };
+// =====================================
+// LẤY BÀI VIẾT CHỜ DUYỆT CỦA NHÓM (admin)
+// GET /api/groups/:groupId/pending-posts
+// =====================================
+export const getPendingPosts = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId).lean();
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const isAdmin = group.member.some(
+            (m) => m.userId.toString() === userId && m.role === "admin"
+        );
+        if (!isAdmin) {
+            res.status(403).json({ success: false, message: "Chỉ admin mới xem được bài chờ duyệt" });
+            return;
+        }
+
+        const posts = await Post.find({ groupId, status: "pending" })
+            .sort({ createdAt: -1 })
+            .populate("authorId", "username avatar")
+            .lean();
+
+        const postsWithDetails = await Promise.all(
+            posts.map(async (post) => {
+                const mediaList = await Media.find({ targetId: post._id, fileType: "image" }).lean();
+                return {
+                    ...post,
+                    images: mediaList.map((m) => m.url),
+                    countComment: 0,
+                    countReaction: 0,
+                    myReaction: null,
+                    topReactions: [],
+                };
+            })
+        );
+
+        res.status(200).json({ success: true, data: postsWithDetails });
+    } catch (error) {
+        console.error("getPendingPosts error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
 // LẤY CHI TIẾT NHÓM
 // GET /api/groups/:groupId
 // =====================================
@@ -535,15 +883,16 @@ export const getGroupDetail = async (req: AuthRequest, res: Response): Promise<v
             return;
         }
 
-        // Nếu nhóm Private, chỉ thành viên mới xem được
+        // Non-member vẫn xem được thông tin cơ bản (preview) để có thể "Yêu cầu tham gia".
+        // Bài viết của nhóm Private vẫn bị chặn ở getPostsByGroup.
         const isMember = group.member.some((m) => m.userId.toString() === userId);
-        if ((group.privacy as string) === "Private" && !isMember) {
-            res.status(403).json({ success: false, message: "Nhóm riêng tư" });
-            return;
-        }
 
         const isAdmin = group.member.some(
             (m) => m.userId.toString() === userId && m.role === "admin"
+        );
+
+        const hasPendingRequest = (group.pendingRequests ?? []).some(
+            (p) => p.userId.toString() === userId
         );
 
         res.status(200).json({
@@ -558,6 +907,8 @@ export const getGroupDetail = async (req: AuthRequest, res: Response): Promise<v
                 memberCount: group.member.length,
                 isMember,
                 isAdmin,
+                hasPendingRequest,
+                requirePostApproval: group.requirePostApproval ?? false,
                 createdAt: group.createdAt,
             },
         });
@@ -589,7 +940,7 @@ export const updateGroup = async (req: AuthRequest, res: Response): Promise<void
             return;
         }
 
-        const { groupName, description, privacy } = req.body;
+        const { groupName, description, privacy, requirePostApproval } = req.body;
 
         if (groupName !== undefined) group.groupName = groupName;
         if (description !== undefined) group.description = description;
@@ -599,6 +950,10 @@ export const updateGroup = async (req: AuthRequest, res: Response): Promise<void
                 return;
             }
             group.privacy = privacy;
+        }
+        // requirePostApproval gửi qua multipart là chuỗi "true"/"false"
+        if (requirePostApproval !== undefined) {
+            group.requirePostApproval = requirePostApproval === true || requirePostApproval === "true";
         }
 
         // Nếu có upload ảnh mới
@@ -618,6 +973,7 @@ export const updateGroup = async (req: AuthRequest, res: Response): Promise<void
                 description: group.description,
                 avatarUrl: group.avatarUrl,
                 privacy: group.privacy,
+                requirePostApproval: group.requirePostApproval,
             },
         });
     } catch (error) {
@@ -625,6 +981,47 @@ export const updateGroup = async (req: AuthRequest, res: Response): Promise<void
         res.status(500).json({ success: false, message: "Lỗi hệ thống" });
     }
 };
+// =====================================
+// CẬP NHẬT ẢNH BÌA NHÓM (chỉ admin)
+// PATCH /api/groups/:groupId/cover  (multipart, field "file")
+// =====================================
+export const updateGroupCover = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const member = group.member.find((m) => m.userId.toString() === userId);
+        if (!member || member.role !== "admin") {
+            res.status(403).json({ success: false, message: "Chỉ admin mới được đổi ảnh bìa" });
+            return;
+        }
+
+        const file = req.file as (Express.Multer.File & { path?: string }) | undefined;
+        if (!file?.path) {
+            res.status(400).json({ success: false, message: "Thiếu ảnh bìa" });
+            return;
+        }
+
+        group.coverUrl = file.path;
+        await group.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Cập nhật ảnh bìa thành công",
+            data: { _id: group._id, coverUrl: group.coverUrl },
+        });
+    } catch (error) {
+        console.error("updateGroupCover error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
 // =====================================
 // LẤY DANH SÁCH THÀNH VIÊN
 // GET /api/groups/:groupId/members
@@ -665,6 +1062,101 @@ export const getGroupMembers = async (req: AuthRequest, res: Response): Promise<
 };
 
 // =====================================
+// RỜI NHÓM
+// POST /api/groups/:groupId/leave
+// =====================================
+export const leaveGroup = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const member = group.member.find((m) => m.userId.toString() === userId);
+        if (!member) {
+            res.status(400).json({ success: false, message: "Bạn không phải thành viên của nhóm này" });
+            return;
+        }
+
+        // Quản trị viên duy nhất (còn thành viên khác) không được rời —
+        // phải chuyển quyền cho người khác hoặc xóa nhóm trước.
+        if (member.role === "admin") {
+            const adminCount = group.member.filter((m) => m.role === "admin").length;
+            if (adminCount === 1 && group.member.length > 1) {
+                res.status(400).json({
+                    success: false,
+                    message: "Bạn là quản trị viên duy nhất. Hãy chuyển quyền cho thành viên khác hoặc xóa nhóm trước khi rời.",
+                });
+                return;
+            }
+        }
+
+        await Group.findByIdAndUpdate(groupId, {
+            $pull: { member: { userId: new mongoose.Types.ObjectId(userId) } },
+        });
+
+        res.status(200).json({ success: true, message: "Đã rời nhóm" });
+    } catch (error) {
+        console.error("leaveGroup error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
+// XÓA NHÓM (chỉ creator hoặc admin)
+// DELETE /api/groups/:groupId
+// Dọn luôn Post / Media / Comment / Reaction / GroupInvitation liên quan
+// =====================================
+export const deleteGroup = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+        const { groupId } = req.params;
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
+            return;
+        }
+
+        const isCreator = group.creatorId.toString() === userId;
+        const isAdmin = group.member.some(
+            (m) => m.userId.toString() === userId && m.role === "admin"
+        );
+        if (!isCreator && !isAdmin) {
+            res.status(403).json({ success: false, message: "Chỉ quản trị viên mới được xóa nhóm" });
+            return;
+        }
+
+        // Lấy toàn bộ bài viết của nhóm để dọn dữ liệu phụ thuộc
+        const posts = await Post.find({ groupId }).select("_id").lean();
+        const postIds = posts.map((p) => p._id);
+
+        // Lấy comment của các bài để dọn reaction trên comment
+        const comments = await Comment.find({ postId: { $in: postIds } }).select("_id").lean();
+        const commentIds = comments.map((c) => c._id);
+
+        await Promise.all([
+            Media.deleteMany({ targetId: { $in: postIds }, sourceType: "post" }),
+            Comment.deleteMany({ postId: { $in: postIds } }),
+            Reaction.deleteMany({ targetId: { $in: [...postIds, ...commentIds] } }),
+            Post.deleteMany({ groupId }),
+            GroupInvitation.deleteMany({ groupId }),
+        ]);
+
+        await Group.findByIdAndDelete(groupId);
+
+        res.status(200).json({ success: true, message: "Đã xóa nhóm" });
+    } catch (error) {
+        console.error("deleteGroup error:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống" });
+    }
+};
+
+// =====================================
 // KICK THÀNH VIÊN (chỉ admin)
 // DELETE /api/groups/:groupId/members/:memberId
 // =====================================
@@ -697,7 +1189,7 @@ export const kickMember = async (req: AuthRequest, res: Response): Promise<void>
         }
 
         await Group.findByIdAndUpdate(groupId, {
-            $pull: { member: { userId: new mongoose.Types.ObjectId(memberId) } },
+            $pull: { member: { userId: new mongoose.Types.ObjectId(String(memberId)) } },
         });
 
         res.status(200).json({ success: true, message: "Đã xóa thành viên khỏi nhóm" });

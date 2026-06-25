@@ -5,13 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F4F7EE">
+    android:background="@color/group_bg">
 
     <!-- TOOLBAR -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#FFFFFF"
+        android:background="@color/group_surface"
         android:paddingHorizontal="8dp"
         android:elevation="2dp">
 
@@ -25,7 +25,7 @@
             android:contentDescription="Quay lại"
             android:padding="8dp"
             android:src="@drawable/ic_arrow_back"
-            app:tint="#283633" />
+            app:tint="@color/group_text" />
 
         <TextView
             android:id="@+id/tvTitle"
@@ -35,7 +35,7 @@
             android:layout_toEndOf="@id/btnBack"
             android:layout_marginStart="8dp"
             android:text="Nhóm"
-            android:textColor="#283633"
+            android:textColor="@color/group_text"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -49,37 +49,56 @@
             android:contentDescription="Tìm kiếm"
             android:padding="8dp"
             android:src="@drawable/ic_search"
-            app:tint="#283633" />
+            app:tint="@color/group_text" />
 
         <ImageButton
-            android:id="@+id/btnAdd"
+            android:id="@+id/btnNotify"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_centerVertical="true"
             android:layout_toStartOf="@id/btnSearch"
             android:layout_marginEnd="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Tạo nhóm"
+            android:contentDescription="Thông báo"
             android:padding="8dp"
-            android:src="@drawable/ic_add"
-            app:tint="#283633" />
+            android:src="@drawable/ic_notify"
+            app:tint="@color/group_text" />
+
+        <TextView
+            android:id="@+id/tvNotifyBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@id/btnNotify"
+            android:layout_alignEnd="@id/btnNotify"
+            android:layout_marginTop="4dp"
+            android:minWidth="16dp"
+            android:minHeight="16dp"
+            android:paddingHorizontal="4dp"
+            android:gravity="center"
+            android:background="@drawable/bg_notification_badge"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
     </RelativeLayout>
 
     <!-- TAB LAYOUT (pill style) -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabGroup"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:background="#FFFFFF"
+        android:layout_height="34dp"
+        android:layout_marginVertical="6dp"
+        android:background="@color/group_surface"
         app:tabBackground="@drawable/bg_tab_selector"
+        app:tabContentStart="0dp"
         app:tabIndicatorHeight="0dp"
         app:tabMode="scrollable"
         app:tabRippleColor="@android:color/transparent"
-        app:tabPaddingStart="12dp"
-        app:tabPaddingEnd="12dp"
+        app:tabPaddingStart="18dp"
+        app:tabPaddingEnd="18dp"
         app:tabGravity="center"
-        app:tabSelectedTextColor="#FFFFFF"
-        app:tabTextColor="#283633"
+        app:tabSelectedTextColor="@color/group_surface"
+        app:tabTextColor="@color/group_text"
         app:tabTextAppearance="@style/GroupTabText" />
 
     <!-- VIEW PAGER -->

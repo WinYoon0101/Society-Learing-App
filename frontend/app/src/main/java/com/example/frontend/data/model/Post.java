@@ -9,14 +9,16 @@ public class Post {
 
     private String content;
 
-    // ĐÃ SỬA: Nhận danh sách URL ảnh từ Backend
     @SerializedName("images")
     private List<String> images;
 
     private User authorId;
-    
+
     @SerializedName("groupId")
-    private String groupId;  // null nếu bài home/profile, có giá trị nếu bài trong nhóm
+    private String groupId;
+
+    @SerializedName("privacy")
+    private String privacy;
 
     private String createdAt;
 
@@ -25,6 +27,13 @@ public class Post {
     private String myReaction;
 
     private List<String> topReactions;
+
+    @SerializedName("tags")
+    private List<User> tags;
+
+    // Getter và Setter cho tags
+    public List<User> getTags() { return tags; }
+    public void setTags(List<User> tags) { this.tags = tags; }
 
     public List<String> getTopReactions() { return topReactions; }
     public void setTopReactions(List<String> topReactions) { this.topReactions = topReactions; }
@@ -35,15 +44,17 @@ public class Post {
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
 
-    // ĐÃ SỬA GETTER & SETTER
     public List<String> getImages() { return images; }
     public void setImages(List<String> images) { this.images = images; }
 
     public User getAuthorId() { return authorId; }
     public void setAuthorId(User authorId) { this.authorId = authorId; }
-    
+
     public String getGroupId() { return groupId; }
     public void setGroupId(String groupId) { this.groupId = groupId; }
+
+    public String getPrivacy() { return privacy; }
+    public void setPrivacy(String privacy) { this.privacy = privacy; }
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }

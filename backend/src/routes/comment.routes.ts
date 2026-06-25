@@ -5,7 +5,8 @@ import { handleValidationErrors } from "../middlewares/validate.middleware";
 import {
   createComment,
   getCommentsByPost,
-  deleteComment
+  deleteComment,
+  getReplies
 } from "../controllers/comment.controller";
 
 const router = Router();
@@ -26,25 +27,26 @@ const createCommentValidators = [
     .isLength({ max: 500 })
     .withMessage("Bình luận không được vượt quá 500 ký tự"),
 
-  // Mở rộng sau này: Nếu bạn muốn làm tính năng Reply Comment
   body("parentId")
     .optional({ checkFalsy: true })
     .isMongoId()
     .withMessage("parentId không hợp lệ"),
 ];
 
-const updateCommentValidators = [
-  param("id").isMongoId().withMessage("Comment ID không hợp lệ"),
-  body("content")
-    .trim()
-    .notEmpty()
-    .withMessage("Nội dung bình luận không được để trống")
-    .isLength({ max: 500 })
-    .withMessage("Bình luận không được vượt quá 500 ký tự"),
-];
-
 const getCommentsValidators = [
   param("postId").isMongoId().withMessage("Post ID không hợp lệ"),
+  query("page")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("page phải là số nguyên dương"),
+  query("limit")
+    .optional()
+    .isInt({ min: 1, max: 50 })
+    .withMessage("limit phải từ 1-50"),
+];
+
+const getRepliesValidators = [
+  param("commentId").isMongoId().withMessage("Comment ID không hợp lệ"),
   query("page")
     .optional()
     .isInt({ min: 1 })
@@ -61,13 +63,22 @@ const deleteCommentValidators = [
 
 // ─── Routes ────────────────────────────────────────────────────────────────────
 
-// 1. Lấy danh sách comment của một bài viết (Có thể public hoặc protected tùy bạn)
-// Ở đây mình để ai cũng xem được comment, chỉ cần có postId
+// 👉 ĐÃ SỬA: Thêm authenticate vào route getCommentsByPost để Backend biết user nào đang xem
 router.get(
   "/post/:postId",
   getCommentsValidators,
   handleValidationErrors,
+  authenticate, 
   getCommentsByPost
+);
+
+// 👉 ĐÃ SỬA: Thêm authenticate vào route getReplies để Backend biết user nào đang xem
+router.get(
+  "/replies/:commentId",
+  getRepliesValidators,
+  handleValidationErrors,
+  authenticate,
+  getReplies
 );
 
 // Bật hàng rào bảo vệ: Các chức năng dưới đây bắt buộc phải đăng nhập
@@ -81,7 +92,7 @@ router.post(
   createComment
 );
 
-// 4. Xóa comment của mình (hoặc Admin/Chủ bài viết xóa)
+// 4. Xóa comment của mình
 router.delete(
   "/:id",
   deleteCommentValidators,

@@ -108,6 +108,21 @@
             android:name=".ui.group.GroupMembersActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.group.PendingMembersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.group.PendingPostsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.group.PendingPostDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.group.MyGroupPostsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.notify.NotificationsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.feed.CreatePostActivity"
             android:exported="false" />
         <activity
@@ -142,7 +157,23 @@
         <activity android:name=".ui.story.CreateStoryActivity"/>
         <activity android:name=".ui.story.StoryViewActivity"/>
         <activity android:name=".ui.chat.ChatDetailActivity"/>
-        <activity android:name=".ui.calendar.AddTaskActivity"/>
+
+        <activity
+            android:name=".ui.scanner.ScanActivity"
+            android:exported="false"
+            android:label="Quét Tài Liệu" />
+
+        <activity
+            android:name=".ui.scanner.ScanResultActivity"
+            android:exported="false"
+            android:label="Kết Quả Quét"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
     </application>
 
 </manifest>
