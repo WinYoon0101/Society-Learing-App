@@ -26,6 +26,7 @@ import com.example.frontend.data.model.NotificationListResponse;
 import com.example.frontend.data.model.Notification;
 import com.example.frontend.data.model.PagedResponse;
 import com.example.frontend.data.model.ReactionItem;
+import com.example.frontend.data.model.Task;
 import com.example.frontend.data.model.TrendingTopic;
 import com.example.frontend.data.model.UpdateProfile;
 import com.example.frontend.data.model.User;
@@ -479,6 +480,28 @@ public interface ApiService {
 
     @GET("posts/{id}")
     Call<ApiResponse<Post>> getPostById(@Path("id") String id);
+
+    //task
+    @GET("task")
+    Call<List<Task>> getTasks();
+
+    @GET("task/{id}")
+    Call<Task> getTaskById(@Path("id") String id);
+
+    @GET("task/date/{date}")
+    Call<List<Task>> getTasksByDate(@Path("date") String date);
+
+    @POST("task")
+    Call<Task> createTask(@Body CreateTaskRequest request);
+
+    @PUT("task/{id}")
+    Call<Task> updateTask(@Path("id") String id, @Body UpdateTaskRequest request);
+
+    @DELETE("task/{id}")
+    Call<Void> deleteTask(@Path("id") String id);
+
+    @PATCH("task/{id}/toggle")
+    Call<Task> toggleStatus(@Path("id") String id);
 
 
     @GET("search/trending")
