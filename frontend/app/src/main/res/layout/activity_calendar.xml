@@ -6,7 +6,6 @@
     android:background="#F6F8FB"
     android:orientation="vertical">
 
-    <!-- Toolbar -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
@@ -42,24 +41,10 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Greeting -->
-
-            <TextView
-                android:id="@+id/txtToday"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Hôm nay bạn sẽ hoàn thành những gì?"
-                android:textColor="#111827"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <!-- Progress Card -->
-
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="12dp"
                 app:cardBackgroundColor="#10B981"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="4dp">
@@ -75,7 +60,8 @@
                         android:layout_height="wrap_content"
                         android:text="Tiến độ hôm nay"
                         android:textColor="#CCFFFFFF"
-                        android:textSize="14sp" />
+                        android:textSize="14sp"
+                        android:textStyle="bold"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -94,7 +80,7 @@
                                 android:id="@+id/txtProgress"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="50%"
+                                android:text=""
                                 android:textColor="#FFFFFF"
                                 android:textSize="38sp"
                                 android:textStyle="bold" />
@@ -103,7 +89,7 @@
                                 android:id="@+id/txtDone"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="3 / 6 hoàn thành"
+                                android:text=""
                                 android:textColor="#FFFFFF"
                                 android:textSize="14sp" />
 
@@ -125,9 +111,14 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:scrollbars="none">
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupFilter"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 app:singleLine="true"
@@ -139,37 +130,53 @@
                     android:layout_height="wrap_content"
                     android:checked="true"
                     android:text="Tất cả"
-                    app:checkedIconVisible="false"/>
+                    android:textColor="@color/chip_text"
+                    app:chipBackgroundColor="@color/chip_background"
+                    app:checkedIconVisible="false"
+                    app:chipStrokeWidth="0dp"/>
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipDaily"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Hằng ngày"
-                    app:checkedIconVisible="false"/>
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipRelax"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Quan trọng"
-                    app:checkedIconVisible="false"/>
+                    android:textColor="@color/chip_text"
+                    app:chipBackgroundColor="@color/chip_background"
+                    app:checkedIconVisible="false"
+                    app:chipStrokeWidth="0dp"/>
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipImportant"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Khẩn cấp"
-                    app:checkedIconVisible="false"/>
+                    android:text="Quan trọng"
+                    android:textColor="@color/chip_text"
+                    app:chipBackgroundColor="@color/chip_background"
+                    app:checkedIconVisible="false"
+                    app:chipStrokeWidth="0dp"/>
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipUrgent"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="Khẩn cấp"
+                    android:textColor="@color/chip_text"
+                    app:chipBackgroundColor="@color/chip_background"
+                    app:checkedIconVisible="false"
+                    app:chipStrokeWidth="0dp"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipOverdue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Quá hạn"
-                    app:checkedIconVisible="false"/>
+                    android:textColor="@color/chip_text"
+                    app:chipBackgroundColor="@color/chip_background"
+                    app:checkedIconVisible="false"
+                    app:chipStrokeWidth="0dp"/>
 
             </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -182,7 +189,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Công việc hôm nay"
+                    android:text="Công việc"
                     android:textColor="#111827"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -203,8 +210,6 @@
                     android:textStyle="bold" />
 
             </LinearLayout>
-
-            <!-- Recycler -->
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvTasks"

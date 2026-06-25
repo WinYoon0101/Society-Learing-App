@@ -5,16 +5,20 @@ import android.os.Bundle;
 import android.widget.CalendarView;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.frontend.R;
+import com.example.frontend.data.repository.TaskRepository;
 import com.example.frontend.ui.calendar.TaskAdapter;
 import com.example.frontend.data.model.Task;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.data.remote.ApiClient;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,65 +28,70 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class CalendarActivity extends AppCompatActivity {
-    private RecyclerView rvTasks;
-    private CalendarView calendarView;
-    private TaskAdapter adapter;
-    private ApiService apiService;
-    private String selectedDate;
-    private TextView txtSelectedDate;
+    private ImageView btnBack;
+    private TextView txtProgress;
+    private TextView txtDone;
+    private CircularProgressIndicator progressCircle;
+    private TaskRepository repository;
+    private TextView btnAddTask;
+    private List<Task> allTasks = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar);
-        ImageView btnBack = findViewById(R.id.btnBack);
-        ImageView btnAdd = findViewById(R.id.btnAddTask);
-        calendarView = findViewById(R.id.calendarView);
-        rvTasks = findViewById(R.id.rvTasks);
-        rvTasks.setLayoutManager(new LinearLayoutManager(this));
-        txtSelectedDate = findViewById(R.id.txtSelectedDate);
-        adapter = new TaskAdapter(new ArrayList<>());
-        rvTasks.setAdapter(adapter);
-        apiService = ApiClient.getApiService(this);
-        loadTasks();
+        btnBack = findViewById(R.id.btnBack);
+        txtProgress = findViewById(R.id.txtProgress);
+        txtDone = findViewById(R.id.txtDone);
+        progressCircle = findViewById(R.id.progressCircle);
+        btnAddTask=findViewById(R.id.btnAddTask);
+
+        repository = new TaskRepository(this);
         btnBack.setOnClickListener(v -> finish());
-        btnAdd.setOnClickListener(v -> {Intent intent = new Intent(this, AddTaskActivity.class);startActivity(intent);});
-        calendarView.setOnDateChangeListener(
-                (view, year, month, dayOfMonth) -> {
-                    selectedDate = year + "-" + String.format("%02d", month + 1) + "-" + String.format("%02d", dayOfMonth);
-                    txtSelectedDate.setText("Công việc ngày " + dayOfMonth + "/" + (month + 1) + "/" + year);
-                    loadTasksByDate(selectedDate);
-                }
-        );
+        btnAddTask.setOnClickListener(v->{BottomSheetAddTask sheet = new BottomSheetAddTask();
+            sheet.setOnTaskSavedListener(() -> {loadTasks();});
+            sheet.show(getSupportFragmentManager(), "ADD_TASK");
+        });
+        loadTasks();
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if(selectedDate != null){
-            loadTasksByDate(selectedDate);
-        }else{
-            loadTasks();
-        }
-    }
-
     private void loadTasks() {
-        apiService.getTasks().enqueue(new Callback<List<Task>>() {
+        repository.getTasks().enqueue(new Callback<List<Task>>() {
             @Override
             public void onResponse(Call<List<Task>> call, Response<List<Task>> response) {
-                if(response.isSuccessful() && response.body() != null) {
-                    adapter.setTasks(response.body());}}
+                if(response.isSuccessful() && response.body()!=null){
+                    allTasks = response.body();
+                    updateProgress();
+                }
+
+            }
             @Override
-            public void onFailure(Call<List<Task>> call, Throwable t) {}});
+            public void onFailure(Call<List<Task>> call, Throwable t) {
+                Toast.makeText(CalendarActivity.this,
+                        t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+
+            }
+        });
     }
-    private void loadTasksByDate(String date) {
-        apiService.getTasksByDate(date).enqueue(new Callback<List<Task>>() {
-            @Override
-            public void onResponse(Call<List<Task>> call, Response<List<Task>> response) {
-                if(response.isSuccessful() && response.body() != null){
-                    adapter.setTasks(response.body());}}
-            @Override
-            public void onFailure(Call<List<Task>> call,Throwable t) {
-                t.printStackTrace();}});
+    private void updateProgress() {
+        int total = 0;
+        int completed = 0;
+        for(Task task : allTasks){
+            if(task.getPriority().equals("daily")){
+                total++;
+                if(task.getStatus().equals("completed")){
+                    completed++;
+
+                }
+            }
+        }
+        int percent = 0;
+        if(total != 0){
+            percent = completed * 100 / total;
+
+        }
+        txtProgress.setText(percent + "%");
+        txtDone.setText(completed + " / " + total + " hoàn thành");
+        progressCircle.setProgress(percent);
     }
 }

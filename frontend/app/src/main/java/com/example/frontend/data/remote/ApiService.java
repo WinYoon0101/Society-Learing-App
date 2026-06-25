@@ -433,19 +433,26 @@ public interface ApiService {
     Call<ApiResponse<Post>> getPostById(@Path("id") String id);
 
     //task
-    @GET("api/tasks")
+    @GET("task")
     Call<List<Task>> getTasks();
 
-    @POST("api/tasks")
-    Call<Task> createTask(@Body Task task);
+    @GET("task/{id}")
+    Call<Task> getTaskById(@Path("id") String id);
 
-    @PUT("api/tasks/{id}")
-    Call<Task> updateTask(@Path("id") String id, @Body Task task);
-
-    @DELETE("api/tasks/{id}")
-    Call<Void> deleteTask(@Path("id") String id);
-    @GET("api/tasks/date/{date}")
+    @GET("task/date/{date}")
     Call<List<Task>> getTasksByDate(@Path("date") String date);
+
+    @POST("task")
+    Call<Task> createTask(@Body CreateTaskRequest request);
+
+    @PUT("task/{id}")
+    Call<Task> updateTask(@Path("id") String id, @Body UpdateTaskRequest request);
+
+    @DELETE("task/{id}")
+    Call<Void> deleteTask(@Path("id") String id);
+
+    @PATCH("task/{id}/toggle")
+    Call<Task> toggleStatus(@Path("id") String id);
 
 
     @GET("search/trending")

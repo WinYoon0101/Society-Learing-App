@@ -195,11 +195,10 @@
         android:id="@+id/layoutPriority"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:weightSum="3">
 
-        <!-- Hằng ngày -->
-
+        <!-- Daily -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardDaily"
             android:layout_width="0dp"
@@ -224,26 +223,23 @@
                     android:background="@drawable/bg_circle_green"/>
 
                 <TextView
-                    android:id="@+id/txtDaily"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="Hằng ngày"
                     android:textColor="#6B7280"
-                    android:textStyle="bold"/>
-
+                    android:textStyle="bold"
+                    android:textSize="12sp"/>
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
-
-        <!-- Quan trọng -->
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardImportant"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:layout_marginHorizontal="3dp"
+            android:layout_marginEnd="6dp"
             app:cardBackgroundColor="#FFFFFF"
             app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
@@ -262,26 +258,23 @@
                     android:background="@drawable/bg_circle_yellow"/>
 
                 <TextView
-                    android:id="@+id/txtImportant"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="Quan trọng"
                     android:textColor="#6B7280"
-                    android:textStyle="bold"/>
-
+                    android:textStyle="bold"
+                    android:textSize="12sp"/>
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
-
-        <!-- Khẩn cấp -->
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardUrgent"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
             app:cardBackgroundColor="#FFFFFF"
             app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
@@ -300,20 +293,18 @@
                     android:background="@drawable/bg_circle_red"/>
 
                 <TextView
-                    android:id="@+id/txtUrgent"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="Khẩn cấp"
                     android:textColor="#6B7280"
-                    android:textStyle="bold"/>
-
+                    android:textStyle="bold"
+                    android:textSize="12sp"/>
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
-
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSave"
         android:layout_width="match_parent"
@@ -323,6 +314,7 @@
         android:textAllCaps="false"
         android:textSize="18sp"
         app:backgroundTint="#10B981"
-        app:cornerRadius="18dp"/>
+        app:cornerRadius="18dp"
+        android:textColor="#CCFFFFFF"/>
 
 </LinearLayout>
