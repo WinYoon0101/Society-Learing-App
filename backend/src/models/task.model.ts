@@ -1,29 +1,46 @@
 import mongoose, { Schema } from "mongoose";
 
+export interface ITask {
+  userId: mongoose.Types.ObjectId;
+  title: string;
+  description: string;
+  dueDate: Date;
+  priority: "daily" | "medium" | "high";
+  status: "pending" | "completed";
+  createdAt: Date;
+  updatedAt: Date;
+}
 const TaskSchema = new Schema(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     title: {
       type: String,
       required: true,
+      trim: true,
     },
+
     description: {
       type: String,
       default: "",
+      trim: true,
     },
-    date: {
+
+    dueDate: {
       type: Date,
       required: true,
     },
-    type: {
-      type: String,
-      enum: ["task", "deadline", "event"],
-      default: "task",
-    },
+
     priority: {
       type: String,
-      enum: ["low", "medium", "high"],
+      enum: ["daily", "medium", "high"],
       default: "medium",
     },
+
     status: {
       type: String,
       enum: ["pending", "completed"],
@@ -32,6 +49,7 @@ const TaskSchema = new Schema(
   },
   {
     timestamps: true,
+    versionKey: false,
   },
 );
 
