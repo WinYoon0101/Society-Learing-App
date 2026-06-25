@@ -1,82 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://tools.android.com/tools"
-    android:id="@+id/profileRootContainer"
+    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#F5F5F0">
+        android:background="#F8FAF5">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <RelativeLayout
+            <!-- Cover -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:background="#FFFFFF"
-                android:paddingHorizontal="8dp"
-                android:elevation="2dp">
+                android:layout_height="240dp">
 
+                <ImageView
+                    android:id="@+id/imgCover"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/bg_cover_default" />
+
+                <!-- Overlay -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    android:background="#22000000"/>
+
+                <!-- Back -->
                 <ImageButton
                     android:id="@+id/btnBack"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_centerVertical="true"
-                    android:src="@drawable/ic_arrow_back"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    app:tint="#283633"/>
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="16dp"
+                    android:background="@drawable/bg_circle_white"
+                    android:src="@android:drawable/ic_menu_revert"
+                    app:tint="#10B981"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:text="Trang cá nhân"
-                    android:textSize="17sp"
-                    android:textStyle="bold"
-                    android:textColor="#283633"/>
-            </RelativeLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="#FFFFFF"
-                android:paddingVertical="24dp"
-                android:gravity="center"
-                android:layout_marginBottom="8dp">
-
+                <!-- Avatar -->
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/imgAvatar"
-                    android:layout_width="90dp"
-                    android:layout_height="90dp"
-                    android:src="@drawable/ic_user"/>
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:layout_marginBottom="0dp"
+                    android:src="@drawable/ic_user"
+                    app:civ_border_color="#FFFFFF"
+                    app:civ_border_width="4dp"/>
+            </FrameLayout>
 
-                <TextView
-                    android:id="@+id/tvFriendName"
-                    android:layout_width="wrap_content"
+            <!-- Info Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="-10dp"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFFFFF">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="#111827"/>
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="20dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnMessage"
-                    android:layout_width="160dp"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="16dp"
-                    android:text="💬 Nhắn tin"
-                    android:textSize="14sp"
-                    android:textAllCaps="false"
-                    android:backgroundTint="#059669"
-                    android:textColor="#FFFFFF"/>
-            </LinearLayout>
+                    <TextView
+                        android:id="@+id/tvFriendName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nguyễn Văn A"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textColor="#1F2937"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMessage"
+                            android:layout_width="0dp"
+                            android:layout_height="46dp"
+                            android:layout_weight="1"
+                            android:text="Nhắn tin"
+                            android:textAllCaps="false"
+                            android:textColor="#FFFFFF"
+                            android:textStyle="bold"
+                            android:backgroundTint="#10B981"
+                            app:cornerRadius="14dp"
+                            app:icon="@drawable/ic_chat"/>
+
+                        <Space
+                            android:layout_width="10dp"
+                            android:layout_height="wrap_content"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnFriend"
+                            android:layout_width="0dp"
+                            android:layout_height="46dp"
+                            android:layout_weight="1"
+                            android:text="Bạn bè"
+                            android:textAllCaps="false"
+                            android:textStyle="bold"
+                            android:textColor="#10B981"
+                            android:backgroundTint="#D1FAE5"
+                            app:cornerRadius="14dp">
+                        </com.google.android.material.button.MaterialButton>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- About -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Giới thiệu"
+                        android:textStyle="bold"
+                        android:textSize="17sp"
+                        android:textColor="#1F2937"/>
+
+                    <TextView
+                        android:id="@+id/tvBio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Chưa có thông tin."
+                        android:textColor="#6B7280"/>
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Posts -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="18dp"
+                android:layout_marginBottom="10dp"
+                android:text="Bài viết"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:textColor="#1F2937"/>
 
             <FrameLayout
                 android:id="@+id/friendPostsContainer"
@@ -84,6 +173,7 @@
                 android:layout_height="wrap_content"/>
 
         </LinearLayout>
+
     </androidx.core.widget.NestedScrollView>
 
 </FrameLayout>
