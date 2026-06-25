@@ -27,6 +27,7 @@ import com.example.frontend.data.model.Notification;
 import com.example.frontend.data.model.PagedResponse;
 import com.example.frontend.data.model.ReactionItem;
 import com.example.frontend.data.model.Task;
+import com.example.frontend.data.model.TrendingTopic;
 import com.example.frontend.data.model.UpdateProfile;
 import com.example.frontend.data.model.User;
 import com.example.frontend.data.model.ProfileResponse;
