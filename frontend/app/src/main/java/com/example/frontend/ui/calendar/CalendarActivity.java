@@ -108,9 +108,11 @@ public class CalendarActivity extends AppCompatActivity {
         adapter.setOnTaskActionListener(new TaskAdapter.OnTaskActionListener() {
             @Override
             public void onTaskClick(Task task) {
-                BottomSheetAddTask sheet = new BottomSheetAddTask();
-                sheet.setOnTaskSavedListener(() -> loadTasks());
-                sheet.show(getSupportFragmentManager(), "EDIT_TASK");
+                BottomSheetAddTask sheet = new BottomSheetAddTask(task);
+                sheet.setOnTaskSavedListener(() -> {
+                    loadTasks();
+                });
+                sheet.show(getSupportFragmentManager(), "EDIT");
             }
 
             @Override
@@ -120,14 +122,12 @@ public class CalendarActivity extends AppCompatActivity {
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         loadTasks();
                     }
-
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
                         Toast.makeText(CalendarActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
             }
-
             @Override
             public void onToggleStatus(Task task) {
                 repository.toggleStatus(task.getId()).enqueue(new Callback<Task>() {
@@ -135,7 +135,6 @@ public class CalendarActivity extends AppCompatActivity {
                     public void onResponse(Call<Task> call, Response<Task> response) {
                         loadTasks();
                     }
-
                     @Override
                     public void onFailure(Call<Task> call, Throwable t) {
                     }
@@ -236,5 +235,50 @@ public class CalendarActivity extends AppCompatActivity {
         }
         selectedChip.setChipBackgroundColorResource(R.color.green);
         selectedChip.setTextColor(getResources().getColor(android.R.color.white));
+    }
+    private void loadFakeTasks() {
+
+        allTasks.clear();
+
+        Task t1 = new Task();
+        t1.setId("1");
+        t1.setTitle("Làm báo cáo Android");
+        t1.setDescription("Hoàn thành trước 17h");
+        t1.setPriority("daily");
+        t1.setStatus("completed");
+        t1.setDueDate("2026-06-26T08:30:00.000Z");
+
+        Task t2 = new Task();
+        t2.setId("2");
+        t2.setTitle("Đọc tài liệu AI");
+        t2.setDescription("Đọc chương 3");
+        t2.setPriority("daily");
+        t2.setStatus("pending");
+        t2.setDueDate("2026-06-26T10:00:00.000Z");
+
+        Task t3 = new Task();
+        t3.setId("3");
+        t3.setTitle("Làm Slide");
+        t3.setDescription("Chuẩn bị thuyết trình");
+        t3.setPriority("medium");
+        t3.setStatus("pending");
+        t3.setDueDate("2026-06-26T13:30:00.000Z");
+
+        Task t4 = new Task();
+        t4.setId("4");
+        t4.setTitle("Nộp Assignment");
+        t4.setDescription("Môn Android");
+        t4.setPriority("high");
+        t4.setStatus("completed");
+        t4.setDueDate("2026-06-26T16:30:00.000Z");
+
+        allTasks.add(t1);
+        allTasks.add(t2);
+        allTasks.add(t3);
+        allTasks.add(t4);
+
+        adapter.setTasks(allTasks);
+
+        updateProgress();
     }
 }

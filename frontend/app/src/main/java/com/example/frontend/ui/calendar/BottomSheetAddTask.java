@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 import com.example.frontend.R;
 import com.example.frontend.data.model.Task;
 import com.example.frontend.data.remote.CreateTaskRequest;
+import com.example.frontend.data.remote.UpdateTaskRequest;
 import com.example.frontend.data.repository.TaskRepository;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
@@ -25,6 +26,7 @@ import com.google.android.material.card.MaterialCardView;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 import retrofit2.Call;
@@ -38,6 +40,10 @@ public class BottomSheetAddTask extends BottomSheetDialogFragment {
 
     }
     public BottomSheetAddTask() {
+    }
+
+    public BottomSheetAddTask(Task task){
+        editingTask = task;
     }
     private Calendar calendar = Calendar.getInstance();
     private String selectedPriority = "daily";
@@ -59,6 +65,7 @@ public class BottomSheetAddTask extends BottomSheetDialogFragment {
     private ImageButton btnClose;
     private TaskRepository repository;
     private OnTaskSavedListener listener;
+    private Task editingTask;
     @Nullable
     @Override
     public View onCreateView(
@@ -87,6 +94,24 @@ public class BottomSheetAddTask extends BottomSheetDialogFragment {
         btnSave = view.findViewById(R.id.btnSave);
         btnClose = view.findViewById(R.id.btnClose);
         repository = new TaskRepository(requireContext());
+        if (editingTask != null) {
+            edtTitle.setText(editingTask.getTitle());
+            edtNote.setText(editingTask.getDescription());
+            parseDate(editingTask.getDueDate());
+            switch (editingTask.getPriority()) {
+                case "daily":
+                    selectedPriority = "daily";
+                    break;
+                case "medium":
+                    selectedPriority = "medium";
+                    break;
+                case "high":
+                    selectedPriority = "high";
+                    break;
+            }
+
+            updatePriorityUI();
+        }
 
         txtDate.setOnClickListener(v -> {DatePickerDialog dialog = new DatePickerDialog(requireContext(), (view1, year, month, day) -> {calendar.set(year, month, day);
             SimpleDateFormat sdf =new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
@@ -123,7 +148,11 @@ public class BottomSheetAddTask extends BottomSheetDialogFragment {
                 Toast.makeText(requireContext(),"Chọn giờ",Toast.LENGTH_SHORT).show();
                 return;
             }
-            saveTask(title,description);
+            if(editingTask == null){
+                saveTask(title, description);
+            }else{
+                updateTask(title, description);
+            }
         });
         btnClose.setOnClickListener(v -> dismiss());
         updatePriorityUI();
@@ -186,5 +215,34 @@ public class BottomSheetAddTask extends BottomSheetDialogFragment {
     }
     public void setOnTaskSavedListener(OnTaskSavedListener listener){
         this.listener = listener;
+    }
+    private void parseDate(String dueDate){
+        try{
+            SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.getDefault());
+            Date date = input.parse(dueDate);
+            calendar.setTime(date);
+            txtDate.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(date));
+            txtTime.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(date));
+        }catch(Exception ignored){}
+    }
+    private void updateTask(String title,String description){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+        String dueDate = sdf.format(calendar.getTime());
+        UpdateTaskRequest request = new UpdateTaskRequest(title, description, dueDate, selectedPriority);
+        repository.updateTask(editingTask.getId(), request).enqueue(new Callback<Task>() {
+            @Override
+            public void onResponse(Call<Task> call, Response<Task> response) {
+                if(response.isSuccessful()){
+                    Toast.makeText(requireContext(), "Đã cập nhật", Toast.LENGTH_SHORT).show();
+                    if(listener != null)
+                        listener.onTaskSaved();
+                    dismiss();
+                }
+            }
+            @Override
+            public void onFailure(Call<Task> call, Throwable t) {
+                Toast.makeText(requireContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
