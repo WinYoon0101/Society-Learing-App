@@ -101,6 +101,23 @@ public class ChatFragment extends Fragment {
         viewModel.openConversation(userId);
     }
 
+    /** Mở thẳng 1 conversation (vd group vừa tạo). */
+    public void openConversation(Conversation conversation) {
+        if (conversation == null || !isAdded()) return;
+        ChatDetailFragment fragment = ChatDetailFragment.newInstance(conversation, null);
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    /** Mở sheet tạo nhóm (child của ChatFragment để callback openConversation hoạt động). */
+    public void openCreateGroup() {
+        CreateGroupBottomSheet.newInstance()
+                .show(getChildFragmentManager(), CreateGroupBottomSheet.TAG);
+    }
+
     private void setupNewChatFab(View view) {
         com.google.android.material.floatingactionbutton.FloatingActionButton fab =
                 view.findViewById(R.id.fabNewChat);
@@ -151,6 +168,8 @@ public class ChatFragment extends Fragment {
                         layoutEmpty.setVisibility(View.GONE);
                         rvConversations.setVisibility(View.VISIBLE);
                         conversationAdapter.submitList(conversations);
+                        // Đảm bảo chấm online đúng ngay khi list vừa load (Task A)
+                        refreshOnlineRail();
                     } else {
                         layoutEmpty.setVisibility(View.VISIBLE);
                         rvConversations.setVisibility(View.GONE);
@@ -282,5 +301,10 @@ public class ChatFragment extends Fragment {
         rail.addAll(railOffline);
         onlineUserAdapter.setOnlineIds(new HashSet<>(onlineIds));
         onlineUserAdapter.submitList(rail);
+
+        // Đồng bộ chấm online cho list "Tin nhắn gần đây" (Task A)
+        if (conversationAdapter != null) {
+            conversationAdapter.setOnlineIds(new HashSet<>(onlineIds));
+        }
     }
 }

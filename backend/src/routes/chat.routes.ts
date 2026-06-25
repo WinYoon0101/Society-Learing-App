@@ -7,6 +7,14 @@ import {
   setNickname,
   setColor,
   deleteMessage,
+  createGroup,
+  addMembers,
+  kickMember,
+  leaveGroup,
+  renameGroup,
+  deleteConversation,
+  setMute,
+  deleteMessageForMe,
 } from "../controllers/chat.controller";
 
 const router = Router();
@@ -17,6 +25,7 @@ router.use(authenticate);
 // Conversations
 router.get("/conversations", getConversations);
 router.post("/conversations", getOrCreateConversation);
+router.post("/conversations/group", createGroup);
 
 // Messages
 router.get("/conversations/:conversationId/messages", getMessages);
@@ -24,8 +33,19 @@ router.get("/conversations/:conversationId/messages", getMessages);
 // Customization
 router.patch("/conversations/:conversationId/nickname", setNickname);
 router.patch("/conversations/:conversationId/color", setColor);
+router.patch("/conversations/:conversationId/name", renameGroup);
+
+// Group management
+router.post("/conversations/:conversationId/members", addMembers);
+router.delete("/conversations/:conversationId/members/:userId", kickMember);
+router.post("/conversations/:conversationId/leave", leaveGroup);
+
+// Mute & delete conversation (ẩn-phía-mình)
+router.patch("/conversations/:conversationId/mute", setMute);
+router.delete("/conversations/:conversationId", deleteConversation);
 
 // Delete message
+router.delete("/messages/:messageId/me", deleteMessageForMe);
 router.delete("/messages/:messageId", deleteMessage);
 
 export default router;

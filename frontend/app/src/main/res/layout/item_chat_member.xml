@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
@@ -9,7 +10,7 @@
     android:background="?attr/selectableItemBackground">
 
     <ImageView
-        android:id="@+id/imgFriendPickAvatar"
+        android:id="@+id/imgChatMemberAvatar"
         android:layout_width="44dp"
         android:layout_height="44dp"
         android:background="@drawable/bg_circle_avatar"
@@ -18,7 +19,7 @@
         android:contentDescription="Avatar" />
 
     <TextView
-        android:id="@+id/tvFriendPickName"
+        android:id="@+id/tvChatMemberName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -28,16 +29,17 @@
         android:textStyle="bold"
         android:maxLines="1"
         android:ellipsize="end"
-        tools:text="Tên bạn"
-        xmlns:tools="http://schemas.android.com/tools" />
+        tools:text="Tên thành viên" />
 
-    <!-- Check chỉ hiện ở chế độ multi-select (tạo nhóm) -->
-    <ImageView
-        android:id="@+id/imgFriendPickCheck"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+    <TextView
+        android:id="@+id/tvChatMemberTag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:src="@drawable/ic_check"
+        android:textColor="#10B981"
+        android:textSize="12sp"
+        android:textStyle="bold"
         android:visibility="gone"
-        android:contentDescription="Đã chọn" />
+        tools:text="Bạn"
+        tools:visibility="visible" />
 </LinearLayout>

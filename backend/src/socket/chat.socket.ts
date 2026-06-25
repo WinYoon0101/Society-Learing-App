@@ -9,6 +9,14 @@ import User from "../models/user.model";
 // Map lưu userId -> Set<socketId> (1 user có thể mở nhiều tab)
 const onlineUsers = new Map<string, Set<string>>();
 
+// Giữ ref tới io để controller (REST) có thể emit (vd system message)
+let ioRef: Server | null = null;
+
+/** Emit 1 event tới tất cả socket trong room conversation (dùng từ controller REST). */
+export function emitToConversation(conversationId: string, event: string, payload: any) {
+  if (ioRef) ioRef.to(conversationId).emit(event, payload);
+}
+
 function addOnlineUser(userId: string, socketId: string) {
   if (!onlineUsers.has(userId)) onlineUsers.set(userId, new Set());
   onlineUsers.get(userId)!.add(socketId);
@@ -61,6 +69,7 @@ async function authenticateSocket(
 }
 
 export function initChatSocket(io: Server) {
+  ioRef = io;
   io.on("connection", async (socket: Socket) => {
     try {
       const user = await authenticateSocket(socket);
@@ -137,10 +146,11 @@ export function initChatSocket(io: Server) {
 
           const message = await Message.create(messageData);
 
-          // Cập nhật lastMessage của conversation
+          // Cập nhật lastMessage + un-hide cho mọi người đã xóa-phía-mình (tin mới → hiện lại)
           await Conversation.findByIdAndUpdate(conversationId, {
             lastMessage: message._id,
             updatedAt: new Date(),
+            deletedBy: [],
           });
 
           // Populate để gửi về client — đảm bảo _id là string
@@ -234,6 +244,28 @@ export function initChatSocket(io: Server) {
         socket.emit("error", { message: "Lỗi thu hồi tin nhắn" });
       }
     });
+
+    // ─── JOIN ROOM CONVERSATION (vd nhóm mới tạo / vừa được add sau connect) ──
+    socket.on(
+      "conversation:join",
+      async (data: { conversationId: string } | string) => {
+        try {
+          const conversationId =
+            typeof data === "string" ? data : data?.conversationId;
+          if (!conversationId) return;
+          // Chỉ join nếu là thành viên
+          const conv = await Conversation.findOne({
+            _id: conversationId,
+            members: userId,
+          });
+          if (conv) {
+            socket.join(conversationId.toString());
+          }
+        } catch (err) {
+          console.error("conversation:join error:", err);
+        }
+      }
+    );
 
     // ─── ĐANG GÕ ────────────────────────────────────────────────────
     socket.on("typing:start", (data: { conversationId: string }) => {

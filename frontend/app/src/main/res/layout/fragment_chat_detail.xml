@@ -31,10 +31,21 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="12dp"
+            android:background="?attr/selectableItemBackground"
+            android:paddingVertical="4dp"
             android:text="Chat Name"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="#3D594B" />
+
+        <ImageButton
+            android:id="@+id/btnChatDetailMore"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_more_vert"
+            android:tint="#3D594B"
+            android:contentDescription="Tuỳ chọn" />
 
     </LinearLayout>
 
@@ -49,6 +60,63 @@
         android:clipToPadding="false"
         android:paddingVertical="12dp"
         tools:listitem="@layout/item_message_sent" />
+
+    <!-- Thanh "Đang trả lời" — ẩn mặc định, hiện khi chọn reply -->
+    <LinearLayout
+        android:id="@+id/replyPreviewBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:background="#F0F4EC"
+        android:visibility="gone">
+
+        <View
+            android:layout_width="3dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="8dp"
+            android:background="#4A7C59" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvReplyPreviewSender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Đang trả lời"
+                android:textColor="#4A7C59"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/tvReplyPreviewText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#5A6B5E"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnCancelReply"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_close"
+            android:tint="#888888"
+            android:contentDescription="Huỷ trả lời" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

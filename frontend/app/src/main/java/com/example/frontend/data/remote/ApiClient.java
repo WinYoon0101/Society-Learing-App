@@ -3,7 +3,10 @@ package com.example.frontend.data.remote;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.example.frontend.data.model.Message;
 import com.example.frontend.utils.Constants;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -49,10 +52,16 @@ public class ApiClient {
                     })
                     .build();
 
+            // Gson chịu được replyTo dạng STRING (ObjectId chưa populate) — tránh crash
+            // "Expected BEGIN_OBJECT but was STRING" khi load conversations/messages.
+            Gson gson = new GsonBuilder()
+                    .registerTypeAdapter(Message.class, new MessageDeserializer())
+                    .create();
+
             retrofit = new Retrofit.Builder()
                     .baseUrl(Constants.BASE_URL)
                     .client(client)
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create(gson))
                     .build();
         }
         return retrofit.create(ApiService.class);
