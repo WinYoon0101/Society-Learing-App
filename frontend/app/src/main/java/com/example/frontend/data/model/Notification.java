@@ -28,7 +28,12 @@ public class Notification {
     @SerializedName("createdAt")
     private String createdAt;
 
+    @SerializedName("targetType")
+    private String targetType;
+
+
     // Getters and Setters
+    public String getTargetType() { return targetType; }
     public String getId() { return id; }
     public User getSender() { return sender; }
     public String getType() { return type; }

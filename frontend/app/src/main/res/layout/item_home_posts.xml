@@ -25,7 +25,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- ĐÃ FIX: Giới hạn chiều rộng để tên không đè lên nút 3 chấm -->
         <TextView
             android:id="@+id/tvAuthorName"
             android:layout_width="0dp"
@@ -40,16 +39,40 @@
             app:layout_constraintStart_toEndOf="@id/imgAvatar"
             app:layout_constraintTop_toTopOf="@id/imgAvatar" />
 
-        <TextView
-            android:id="@+id/tvTime"
+        <LinearLayout
+            android:id="@+id/layoutTimePrivacy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Vừa xong"
-            android:textSize="12sp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp"
             app:layout_constraintStart_toStartOf="@id/tvAuthorName"
-            app:layout_constraintTop_toBottomOf="@id/tvAuthorName" />
+            app:layout_constraintTop_toBottomOf="@id/tvAuthorName">
 
-        <!-- ĐÃ FIX: Ép cứng size 32dp và căn giữa theo Avatar để không bị phình -->
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vừa xong"
+                android:textColor="#757575"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="4dp"
+                android:text="•"
+                android:textColor="#757575"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/imgPrivacy"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@drawable/ic_public"
+                app:tint="#757575" />
+        </LinearLayout>
+
         <ImageView
             android:id="@+id/btnMoreOptions"
             android:layout_width="40dp"

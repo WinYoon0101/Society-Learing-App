@@ -111,6 +111,27 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         }
 
         // ==========================================
+        // 👉 BỔ SUNG: XỬ LÝ HIỂN THỊ ICON QUYỀN RIÊNG TƯ
+        // ==========================================
+        if (holder.imgPrivacy != null) {
+            String privacy = post.getPrivacy();
+            if (privacy != null) {
+                holder.imgPrivacy.setVisibility(View.VISIBLE);
+                if (privacy.equalsIgnoreCase("Private")) {
+                    holder.imgPrivacy.setImageResource(R.drawable.ic_private);
+                } else if (privacy.equalsIgnoreCase("Friends")) {
+                    holder.imgPrivacy.setImageResource(R.drawable.ic_friend);
+                } else { // Mặc định là Public
+                    holder.imgPrivacy.setImageResource(R.drawable.ic_public);
+                }
+            } else {
+                // Nếu data cũ không có privacy, mặc định hiện icon Public
+                holder.imgPrivacy.setVisibility(View.VISIBLE);
+                holder.imgPrivacy.setImageResource(R.drawable.ic_public);
+            }
+        }
+
+        // ==========================================
         // SỰ KIỆN ẤN VÀO DẤU 3 CHẤM (POPUP MENU)
         // ==========================================
         if (holder.btnMoreOptions != null) {
@@ -403,6 +424,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         ImageView btnMoreOptions;
 
+        // 👉 BỔ SUNG: KHAI BÁO BIẾN CHO ICON PRIVACY
+        ImageView imgPrivacy;
+
         RecyclerView rvPostImages;
 
         LinearLayout layoutTopReactions;
@@ -424,6 +448,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
             // ÁNH XẠ NÚT SHARE
             btnShare = itemView.findViewById(R.id.btnShare);
+
+            // 👉 BỔ SUNG: ÁNH XẠ VIEW CHO ICON PRIVACY
+            imgPrivacy = itemView.findViewById(R.id.imgPrivacy);
 
             rvPostImages = itemView.findViewById(R.id.rvPostImages);
             rvPostImages.setLayoutManager(new LinearLayoutManager(itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));

@@ -12,15 +12,36 @@ export const getNotifications = async (req: AuthRequest, res: Response): Promise
         const userId = req.user?.id;
         if (!userId) return res.status(401).json({ message: 'Không tìm thấy thông tin người dùng' });
 
+        // 1. Lấy danh sách thông báo từ DB
         const notifications = await Notification.find({ recipient: userId })
             .populate('sender', 'username avatar')
             .sort({ createdAt: -1 });
 
+        // 2. Dựa vào trường "type" của DB để sinh ra "targetType" động
+        const formattedNotifications = notifications.map((n: any) => {
+            let targetType = 'Post'; // Giá trị mặc định
+
+            if (n.type.startsWith('post_') || n.type.startsWith('comment_')) {
+                targetType = 'Post';
+            } else if (n.type.startsWith('group_')) {
+                targetType = 'Group';
+            } else if (n.type.startsWith('friend_')) {
+                targetType = 'Friend';
+            }
+
+            // Gộp thêm trường targetType vào Object
+            return {
+                ...n.toObject(), 
+                targetType: targetType
+            };
+        });
+
         const unreadCount = await Notification.countDocuments({ recipient: userId, isRead: false });
 
+        // 3. Trả về dữ liệu đã được định dạng 
         return res.status(200).json({
             success: true,
-            data: notifications,
+            data: formattedNotifications, // Gửi mảng đã có targetType động
             unreadCount: unreadCount
         });
     } catch (error) {

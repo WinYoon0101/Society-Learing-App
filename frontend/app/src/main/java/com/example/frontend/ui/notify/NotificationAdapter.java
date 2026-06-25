@@ -1,113 +1,175 @@
 package com.example.frontend.ui.notify;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
-import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
+import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Notification;
-import com.example.frontend.utils.TimeUtils;
+import com.example.frontend.data.remote.ApiClient;
+import com.example.frontend.data.remote.ApiService;
+import com.example.frontend.ui.feed.PostDetailActivity;
+import com.example.frontend.ui.group.GroupDetailActivity;
+import com.example.frontend.ui.profile.FriendProfileActivity;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
-public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
+import de.hdodenhof.circleimageview.CircleImageView;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
-    private List<Notification> notifications = new ArrayList<>();
-    private Context context;
-    private OnNotificationClickListener listener;
+public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.VH> {
 
-    public interface OnNotificationClickListener {
-        void onClick(Notification notification);
-    }
+    private final List<Notification> items = new ArrayList<>();
+    private final Context context;
+    private final ApiService apiService;
 
-    public NotificationAdapter(Context context, OnNotificationClickListener listener) {
+    // Constructor nhận Context để dùng cho Glide và Intent
+    public NotificationAdapter(Context context) {
         this.context = context;
-        this.listener = listener;
+        this.apiService = ApiClient.getApiService(context);
     }
 
-    public void updateData(List<Notification> newList) {
-        this.notifications = newList;
+    public void submit(List<Notification> data) {
+        items.clear();
+        if (data != null) items.addAll(data);
         notifyDataSetChanged();
+    }
+
+    public void markAllRead() {
+        for (Notification item : items) {
+            item.setRead(true);
+        }
+        notifyDataSetChanged(); // Cập nhật lại toàn bộ list trong 1 lần
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_notification, parent, false);
-        return new ViewHolder(view);
+    public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(context).inflate(R.layout.item_notification, parent, false);
+        return new VH(v);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Notification noti = notifications.get(position);
+    public void onBindViewHolder(@NonNull VH h, int pos) {
+        Notification n = items.get(pos);
+        h.tvMessage.setText(n.getContent() != null ? n.getContent() : "Thông báo mới");
+        h.tvTime.setText(formatTime(n.getCreatedAt()));
 
-        // 1. Set Ảnh đại diện với Glide và hiệu ứng bo tròn
-        if (noti.getSender() != null) {
-            Glide.with(context)
-                    .load(noti.getSender().getAvatar())
-                    .placeholder(R.drawable.ic_user)
-                    .circleCrop()
-                    .into(holder.imgAvatar);
-        }
+        // Cập nhật màu nền và dấu chấm chưa đọc
+        h.dotUnread.setVisibility(n.isRead() ? View.GONE : View.VISIBLE);
+        h.itemView.setBackgroundColor(n.isRead() ? Color.WHITE : Color.parseColor("#ECFDF5"));
 
-        // 2. Chế biến nội dung (Tên người dùng + Nội dung từ Backend)
-        String userName = (noti.getSender() != null && noti.getSender().getUsername() != null)
-                ? noti.getSender().getUsername() : "Người dùng";
-
-        String contentText = (noti.getContent() != null) ? noti.getContent() : "đã tương tác với bạn.";
-
-        // In đậm Tên người dùng bằng HTML
-        holder.tvContent.setText(Html.fromHtml("<b>" + userName + "</b> " + contentText, Html.FROM_HTML_MODE_LEGACY));
-
-        // 3. Set Thời gian
-        holder.tvTime.setText(TimeUtils.getTimeAgo(noti.getCreatedAt()));
-
-        // 4. Hiệu ứng "Đã đọc" / "Chưa đọc"
-        if (!noti.isRead()) {
-            holder.layoutContainer.setBackgroundColor(Color.parseColor("#E8F4FA")); // Màu xanh nhạt
-            holder.imgUnreadDot.setVisibility(View.VISIBLE);
+        // Load Avatar
+        if (n.getSender() != null && n.getSender().getAvatar() != null && !n.getSender().getAvatar().isEmpty()) {
+            Glide.with(context).load(n.getSender().getAvatar())
+                    .placeholder(R.drawable.ic_user).into(h.imgAvatar);
         } else {
-            holder.layoutContainer.setBackgroundColor(Color.WHITE); // Màu trắng
-            holder.imgUnreadDot.setVisibility(View.GONE);
+            h.imgAvatar.setImageResource(R.drawable.ic_user);
         }
 
-        // 5. Sự kiện Click
-        holder.itemView.setOnClickListener(v -> {
-            if (!noti.isRead()) {
-                noti.setRead(true);
-                notifyItemChanged(position);
+        // Xử lý Click điều hướng
+        h.itemView.setOnClickListener(v -> {
+            Log.d("NOTI_DEBUG", "Type: " + n.getTargetType() + " | Id: " + n.getTargetId());
+
+            // 1. Cập nhật trạng thái đã đọc lên Server và UI
+            if (!n.isRead()) {
+                n.setRead(true);
+                notifyItemChanged(pos);
+                apiService.markNotificationRead(n.getId()).enqueue(new Callback<ApiResponse<Object>>() {
+                    @Override public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> r) {}
+                    @Override public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {}
+                });
             }
-            if (listener != null) listener.onClick(noti);
+
+            // 2. Chuyển trang
+            String targetType = n.getTargetType();
+            String targetId = n.getTargetId();
+
+            if (targetType == null || targetId == null) {
+                Toast.makeText(context, "Không thể mở nội dung này", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            try {
+                if (targetType.equalsIgnoreCase("Post") || targetType.equalsIgnoreCase("Comment")) {
+                    Intent intent = new Intent(context, PostDetailActivity.class);
+                    intent.putExtra("POST_ID", targetId);
+                    context.startActivity(intent);
+
+                } else if (targetType.equalsIgnoreCase("Friend") || targetType.equalsIgnoreCase("User")) {
+                    if (n.getSender() != null) {
+                        Intent intent = new Intent(context, FriendProfileActivity.class);
+                        intent.putExtra("FRIEND_ID", n.getSender().getId());
+                        intent.putExtra("FRIEND_NAME", n.getSender().getUsername());
+                        intent.putExtra("FRIEND_AVATAR", n.getSender().getAvatar());
+                        context.startActivity(intent);
+                    } else {
+                        Toast.makeText(context, "Không tìm thấy người dùng", Toast.LENGTH_SHORT).show();
+                    }
+
+                } else if (targetType.equalsIgnoreCase("Group")) {
+                    Intent intent = new Intent(context, GroupDetailActivity.class);
+                    intent.putExtra(GroupDetailActivity.EXTRA_GROUP_ID, targetId);
+                    context.startActivity(intent);
+
+                } else {
+                    Toast.makeText(context, "Loại thông báo không được hỗ trợ", Toast.LENGTH_SHORT).show();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(context, "Đã xảy ra lỗi khi mở màn hình", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
     @Override
-    public int getItemCount() { return notifications.size(); }
+    public int getItemCount() { return items.size(); }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView imgAvatar;
-        View imgUnreadDot;
-        TextView tvContent, tvTime;
-        View layoutContainer;
+    private String formatTime(String iso) {
+        if (iso == null) return "";
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date date = sdf.parse(iso);
+            long diff = (System.currentTimeMillis() - date.getTime()) / 1000;
+            if (diff < 60)   return diff + "s trước";
+            if (diff < 3600) return (diff / 60) + " phút trước";
+            if (diff < 86400)return (diff / 3600) + " giờ trước";
+            return (diff / 86400) + " ngày trước";
+        } catch (ParseException e) {
+            return "";
+        }
+    }
 
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            imgAvatar = itemView.findViewById(R.id.imgSenderAvatar);
-            imgUnreadDot = itemView.findViewById(R.id.dotUnread);
-            tvContent = itemView.findViewById(R.id.tvMessage);
-            tvTime = itemView.findViewById(R.id.tvTime);
-            layoutContainer = itemView;
+    static class VH extends RecyclerView.ViewHolder {
+        CircleImageView imgAvatar;
+        TextView tvMessage, tvTime;
+        View dotUnread;
+        VH(@NonNull View v) {
+            super(v);
+            imgAvatar  = v.findViewById(R.id.imgSenderAvatar);
+            tvMessage  = v.findViewById(R.id.tvMessage);
+            tvTime     = v.findViewById(R.id.tvTime);
+            dotUnread  = v.findViewById(R.id.dotUnread);
         }
     }
 }

@@ -31,6 +31,12 @@ public class Group {
     @SerializedName("hasPendingRequest")
     private boolean hasPendingRequest;
 
+    @SerializedName("coverUrl")
+    private String coverUrl;
+
+    public String getCoverUrl() { return coverUrl; }
+    public void setCoverUrl(String coverUrl) { this.coverUrl = coverUrl; }
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
