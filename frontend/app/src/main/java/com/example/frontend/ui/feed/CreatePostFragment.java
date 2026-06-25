@@ -43,7 +43,7 @@ public class CreatePostFragment extends Fragment {
     private LinearLayout btnPickImage;
     private LinearLayout optFeeling, optTag;
 
-    // ĐÃ THÊM: Biến cho Quyền riêng tư
+    // Biến cho Quyền riêng tư
     private LinearLayout btnPrivacy;
     private TextView tvPrivacyText;
     private ImageView imgPrivacyIcon;
@@ -91,7 +91,7 @@ public class CreatePostFragment extends Fragment {
             }
         }
 
-        // ĐÃ THÊM: Ánh xạ view Quyền riêng tư
+        // Ánh xạ view Quyền riêng tư
         btnPrivacy = view.findViewById(R.id.btnPrivacy);
         tvPrivacyText = view.findViewById(R.id.tvPrivacyText);
         imgPrivacyIcon = view.findViewById(R.id.imgPrivacyIcon);
@@ -155,11 +155,9 @@ public class CreatePostFragment extends Fragment {
         observeViewModel();
 
         btnBack.setOnClickListener(v -> {
-            // Nếu có fragment trước đó trong danh sách thì lùi lại
             if (getParentFragmentManager().getBackStackEntryCount() > 0) {
                 getParentFragmentManager().popBackStack();
             }
-            // Nếu không có thì đóng Activity
             else if (getActivity() != null) {
                 getActivity().finish();
             }
@@ -210,7 +208,6 @@ public class CreatePostFragment extends Fragment {
             List<String> tagIds = new ArrayList<>();
             for (User u : selectedTags) tagIds.add(u.getId());
 
-            // ĐÃ SỬA: Bổ sung thêm selectedPrivacy vào hàm uploadPost
             if (groupId != null && !groupId.isEmpty()) {
                 viewModel.uploadPost(getContext(), content, selectedPrivacy, selectedImageUris, groupId, tagIds, selectedReaction);
             } else {
@@ -221,7 +218,6 @@ public class CreatePostFragment extends Fragment {
         return view;
     }
 
-    // ĐÃ THÊM: Hàm hiển thị Dialog chọn quyền
     private void showPrivacyDialog() {
         String[] options = {"Công khai", "Bạn bè", "Chỉ mình tôi"};
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
@@ -244,17 +240,22 @@ public class CreatePostFragment extends Fragment {
                 .show();
     }
 
+    // 👉 ĐÃ TÚT LẠI: Hiển thị đẹp chuẩn Facebook
     private void updateMetaText() {
         StringBuilder s = new StringBuilder();
-        if (selectedReaction != null) s.append("Cảm xúc: ").append(selectedReaction);
+
+        if (selectedReaction != null) {
+            s.append("Đang cảm thấy ").append(selectedReaction);
+        }
+
         if (!selectedTags.isEmpty()) {
-            if (s.length() > 0) s.append(" · ");
-            s.append("Đã gắn: ");
-            for (int i = 0; i < selectedTags.size(); i++) {
-                s.append(selectedTags.get(i).getUsername());
-                if (i < selectedTags.size() - 1) s.append(", ");
+            if (s.length() > 0) s.append("\n"); // Xuống dòng nếu có cả cảm xúc và tag
+            s.append("— Cùng với ").append(selectedTags.get(0).getUsername());
+            if (selectedTags.size() > 1) {
+                s.append(" và ").append(selectedTags.size() - 1).append(" người khác");
             }
         }
+
         tvSelectedMeta.setText(s.toString());
         tvSelectedMeta.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
     }
@@ -271,24 +272,36 @@ public class CreatePostFragment extends Fragment {
         UserSearchAdapter adapter = new UserSearchAdapter(new ArrayList<>(), selectedTags);
         rvResults.setAdapter(adapter);
 
-        edtSearch.setOnEditorActionListener((v, actionId, event) -> {
-            String q = edtSearch.getText().toString().trim();
-            if (!q.isEmpty()) {
-                com.example.frontend.data.remote.ApiClient.getApiService(requireContext()).searchUsers(q)
-                        .enqueue(new retrofit2.Callback<com.example.frontend.data.model.ApiResponse<java.util.List<User>>>() {
-                            @Override
-                            public void onResponse(retrofit2.Call<com.example.frontend.data.model.ApiResponse<java.util.List<User>>> call, retrofit2.Response<com.example.frontend.data.model.ApiResponse<java.util.List<User>>> response) {
-                                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                                    adapter.updateData(response.body().getData());
-                                }
-                            }
+        // 👉 ĐÃ CẬP NHẬT: Dùng TextWatcher để gõ chữ tới đâu, gọi API tìm kiếm tới đó
+        edtSearch.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-                            @Override
-                            public void onFailure(retrofit2.Call<com.example.frontend.data.model.ApiResponse<java.util.List<User>>> call, Throwable t) {
-                            }
-                        });
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String q = s.toString().trim();
+                if (!q.isEmpty()) {
+                    com.example.frontend.data.remote.ApiClient.getApiService(requireContext()).searchUsers(q)
+                            .enqueue(new retrofit2.Callback<com.example.frontend.data.model.ApiResponse<java.util.List<User>>>() {
+                                @Override
+                                public void onResponse(retrofit2.Call<com.example.frontend.data.model.ApiResponse<java.util.List<User>>> call, retrofit2.Response<com.example.frontend.data.model.ApiResponse<java.util.List<User>>> response) {
+                                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                                        adapter.updateData(response.body().getData());
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(retrofit2.Call<com.example.frontend.data.model.ApiResponse<java.util.List<User>>> call, Throwable t) {
+                                }
+                            });
+                } else {
+                    // Nếu xóa hết chữ thì làm rỗng danh sách
+                    adapter.updateData(new ArrayList<>());
+                }
             }
-            return true;
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {}
         });
 
         btnDone.setOnClickListener(v -> {

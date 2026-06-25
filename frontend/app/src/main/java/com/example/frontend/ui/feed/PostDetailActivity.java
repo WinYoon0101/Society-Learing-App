@@ -2,7 +2,13 @@ package com.example.frontend.ui.feed;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -11,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -20,7 +27,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.model.Comment;
-import com.example.frontend.data.model.Post;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,23 +37,17 @@ public class PostDetailActivity extends AppCompatActivity {
     private CommentAdapter commentAdapter;
     private List<Comment> currentCommentList = new ArrayList<>();
 
-    // Các thành phần giao diện
     private EditText edtComment;
     private ImageView btnSendComment, imgAvatar, btnBack;
-
     private TextView tvAuthorName, tvContent, tvCommentCount, tvTime;
-
     private RecyclerView rvComments;
     private RecyclerView rvPostImagesFeed;
 
-    // View liên quan đến Reaction
     private LinearLayout layoutTopReactions, btnLikeContainer;
     private TextView tvReactionCount, tvLikeLabel;
     private TextView imgReact1, imgReact2, imgLikeIcon;
-
     private View btnShare;
 
-    // Dữ liệu quản lý trạng thái
     private String currentPostId;
     private String replyingToId = null;
 
@@ -58,12 +58,15 @@ public class PostDetailActivity extends AppCompatActivity {
 
         viewModel = new ViewModelProvider(this).get(PostDetailViewModel.class);
         initViews();
+
         receiveDataFromIntent();
         setupRecyclerView();
         observeViewModel();
 
         if (currentPostId != null) {
             viewModel.fetchComments(currentPostId);
+            // 👉 BỔ SUNG: Luôn fetch data mới từ server để cập nhật lại Tag và React nếu có thay đổi
+            viewModel.fetchPostById(currentPostId);
         }
     }
 
@@ -72,12 +75,10 @@ public class PostDetailActivity extends AppCompatActivity {
         edtComment = findViewById(R.id.edtComment);
         btnSendComment = findViewById(R.id.btnSendComment);
         rvComments = findViewById(R.id.rvComments);
-
         tvAuthorName = findViewById(R.id.tvAuthorName);
         tvContent = findViewById(R.id.tvContent);
         imgAvatar = findViewById(R.id.imgAvatar);
         tvCommentCount = findViewById(R.id.tvCommentCount);
-
         tvTime = findViewById(R.id.tvTime);
         btnShare = findViewById(R.id.btnShare);
 
@@ -94,7 +95,6 @@ public class PostDetailActivity extends AppCompatActivity {
         tvReactionCount = findViewById(R.id.tvReactionCount);
         imgReact1 = findViewById(R.id.imgReact1);
         imgReact2 = findViewById(R.id.imgReact2);
-
         btnLikeContainer = findViewById(R.id.btnLike);
         imgLikeIcon = findViewById(R.id.imgLike);
         tvLikeLabel = findViewById(R.id.tvLikeCount);
@@ -140,18 +140,100 @@ public class PostDetailActivity extends AppCompatActivity {
         });
     }
 
+    // ==========================================
+    // 👉 HÀM TIỆN ÍCH DÙNG CHUNG: VẼ TÊN VÀ TAG BẤM ĐƯỢC
+    // ==========================================
+    private void setAuthorAndTags(String authorId, String authorName, String authorAvatar, String tagId, String tagName, int tagCount) {
+        if (tvAuthorName == null) return;
+
+        View.OnClickListener goToAuthorProfile = v -> {
+            if (authorId != null) {
+                Intent intent = new Intent(this, com.example.frontend.ui.profile.FriendProfileActivity.class);
+                intent.putExtra("FRIEND_ID", authorId);
+                intent.putExtra("FRIEND_NAME", authorName);
+                intent.putExtra("FRIEND_AVATAR", authorAvatar);
+                startActivity(intent);
+            }
+        };
+
+        if (imgAvatar != null) {
+            Glide.with(this).load(authorAvatar).placeholder(R.drawable.ic_user).into(imgAvatar);
+            imgAvatar.setOnClickListener(goToAuthorProfile);
+        }
+
+        if (tagName != null && !tagName.isEmpty()) {
+            String prefix = " — cùng với ";
+            String suffix = "";
+            if (tagCount > 1) {
+                suffix = " và " + (tagCount - 1) + " người khác";
+            }
+
+            String fullText = authorName + prefix + tagName + suffix;
+            SpannableString spannableString = new SpannableString(fullText);
+
+            ClickableSpan authorSpan = new ClickableSpan() {
+                @Override
+                public void onClick(@NonNull View widget) {
+                    goToAuthorProfile.onClick(widget);
+                }
+                @Override
+                public void updateDrawState(@NonNull TextPaint ds) {
+                    super.updateDrawState(ds);
+                    ds.setUnderlineText(false);
+                    ds.setColor(Color.parseColor("#050505"));
+                    ds.setFakeBoldText(true);
+                }
+            };
+            spannableString.setSpan(authorSpan, 0, authorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            ClickableSpan taggedSpan = new ClickableSpan() {
+                @Override
+                public void onClick(@NonNull View widget) {
+                    if (tagId != null) {
+                        Intent intent = new Intent(PostDetailActivity.this, com.example.frontend.ui.profile.FriendProfileActivity.class);
+                        intent.putExtra("FRIEND_ID", tagId);
+                        intent.putExtra("FRIEND_NAME", tagName);
+                        startActivity(intent);
+                    }
+                }
+                @Override
+                public void updateDrawState(@NonNull TextPaint ds) {
+                    super.updateDrawState(ds);
+                    ds.setUnderlineText(false);
+                    ds.setColor(Color.parseColor("#050505"));
+                    ds.setFakeBoldText(true);
+                }
+            };
+
+            int startTag = authorName.length() + prefix.length();
+            int endTag = startTag + tagName.length();
+            spannableString.setSpan(taggedSpan, startTag, endTag, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            tvAuthorName.setText(spannableString);
+            tvAuthorName.setMovementMethod(LinkMovementMethod.getInstance());
+            tvAuthorName.setHighlightColor(Color.TRANSPARENT);
+            tvAuthorName.setOnClickListener(null);
+        } else {
+            tvAuthorName.setText(authorName);
+            tvAuthorName.setOnClickListener(goToAuthorProfile);
+            tvAuthorName.setMovementMethod(null);
+        }
+    }
+
     private void receiveDataFromIntent() {
         currentPostId = getIntent().getStringExtra("POST_ID");
         String content = getIntent().getStringExtra("POST_CONTENT");
 
-        if (content == null || content.isEmpty()) {
-            if (currentPostId != null) {
-                viewModel.fetchPostById(currentPostId);
-            }
-        } else {
+        if (content != null && !content.isEmpty()) {
+            String authorId = getIntent().getStringExtra("AUTHOR_ID");
             String authorName = getIntent().getStringExtra("AUTHOR_NAME");
             String authorAvatar = getIntent().getStringExtra("AUTHOR_AVATAR");
             String postTime = getIntent().getStringExtra("POST_TIME");
+
+            // Dữ liệu Tag từ Adapter chuyển sang
+            String tagId = getIntent().getStringExtra("TAG_ID");
+            String tagName = getIntent().getStringExtra("TAG_NAME");
+            int tagCount = getIntent().getIntExtra("TAG_COUNT", 0);
 
             ArrayList<String> postImages = getIntent().getStringArrayListExtra("POST_IMAGES");
             int commentCount = getIntent().getIntExtra("COMMENT_COUNT", 0);
@@ -160,10 +242,9 @@ public class PostDetailActivity extends AppCompatActivity {
             ArrayList<String> topReactions = getIntent().getStringArrayListExtra("TOP_REACTIONS");
 
             if (tvContent != null) tvContent.setText(content);
-            if (authorName != null && tvAuthorName != null) tvAuthorName.setText(authorName);
-            if (authorAvatar != null && imgAvatar != null) {
-                Glide.with(this).load(authorAvatar).placeholder(R.drawable.ic_user).into(imgAvatar);
-            }
+
+            // 👉 Gọi hàm Setup UI Tên + Tag
+            setAuthorAndTags(authorId, authorName, authorAvatar, tagId, tagName, tagCount);
 
             if (tvTime != null) tvTime.setText(formatTime(postTime));
 
@@ -175,9 +256,7 @@ public class PostDetailActivity extends AppCompatActivity {
                 rvPostImagesFeed.setVisibility(View.GONE);
             }
 
-            if (tvCommentCount != null) {
-                tvCommentCount.setText(String.valueOf(commentCount));
-            }
+            if (tvCommentCount != null) tvCommentCount.setText(String.valueOf(commentCount));
 
             if (imgLikeIcon != null && tvLikeLabel != null) {
                 imgLikeIcon.setText(getEmojiForReaction(myReaction));
@@ -192,14 +271,12 @@ public class PostDetailActivity extends AppCompatActivity {
                 if (reactionCount > 0) {
                     layoutTopReactions.setVisibility(View.VISIBLE);
                     tvReactionCount.setText(String.valueOf(reactionCount));
-
                     imgReact1.setVisibility(View.GONE);
                     imgReact2.setVisibility(View.GONE);
 
                     if (topReactions != null && !topReactions.isEmpty()) {
                         imgReact1.setVisibility(View.VISIBLE);
                         imgReact1.setText(getEmojiForReaction(topReactions.get(0)));
-
                         if (topReactions.size() > 1) {
                             imgReact2.setVisibility(View.VISIBLE);
                             imgReact2.setText(getEmojiForReaction(topReactions.get(1)));
@@ -236,7 +313,6 @@ public class PostDetailActivity extends AppCompatActivity {
             }
         });
 
-        // 👉 SỰ KIỆN DUY NHẤT ĐƯỢC CHỈNH SỬA: Gọi thẳng ViewModel (do ViewModel đã tự lấy token)
         commentAdapter.setOnReactionClickListener((commentId, reactionType) -> {
             viewModel.toggleCommentReaction(commentId, reactionType);
         });
@@ -268,9 +344,20 @@ public class PostDetailActivity extends AppCompatActivity {
             if (post == null) return;
 
             if (tvContent != null) tvContent.setText(post.getContent());
+
             if (post.getAuthorId() != null) {
-                if (tvAuthorName != null) tvAuthorName.setText(post.getAuthorId().getUsername());
-                if (imgAvatar != null) Glide.with(this).load(post.getAuthorId().getAvatar()).placeholder(R.drawable.ic_user).into(imgAvatar);
+                String tagId = null;
+                String tagName = null;
+                int tagCount = 0;
+
+                if (post.getTags() != null && !post.getTags().isEmpty() && post.getTags().get(0) != null) {
+                    tagId = post.getTags().get(0).getId();
+                    tagName = post.getTags().get(0).getUsername();
+                    tagCount = post.getTags().size();
+                }
+
+                // 👉 Tự động vẽ Tên và Tag khi cập nhật xong API
+                setAuthorAndTags(post.getAuthorId().getId(), post.getAuthorId().getUsername(), post.getAuthorId().getAvatar(), tagId, tagName, tagCount);
             }
 
             if (tvTime != null) tvTime.setText(formatTime(post.getCreatedAt()));

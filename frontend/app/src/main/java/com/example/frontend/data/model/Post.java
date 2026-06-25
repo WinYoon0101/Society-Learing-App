@@ -17,7 +17,6 @@ public class Post {
     @SerializedName("groupId")
     private String groupId;
 
-
     @SerializedName("privacy")
     private String privacy;
 
@@ -28,6 +27,13 @@ public class Post {
     private String myReaction;
 
     private List<String> topReactions;
+
+    @SerializedName("tags")
+    private List<User> tags;
+
+    // Getter và Setter cho tags
+    public List<User> getTags() { return tags; }
+    public void setTags(List<User> tags) { this.tags = tags; }
 
     public List<String> getTopReactions() { return topReactions; }
     public void setTopReactions(List<String> topReactions) { this.topReactions = topReactions; }
@@ -46,7 +52,6 @@ public class Post {
 
     public String getGroupId() { return groupId; }
     public void setGroupId(String groupId) { this.groupId = groupId; }
-
 
     public String getPrivacy() { return privacy; }
     public void setPrivacy(String privacy) { this.privacy = privacy; }

@@ -4,6 +4,12 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -23,6 +29,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.model.Post;
+import com.example.frontend.data.model.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +40,10 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         void onReactClick(String targetId, String type);
     }
 
-    // Tạo Interface để báo tin ra ngoài Fragment khi bấm XÓA
     public interface OnPostDeleteListener {
         void onDeletePost(String postId);
     }
 
-    // Tạo Interface để báo tin ra ngoài Fragment khi bấm LƯU
     public interface OnPostSaveListener {
         void onSavePost(String postId);
     }
@@ -55,12 +60,10 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         this.reactionListener = listener;
     }
 
-    // Hàm để FeedFragment truyền tai nghe vào (cho Xóa)
     public void setOnPostDeleteListener(OnPostDeleteListener listener) {
         this.deleteListener = listener;
     }
 
-    // Hàm để FeedFragment truyền tai nghe vào (cho Lưu)
     public void setOnPostSaveListener(OnPostSaveListener listener) {
         this.saveListener = listener;
     }
@@ -83,11 +86,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         Post post = postList.get(position);
 
         holder.tvContent.setText(post.getContent());
-        if (post.getAuthorId() != null) {
-            holder.tvUserName.setText(post.getAuthorId().getUsername());
-            Glide.with(context).load(post.getAuthorId().getAvatar()).placeholder(R.drawable.ic_user).into(holder.imgAvatar);
 
-            View.OnClickListener goToProfile = v -> {
+        if (post.getAuthorId() != null) {
+            String authorName = post.getAuthorId().getUsername();
+            List<User> tags = post.getTags();
+
+            View.OnClickListener goToAuthorProfile = v -> {
                 if (post.getAuthorId().getId() != null) {
                     Intent intent = new Intent(context, com.example.frontend.ui.profile.FriendProfileActivity.class);
                     intent.putExtra("FRIEND_ID", post.getAuthorId().getId());
@@ -96,12 +100,77 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     context.startActivity(intent);
                 }
             };
-            holder.imgAvatar.setOnClickListener(goToProfile);
-            holder.tvUserName.setOnClickListener(goToProfile);
+
+            holder.imgAvatar.setOnClickListener(goToAuthorProfile);
+
+            if (tags != null && !tags.isEmpty() && tags.get(0) != null) {
+                String taggedName = tags.get(0).getUsername();
+                String prefix = " — cùng với ";
+                String suffix = "";
+                if (tags.size() > 1) {
+                    suffix = " và " + (tags.size() - 1) + " người khác";
+                }
+
+                String fullText = authorName + prefix + taggedName + suffix;
+                SpannableString spannableString = new SpannableString(fullText);
+
+                ClickableSpan authorSpan = new ClickableSpan() {
+                    @Override
+                    public void onClick(@NonNull View widget) {
+                        goToAuthorProfile.onClick(widget);
+                    }
+                    @Override
+                    public void updateDrawState(@NonNull TextPaint ds) {
+                        super.updateDrawState(ds);
+                        ds.setUnderlineText(false);
+                        ds.setColor(Color.parseColor("#050505"));
+                        ds.setFakeBoldText(true);
+                    }
+                };
+                spannableString.setSpan(authorSpan, 0, authorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                ClickableSpan taggedSpan = new ClickableSpan() {
+                    @Override
+                    public void onClick(@NonNull View widget) {
+                        if (tags.get(0).getId() != null) {
+                            Intent intent = new Intent(context, com.example.frontend.ui.profile.FriendProfileActivity.class);
+                            intent.putExtra("FRIEND_ID", tags.get(0).getId());
+                            intent.putExtra("FRIEND_NAME", tags.get(0).getUsername());
+                            intent.putExtra("FRIEND_AVATAR", tags.get(0).getAvatar());
+                            context.startActivity(intent);
+                        }
+                    }
+                    @Override
+                    public void updateDrawState(@NonNull TextPaint ds) {
+                        super.updateDrawState(ds);
+                        ds.setUnderlineText(false);
+                        ds.setColor(Color.parseColor("#050505"));
+                        ds.setFakeBoldText(true);
+                    }
+                };
+
+                int startTag = authorName.length() + prefix.length();
+                int endTag = startTag + taggedName.length();
+                spannableString.setSpan(taggedSpan, startTag, endTag, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                holder.tvUserName.setText(spannableString);
+                holder.tvUserName.setMovementMethod(LinkMovementMethod.getInstance());
+                holder.tvUserName.setHighlightColor(Color.TRANSPARENT);
+                holder.tvUserName.setOnClickListener(null);
+
+            } else {
+                holder.tvUserName.setText(authorName);
+                holder.tvUserName.setOnClickListener(goToAuthorProfile);
+                holder.tvUserName.setMovementMethod(null);
+            }
+
+            Glide.with(context).load(post.getAuthorId().getAvatar()).placeholder(R.drawable.ic_user).into(holder.imgAvatar);
+
         } else {
             holder.tvUserName.setText("Người dùng ẩn danh");
             holder.imgAvatar.setOnClickListener(null);
             holder.tvUserName.setOnClickListener(null);
+            holder.tvUserName.setMovementMethod(null);
         }
 
         if (post.getCreatedAt() != null) {
@@ -110,9 +179,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             holder.tvTime.setText("Vừa xong");
         }
 
-        // ==========================================
-        // 👉 BỔ SUNG: XỬ LÝ HIỂN THỊ ICON QUYỀN RIÊNG TƯ
-        // ==========================================
         if (holder.imgPrivacy != null) {
             String privacy = post.getPrivacy();
             if (privacy != null) {
@@ -121,64 +187,44 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     holder.imgPrivacy.setImageResource(R.drawable.ic_private);
                 } else if (privacy.equalsIgnoreCase("Friends")) {
                     holder.imgPrivacy.setImageResource(R.drawable.ic_friend);
-                } else { // Mặc định là Public
+                } else {
                     holder.imgPrivacy.setImageResource(R.drawable.ic_public);
                 }
             } else {
-                // Nếu data cũ không có privacy, mặc định hiện icon Public
                 holder.imgPrivacy.setVisibility(View.VISIBLE);
                 holder.imgPrivacy.setImageResource(R.drawable.ic_public);
             }
         }
 
-        // ==========================================
-        // SỰ KIỆN ẤN VÀO DẤU 3 CHẤM (POPUP MENU)
-        // ==========================================
         if (holder.btnMoreOptions != null) {
             holder.btnMoreOptions.setOnClickListener(v -> {
                 PopupMenu popupMenu = new PopupMenu(context, holder.btnMoreOptions);
-
-                // 1. Mặc định ai cũng thấy nút "Lưu bài viết" (ID = 1)
                 popupMenu.getMenu().add(Menu.NONE, 1, 1, "Lưu bài viết");
 
-                // 2. Lấy ID của bạn (người đang xài app)
                 SharedPreferences prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
                 String myUserId = prefs.getString("USER_ID", "");
 
-                // 3. KIỂM TRA CHÍNH CHỦ
                 if (post.getAuthorId() != null && post.getAuthorId().getId() != null && post.getAuthorId().getId().equals(myUserId)) {
                     popupMenu.getMenu().add(Menu.NONE, 2, 2, "Xóa bài viết");
                 }
 
-                // 4. Lắng nghe hành động bấm vào Menu
                 popupMenu.setOnMenuItemClickListener(item -> {
                     switch (item.getItemId()) {
-                        case 1: // Bấm Lưu
-                            if (saveListener != null) {
-                                saveListener.onSavePost(post.getId());
-                            }
+                        case 1:
+                            if (saveListener != null) saveListener.onSavePost(post.getId());
                             return true;
-                        case 2: // Bấm Xóa
-                            if (deleteListener != null) {
-                                deleteListener.onDeletePost(post.getId());
-                            }
+                        case 2:
+                            if (deleteListener != null) deleteListener.onDeletePost(post.getId());
                             return true;
                     }
                     return false;
                 });
-
-                // Hiển thị menu lên màn hình
                 popupMenu.show();
             });
         }
 
-        // ==========================================
-        // HIỂN THỊ MẢNG ẢNH BẰNG RECYCLERVIEW
-        // ==========================================
         if (post.getImages() != null && !post.getImages().isEmpty()) {
             holder.rvPostImages.setVisibility(View.VISIBLE);
-
-            // TRUYỀN THẲNG MẢNG ẢNH VÀO
             PostImageAdapter imageAdapter = new PostImageAdapter(context, post.getImages());
             holder.rvPostImages.setAdapter(imageAdapter);
         } else {
@@ -203,7 +249,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             if (topReactions != null && !topReactions.isEmpty()) {
                 holder.imgReact1.setVisibility(View.VISIBLE);
                 holder.imgReact1.setText(getEmojiForReaction(topReactions.get(0)));
-
                 if (topReactions.size() > 1) {
                     holder.imgReact2.setVisibility(View.VISIBLE);
                     holder.imgReact2.setText(getEmojiForReaction(topReactions.get(1)));
@@ -220,9 +265,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             }
         });
 
-        // ==========================================
-        // SỰ KIỆN NÚT CHIA SẺ (SHARE)
-        // ==========================================
         if (holder.btnShare != null) {
             holder.btnShare.setOnClickListener(v -> {
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -231,7 +273,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 String authorName = post.getAuthorId() != null ? post.getAuthorId().getUsername() : "Một người bạn";
                 String shareMessage = authorName + " vừa chia sẻ một bài viết thú vị:\n\n"
                         + "\"" + post.getContent() + "\"\n\n"
-                        + "👉 Tải ngay ứng dụng để tham gia thảo luận cùng nhóm UIT tụi mình nhé!";
+                        + "👉 Tải ngay ứng dụng để tham gia thảo luận nhé!";
 
                 if (post.getImages() != null && !post.getImages().isEmpty()) {
                     shareMessage += "\n\nXem ảnh tại: " + post.getImages().get(0);
@@ -243,22 +285,28 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         }
 
         // ==========================================
-        // CHUYỂN DỮ LIỆU SANG POST DETAIL
+        // 👉 ĐÃ SỬA: CHUYỂN DỮ LIỆU TAG SANG POST DETAIL
         // ==========================================
         if (holder.btnComment != null) {
             holder.btnComment.setOnClickListener(v -> {
                 Intent intent = new Intent(context, PostDetailActivity.class);
                 intent.putExtra("POST_ID", post.getId());
                 intent.putExtra("POST_CONTENT", post.getContent());
-
                 intent.putExtra("POST_TIME", post.getCreatedAt());
 
                 if (post.getAuthorId() != null) {
+                    intent.putExtra("AUTHOR_ID", post.getAuthorId().getId());
                     intent.putExtra("AUTHOR_NAME", post.getAuthorId().getUsername());
                     intent.putExtra("AUTHOR_AVATAR", post.getAuthorId().getAvatar());
                 }
 
-                // Gửi mảng ảnh sang Detail
+                // Chèn thêm thông tin Tag vào Intent
+                if (post.getTags() != null && !post.getTags().isEmpty() && post.getTags().get(0) != null) {
+                    intent.putExtra("TAG_ID", post.getTags().get(0).getId());
+                    intent.putExtra("TAG_NAME", post.getTags().get(0).getUsername());
+                    intent.putExtra("TAG_COUNT", post.getTags().size());
+                }
+
                 if (post.getImages() != null) {
                     intent.putStringArrayListExtra("POST_IMAGES", new ArrayList<>(post.getImages()));
                 }
@@ -291,7 +339,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             holder.btnLikeContainer.setOnLongClickListener(v -> {
                 View popupView = LayoutInflater.from(context).inflate(R.layout.item_feed_reaction_popup, null);
                 PopupWindow popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
-                popupWindow.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+                popupWindow.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
 
                 TextView btnReactLike = popupView.findViewById(R.id.btnReactLike);
                 TextView btnReactLove = popupView.findViewById(R.id.btnReactLove);
@@ -380,7 +428,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     private String getEmojiForReaction(String type) {
         if (type == null) return "👍";
         switch (type) {
-            case "Like": return "👍";
             case "Love": return "❤️";
             case "Haha": return "😆";
             case "Wow":  return "😮";
@@ -418,21 +465,13 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         TextView tvUserName, tvContent, tvCommentCount, tvTime;
         ImageView imgAvatar;
         View btnComment;
-
-        // ĐÃ THÊM NÚT SHARE
         View btnShare;
-
         ImageView btnMoreOptions;
-
-        // 👉 BỔ SUNG: KHAI BÁO BIẾN CHO ICON PRIVACY
         ImageView imgPrivacy;
-
         RecyclerView rvPostImages;
-
         LinearLayout layoutTopReactions;
         TextView tvReactionCount;
         TextView imgReact1, imgReact2;
-
         LinearLayout btnLikeContainer;
         TextView imgLikeIcon;
         TextView tvLikeLabel;
@@ -445,11 +484,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             imgAvatar = itemView.findViewById(R.id.imgAvatar);
 
             btnMoreOptions = itemView.findViewById(R.id.btnMoreOptions);
-
-            // ÁNH XẠ NÚT SHARE
             btnShare = itemView.findViewById(R.id.btnShare);
-
-            // 👉 BỔ SUNG: ÁNH XẠ VIEW CHO ICON PRIVACY
             imgPrivacy = itemView.findViewById(R.id.imgPrivacy);
 
             rvPostImages = itemView.findViewById(R.id.rvPostImages);
@@ -457,8 +492,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             rvPostImages.setOnFlingListener(null);
             PagerSnapHelper snapHelper = new PagerSnapHelper();
             snapHelper.attachToRecyclerView(rvPostImages);
-
-            // ĐÃ THÊM DÒNG KÍCH HOẠT DẤU CHẤM TRÒN
             rvPostImages.addItemDecoration(new DotsIndicatorDecoration());
 
             btnComment = itemView.findViewById(R.id.btnComment);
