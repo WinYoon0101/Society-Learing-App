@@ -38,6 +38,7 @@ import com.example.frontend.data.model.User;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.data.repository.UserRepository;
+import com.example.frontend.ui.main.HomeActivity;
 import com.example.frontend.utils.FileUtils;
 import com.example.frontend.utils.Result;
 import com.google.android.material.button.MaterialButton;
@@ -72,6 +73,7 @@ public class ProfileFragment extends Fragment {
 
     private UserRepository repository;
     private ApiService apiService;
+    private Button btnChat;
 
     // ─── Launchers ────────────────────────────────────────────────────────────
     private final ActivityResultLauncher<String> pickImageLauncher =
@@ -110,6 +112,7 @@ public class ProfileFragment extends Fragment {
         lineFriends    = view.findViewById(R.id.lineFriends);
         linePic        = view.findViewById(R.id.linePic);
         contentContainer = view.findViewById(R.id.contentContainer);
+        btnChat = view.findViewById(R.id.btnMessage);
 
         repository = new UserRepository(requireContext());
         apiService = ApiClient.getApiService(requireContext());
@@ -121,7 +124,9 @@ public class ProfileFragment extends Fragment {
         tabAll.setOnClickListener(v -> { selectTab(lineAll); showTabAll(); });
         tabFriends.setOnClickListener(v -> { selectTab(lineFriends); showTabFriends(); });
         tabPic.setOnClickListener(v -> { selectTab(linePic); showTabPictures(); });
-
+        btnChat.setOnClickListener(v -> {
+            ((HomeActivity) requireActivity()).openChat();
+        });
         selectTab(lineAll);
         showTabAll();
     }

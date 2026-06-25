@@ -369,4 +369,8 @@ public class HomeActivity extends AppCompatActivity {
             lines[i].setVisibility(View.INVISIBLE);
         }
     }
+
+    public void openChat(){
+        selectTab(imgChat, lineChat, new ChatFragment());
+    }
 }
