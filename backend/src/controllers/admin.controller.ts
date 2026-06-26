@@ -237,3 +237,31 @@ export const getAllUsersAdmin = async (req: AuthRequest, res: Response): Promise
         return res.status(500).json({ success: false, message: "Lỗi server" });
     }
 };
+
+// =====================================
+// [USERS] KHÓA / MỞ KHÓA TÀI KHOẢN (BAN / UNBAN)
+// =====================================
+export const toggleUserStatusAdmin = async (req: AuthRequest, res: Response): Promise<any> => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
+        }
+
+        // Đảo ngược trạng thái hiện tại (Nếu đang true thì thành false và ngược lại)
+        user.isActive = !user.isActive;
+        await user.save();
+
+        const statusText = user.isActive ? "Mở khóa" : "Khóa";
+        return res.status(200).json({ 
+            success: true, 
+            message: `Đã ${statusText} tài khoản thành công`, 
+            data: user 
+        });
+    } catch (error) {
+        console.error("Lỗi Admin toggle user status:", error);
+        return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+};
