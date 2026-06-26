@@ -30,6 +30,7 @@ public class RegisterActivity extends AppCompatActivity {
     private RadioGroup rgGender;
     private MaterialButton btnRegister;
     private TextView tvLoginLink;
+    private android.widget.ImageView imgLogo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,8 +46,15 @@ public class RegisterActivity extends AppCompatActivity {
         rgGender = findViewById(R.id.rgGender);
         btnRegister = findViewById(R.id.btnRegister);
         tvLoginLink = findViewById(R.id.tvLoginLink);
+        imgLogo = findViewById(R.id.imgLogo);
 
         viewModel = new ViewModelProvider(this).get(RegisterViewModel.class);
+
+        // MỞ OnboardingActivity
+        imgLogo.setOnClickListener(v -> {
+            Intent intent = new Intent(RegisterActivity.this, com.example.frontend.ui.onboarding.OnboardingActivity.class);
+            startActivity(intent);
+        });
 
         // 2. NÚT CHUYỂN VỀ LOGIN
         tvLoginLink.setOnClickListener(v -> {

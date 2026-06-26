@@ -7,8 +7,8 @@ public class Constants {
     public static final String SOCKET_URL = "http://192.168.54.22:3000";
 
 
-    public static final long ZEGO_APP_ID = 948164799;
-    public static final String ZEGO_APP_SIGN = "60cc845386125ef2d3f4c6cafe07d8faac5ddc0be11a2f77a62b6fe62641a44f";
+    public static final long ZEGO_APP_ID = 388664871;
+    public static final String ZEGO_APP_SIGN = "74849334649b79a7dad5b9a2892f00bbc594550f0694e66e8332b25f4f39a6ab";
 }
 
 

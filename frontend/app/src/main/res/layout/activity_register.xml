@@ -30,6 +30,7 @@
                 android:padding="24dp">
 
                 <ImageView
+                    android:id="@+id/imgLogo"
                     android:layout_width="200dp"
                     android:layout_height="55dp"
                     android:src="@drawable/ic_text_logo"
@@ -226,86 +227,6 @@
                     app:cornerRadius="24dp"
                     app:backgroundTint="#10B981" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="hoặc tiếp tục với"
-                    android:textColor="#999999"
-                    android:textSize="14sp"
-                    android:layout_gravity="center"
-                    android:layout_marginBottom="16dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:layout_marginBottom="24dp">
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:layout_marginEnd="12dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:cardBackgroundColor="#F5F7F4"
-                        app:cardCornerRadius="18dp"
-                        app:cardElevation="0dp"
-                        app:strokeColor="#E0E0E0"
-                        app:strokeWidth="1dp">
-
-                        <LinearLayout
-                            android:id="@+id/btnGoogle"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:gravity="center">
-
-                            <ImageView
-                                android:layout_width="26dp"
-                                android:layout_height="26dp"
-                                android:src="@drawable/ic_google" />
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:layout_marginStart="12dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:cardBackgroundColor="#F5F7F4"
-                        app:cardCornerRadius="18dp"
-                        app:cardElevation="0dp"
-                        app:strokeColor="#E0E0E0"
-                        app:strokeWidth="1dp">
-
-                        <FrameLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:elevation="2dp">
-
-                                <ImageView
-                                    android:layout_width="45dp"
-                                    android:layout_height="45dp"
-                                    android:src="@drawable/ic_facebook" />
-                            </LinearLayout>
-
-                            <com.facebook.login.widget.LoginButton
-                                android:id="@+id/fbLoginButton"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:alpha="0"
-                                app:com_facebook_login_text=""
-                                app:com_facebook_logout_text="" />
-
-                        </FrameLayout>
-                    </com.google.android.material.card.MaterialCardView>
-                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
