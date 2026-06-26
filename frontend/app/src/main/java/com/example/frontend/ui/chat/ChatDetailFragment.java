@@ -1,5 +1,6 @@
 package com.example.frontend.ui.chat;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -38,6 +39,7 @@ import java.util.Map;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
 
 public class ChatDetailFragment extends Fragment {
     private static final int PICK_FILE_REQUEST = 101;
@@ -456,10 +458,12 @@ public class ChatDetailFragment extends Fragment {
                 for (User m : members) {
                     if (m == null || m.getId() == null) continue;
                     if (m.getId().equals(currentUserId)) continue;
+                    android.util.Log.d("ZegoCallDebug", "Group Call - Inviting User ID: " + m.getId() + " | Name: " + nameForInvitee(m));
                     list.add(new com.zegocloud.uikit.service.defines.ZegoUIKitUser(m.getId(), nameForInvitee(m)));
                 }
             }
         } else if (otherMember != null && otherMember.getId() != null) {
+            android.util.Log.d("ZegoCallDebug", "1-1 Call - Inviting User ID: " + otherMember.getId() + " | Name: " + nameForInvitee(otherMember));
             list.add(new com.zegocloud.uikit.service.defines.ZegoUIKitUser(
                     otherMember.getId(), nameForInvitee(otherMember)));
         }
@@ -607,6 +611,7 @@ public class ChatDetailFragment extends Fragment {
     }
 
     /** Đổi biệt danh cho 1 thành viên bất kỳ (dùng từ GroupMembersBottomSheet). */
+    @SuppressLint("RestrictedApi")
     void showNicknameDialogFor(User member) {
         if (member == null || member.getId() == null || conversationId == null) return;
         final EditText input = new EditText(requireContext());
@@ -626,6 +631,7 @@ public class ChatDetailFragment extends Fragment {
 
     // ─────────────────────── Đổi tên nhóm ───────────────────────
 
+    @SuppressLint("RestrictedApi")
     private void showRenameGroupDialog() {
         if (conversationId == null) return;
         final EditText input = new EditText(requireContext());
@@ -799,6 +805,7 @@ public class ChatDetailFragment extends Fragment {
     }
 
     /** Dialog nhập biệt danh cho đối phương. */
+    @SuppressLint("RestrictedApi")
     private void showNicknameDialog() {
         if (otherMember == null || otherMember.getId() == null || conversationId == null) {
             Toast.makeText(getContext(), "Không thể đổi biệt danh lúc này", Toast.LENGTH_SHORT).show();
