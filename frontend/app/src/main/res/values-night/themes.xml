@@ -10,7 +10,7 @@
         <item name="colorSecondaryVariant">@color/green_dark</item>
         <item name="colorOnSecondary">@color/black</item>
 
-        <item name="android:statusBarColor">#F1F3E0</item> <item name="android:windowLightStatusBar">true</item> <item name="hintTextAppearance">@style/HintText</item>
+        <item name="android:statusBarColor">#064E3B</item> <item name="android:windowLightStatusBar">true</item> <item name="hintTextAppearance">@style/HintText</item>
     </style>
 
     <style name="HintText" parent="TextAppearance.Design.Hint">
