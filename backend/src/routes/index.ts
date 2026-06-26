@@ -20,6 +20,7 @@ import searchRoutes from "./search.route";
 
 import storyRoutes from "./story.routes";
 import taskRoutes from "./task.routes";
+import adminRoutes from "./admin.routes";
 
 const router = Router();
 
@@ -66,5 +67,7 @@ router.use("/search", searchRoutes);
 
 // Task
 router.use("/task", taskRoutes);
+
+router.use("/admin", adminRoutes);
 
 export default router;
