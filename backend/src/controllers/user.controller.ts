@@ -163,7 +163,11 @@ export const updateCover = async (
 
     const coverUrl = file.path; // Cloudinary URL
 
-    const user = await User.findByIdAndUpdate(userId, { cover: coverUrl }, { new: true });
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { cover: coverUrl },
+      { new: true },
+    );
 
     if (!user) {
       res.status(404).json({
@@ -196,7 +200,7 @@ export const searchUsers = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const q = (req.query.q as string || "").trim();
+    const q = ((req.query.q as string) || "").trim();
     if (!q) {
       res.status(200).json({ success: true, data: [] });
       return;
@@ -241,7 +245,7 @@ export const getMyProfile = async (
       .lean();
 
     const friendCount = friendships.filter(
-      (f: any) => f.requester && f.recipient
+      (f: any) => f.requester && f.recipient,
     ).length;
 
     const groupCount = await Group.countDocuments({
@@ -270,6 +274,28 @@ export const getMyProfile = async (
     res.status(500).json({
       success: false,
       message: "Lỗi server",
+    });
+  }
+};
+
+export const getUserById = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
     });
   }
 };

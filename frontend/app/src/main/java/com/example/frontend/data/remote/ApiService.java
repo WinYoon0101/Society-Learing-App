@@ -512,4 +512,7 @@ public interface ApiService {
             @Query("q") String query,
             @Query("hashtag") String hashtag
     );
+
+    @GET("user/{id}")
+    Call<ApiResponse<User>> getUserById(@Path("id") String id);
 }

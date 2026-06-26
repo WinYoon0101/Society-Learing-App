@@ -154,6 +154,27 @@ public class UserRepository {
             }
         });
 
+
         return liveData;
+    }
+
+    public void getUserById(String id, MutableLiveData<Result<User>> liveData) {
+        liveData.postValue(Result.loading(null));
+        api.getUserById(id).enqueue(new Callback<ApiResponse<User>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<User>> call, Response<ApiResponse<User>> response) {
+                if(response.isSuccessful() && response.body()!=null){
+                    liveData.postValue(Result.success(response.body().getData()));
+                }else{
+
+                    liveData.postValue(
+                            Result.error("Không lấy được user",null));
+                        }
+                    }
+                    @Override
+                    public void onFailure(Call<ApiResponse<User>> call, Throwable t) {
+
+                liveData.postValue(Result.error(t.getMessage(),null));}
+                });
     }
 }
