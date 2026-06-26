@@ -1,140 +1,204 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="#F8FAF5">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="25dp">
+        android:padding="18dp">
+
+        <!-- ================= HEADER ================= -->
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="22dp">
 
             <ImageButton
                 android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
                 android:padding="10dp"
-                android:src="@drawable/ic_arrow_back"
-                android:background="@drawable/bg_circle_gray"
+                android:background="@drawable/bg_circle_white"
+                android:src="@android:drawable/ic_menu_revert"
+                app:tint="#10B981"
                 android:contentDescription="Back"/>
 
-            <!-- Tittle -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Edit Profile"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:layout_marginStart="12dp"/>
+                android:layout_marginStart="14dp"
+                android:text="Chỉnh sửa hồ sơ"
+                android:textColor="#111827"
+                android:textSize="24sp"
+                android:textStyle="bold"/>
 
         </LinearLayout>
 
-        <!-- BIO -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Bio"
-            android:textStyle="bold"/>
+        <!-- ================= FORM CARD ================= -->
 
-        <EditText
-            android:id="@+id/edtBio"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nhập bio..."
-            android:inputType="textMultiLine"
-            android:minHeight="80dp"
-            android:gravity="top"
-            android:padding="10dp"
-            android:background="@drawable/bg_input"
-            android:layout_marginBottom="12dp"/>
+            app:cardCornerRadius="18dp"
+            app:cardElevation="3dp"
+            app:cardBackgroundColor="#FFFFFF">
 
-        <!-- LOCATION -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Location"
-            android:textStyle="bold"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
 
-        <EditText
-            android:id="@+id/edtLocation"
+                <!-- BIO -->
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tiểu sử"
+                    android:textColor="#111827"
+                    android:textSize="15sp"
+                    android:textStyle="bold"/>
+
+                <EditText
+                    android:id="@+id/edtBio"
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="18dp"
+                    android:background="@drawable/bg_input"
+                    android:gravity="top|start"
+                    android:hint="Viết vài dòng giới thiệu về bản thân..."
+                    android:inputType="textMultiLine"
+                    android:padding="16dp"
+                    android:textColor="#111827"
+                    android:textColorHint="#9CA3AF"
+                    android:textSize="15sp"/>
+
+                <!-- LOCATION -->
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nơi ở"
+                    android:textColor="#111827"
+                    android:textSize="15sp"
+                    android:textStyle="bold"/>
+
+                <EditText
+                    android:id="@+id/edtLocation"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="18dp"
+                    android:background="@drawable/bg_input"
+                    android:hint="Ví dụ: TP. Hồ Chí Minh"
+                    android:paddingHorizontal="16dp"
+                    android:textColor="#111827"
+                    android:textColorHint="#9CA3AF"
+                    android:textSize="15sp"/>
+
+                <!-- HOMETOWN -->
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quê quán"
+                    android:textColor="#111827"
+                    android:textSize="15sp"
+                    android:textStyle="bold"/>
+
+                <EditText
+                    android:id="@+id/edtHometown"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="18dp"
+                    android:background="@drawable/bg_input"
+                    android:hint="Ví dụ: Đà Nẵng"
+                    android:paddingHorizontal="16dp"
+                    android:textColor="#111827"
+                    android:textColorHint="#9CA3AF"
+                    android:textSize="15sp"/>
+
+                <!-- GENDER -->
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Giới tính"
+                    android:textColor="#111827"
+                    android:textSize="15sp"
+                    android:textStyle="bold"/>
+
+                <EditText
+                    android:id="@+id/edtGender"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="18dp"
+                    android:background="@drawable/bg_input"
+                    android:hint="Nam / Nữ / Khác"
+                    android:paddingHorizontal="16dp"
+                    android:textColor="#111827"
+                    android:textColorHint="#9CA3AF"
+                    android:textSize="15sp"/>
+
+                <!-- BIRTHDAY -->
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ngày sinh"
+                    android:textColor="#111827"
+                    android:textSize="15sp"
+                    android:textStyle="bold"/>
+
+                <EditText
+                    android:id="@+id/edtBirthday"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="10dp"
+                    android:background="@drawable/bg_input"
+                    android:hint="YYYY-MM-DD"
+                    android:paddingHorizontal="16dp"
+                    android:textColor="#111827"
+                    android:textColorHint="#9CA3AF"
+                    android:textSize="15sp"/>
+                <!-- SAVE BUTTON -->
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSave"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="4dp"
+                    android:text="Lưu thay đổi"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#10B981"
+                    app:cornerRadius="14dp"/>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Bottom spacing -->
+
+        <Space
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Bạn đang sống ở đâu?"
-            android:inputType="text"
-            android:autofillHints="address"
-            android:padding="10dp"
-            android:background="@drawable/bg_input"
-            android:layout_marginBottom="12dp"/>
-
-        <!-- HOMETOWN -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Hometown"
-            android:textStyle="bold"/>
-
-        <EditText
-            android:id="@+id/edtHometown"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Quê quán"
-            android:inputType="text"
-            android:autofillHints="address"
-            android:padding="10dp"
-            android:background="@drawable/bg_input"
-            android:layout_marginBottom="12dp"/>
-
-        <!-- GENDER -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Gender"
-            android:textStyle="bold"/>
-
-        <EditText
-            android:id="@+id/edtGender"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Nam / Nữ / Khác"
-            android:inputType="text"
-            android:padding="10dp"
-            android:background="@drawable/bg_input"
-            android:layout_marginBottom="12dp"/>
-
-        <!-- BIRTHDAY -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Birthday"
-            android:textStyle="bold"/>
-
-        <EditText
-            android:id="@+id/edtBirthday"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="YYYY-MM-DD"
-            android:inputType="date"
-            android:autofillHints="birthDate"
-            android:padding="10dp"
-            android:background="@drawable/bg_input"
-            android:layout_marginBottom="20dp"/>
-
-        <!-- SAVE BUTTON -->
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="Lưu thay đổi"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#0B8A00"/>
+            android:layout_height="20dp"/>
 
     </LinearLayout>
+
 </ScrollView>
