@@ -35,6 +35,18 @@
             android:textStyle="bold" />
 
         <ImageButton
+            android:id="@+id/btnSelectFriendCreateGroup"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="8dp"
+            android:padding="4dp"
+            android:scaleType="fitCenter"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_group"
+            android:tint="#10B981"
+            android:contentDescription="Tạo nhóm" />
+
+        <ImageButton
             android:id="@+id/btnSelectFriendClose"
             android:layout_width="32dp"
             android:layout_height="32dp"

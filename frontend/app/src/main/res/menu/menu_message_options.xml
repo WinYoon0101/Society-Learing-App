@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_delete_for_me"
+        android:title="Xóa ở phía tôi" />
+    <item
+        android:id="@+id/action_recall"
+        android:title="Thu hồi với mọi người" />
+</menu>

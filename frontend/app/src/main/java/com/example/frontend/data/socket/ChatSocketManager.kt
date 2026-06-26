@@ -8,14 +8,22 @@ import io.socket.client.Socket
 import io.socket.emitter.Emitter
 import org.json.JSONObject
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.example.frontend.data.model.Message
 import com.example.frontend.data.model.Reaction
+import com.example.frontend.data.remote.MessageDeserializer
 import java.net.URISyntaxException
 
 object ChatSocketManager {
     private var socket: Socket? = null
-    private val gson = Gson()
+    // Gson chịu được replyTo dạng STRING (replyTo lồng nhau BE chỉ populate 1 cấp)
+    private val gson = GsonBuilder()
+        .registerTypeAdapter(Message::class.java, MessageDeserializer())
+        .create()
     private val TAG = "ChatSocket"
+
+    // Conversation đang mở — để join lại room sau khi (re)connect
+    private var currentRoom: String? = null
 
     // Listeners
     private var onMessageNew: ((Message) -> Unit)? = null
@@ -80,6 +88,10 @@ object ChatSocketManager {
     private fun setupListeners() {
         socket?.on(Socket.EVENT_CONNECT) {
             Log.d(TAG, "✅ Connected to server")
+            // Join lại room conversation đang mở (vd nhóm vừa tạo / vừa được add sau connect)
+            currentRoom?.let { room ->
+                socket?.emit("conversation:join", JSONObject().apply { put("conversationId", room) })
+            }
             onConnected?.invoke()
         }
 
@@ -215,6 +227,22 @@ object ChatSocketManager {
     // ═══════════════════════════════════════════════════════════════════════
     // EMIT EVENTS
     // ═══════════════════════════════════════════════════════════════════════
+
+    /** Đánh dấu đã đọc conversation (badge unread về 0 cho conversation này). */
+    fun markRead(conversationId: String) {
+        if (socket != null && socket!!.connected()) {
+            socket?.emit("conversation:read", JSONObject().apply { put("conversationId", conversationId) })
+        }
+    }
+
+    /** Chủ động join room conversation (để nhận realtime, kể cả nhóm vừa tạo/được add sau connect). */
+    fun joinConversation(conversationId: String) {
+        currentRoom = conversationId
+        if (socket != null && socket!!.connected()) {
+            socket?.emit("conversation:join", JSONObject().apply { put("conversationId", conversationId) })
+            Log.d(TAG, "Joined conversation room $conversationId")
+        }
+    }
 
     @JvmOverloads
     fun sendMessage(

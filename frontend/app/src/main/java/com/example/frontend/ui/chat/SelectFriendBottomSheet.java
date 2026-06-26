@@ -65,6 +65,7 @@ public class SelectFriendBottomSheet extends BottomSheetDialogFragment {
         super.onViewCreated(view, savedInstanceState);
 
         ImageButton btnClose = view.findViewById(R.id.btnSelectFriendClose);
+        ImageButton btnCreateGroup = view.findViewById(R.id.btnSelectFriendCreateGroup);
         etSearch = view.findViewById(R.id.etSearchFriend);
         rvFriends = view.findViewById(R.id.rvFriendsPick);
         layoutEmpty = view.findViewById(R.id.layoutEmptyFriendPick);
@@ -72,6 +73,14 @@ public class SelectFriendBottomSheet extends BottomSheetDialogFragment {
         progress = view.findViewById(R.id.progressFriendPick);
 
         btnClose.setOnClickListener(v -> dismiss());
+
+        btnCreateGroup.setOnClickListener(v -> {
+            Fragment parent = getParentFragment();
+            dismiss();
+            if (parent instanceof ChatFragment) {
+                ((ChatFragment) parent).openCreateGroup();
+            }
+        });
 
         adapter = new FriendPickAdapter(this::onFriendPicked);
         rvFriends.setLayoutManager(new LinearLayoutManager(getContext()));

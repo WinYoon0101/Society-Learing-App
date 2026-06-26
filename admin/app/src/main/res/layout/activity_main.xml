@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F3F4F6"> <!-- Nền app xám rất nhạt (Gray 100) để làm nổi bật thanh Nav -->
+
+    <!-- Vùng chứa các Fragment -->
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/custom_bottom_nav" />
+
+    <!-- Thanh Custom Bottom Navigation -->
+    <LinearLayout
+        android:id="@+id/custom_bottom_nav"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_bottom_nav"
+        android:elevation="12dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="6dp">
+
+        <!-- Tab 1: Dashboard (Mặc định Active) -->
+        <FrameLayout
+            android:id="@+id/btn_nav_dashboard"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/img_nav_dashboard"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_item_active"
+                android:padding="12dp"
+                android:src="@drawable/ic_home"
+                app:tint="#064E3B" /> <!-- Icon màu tối đậm cắt ngang nền sáng -->
+        </FrameLayout>
+
+        <!-- Tab 2: Quản lý báo cáo (Inactive) -->
+        <FrameLayout
+            android:id="@+id/btn_nav_reports"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/img_nav_reports"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:background="@android:color/transparent"
+                android:padding="12dp"
+                android:src="@drawable/ic_report"
+                app:tint="#A7F3D0" />
+        </FrameLayout>
+
+        <!-- Tab 3: Quản lý bài viết (Inactive) -->
+        <FrameLayout
+            android:id="@+id/btn_nav_posts"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/img_nav_posts"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:background="@android:color/transparent"
+                android:padding="12dp"
+                android:src="@drawable/ic_post"
+                app:tint="#A7F3D0" />
+        </FrameLayout>
+
+        <!-- Tab 4: Quản lý người dùng (Inactive) -->
+        <FrameLayout
+            android:id="@+id/btn_nav_users"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/img_nav_users"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:background="@android:color/transparent"
+                android:padding="12dp"
+                android:src="@drawable/ic_user"
+                app:tint="#A7F3D0" />
+        </FrameLayout>
+
+    </LinearLayout>
+</RelativeLayout>

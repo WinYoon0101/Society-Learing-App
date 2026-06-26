@@ -3,9 +3,16 @@ import mongoose, { Document, Schema } from "mongoose";
 export interface IConversation extends Document {
   _id: mongoose.Types.ObjectId;
   members: mongoose.Types.ObjectId[];
+  isGroup: boolean;
+  name: string;
+  admin?: mongoose.Types.ObjectId;
   nicknames: Map<string, string>;
   color: string;
   lastMessage?: mongoose.Types.ObjectId;
+  lastRead: Map<string, Date>;
+  deletedBy: mongoose.Types.ObjectId[];
+  mutedMessages: mongoose.Types.ObjectId[];
+  mutedCalls: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,9 +26,29 @@ const ConversationSchema = new Schema<IConversation>(
         required: true,
       },
     ],
+    // Group chat: nhiều hơn 2 thành viên + có tên + admin (người tạo)
+    isGroup: {
+      type: Boolean,
+      default: false,
+    },
+    name: {
+      type: String,
+      default: "",
+    },
+    admin: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     nicknames: {
       type: Map,
       of: String,
+      default: {},
+    },
+    // Thời điểm mỗi user đọc conversation gần nhất (để tính số tin chưa xem)
+    lastRead: {
+      type: Map,
+      of: Date,
       default: {},
     },
     color: {
@@ -33,6 +60,26 @@ const ConversationSchema = new Schema<IConversation>(
       ref: "Message",
       default: null,
     },
+    // Ẩn đoạn chat cho riêng từng user (xóa-phía-mình); tin mới sẽ clear lại
+    deletedBy: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    // Tắt thông báo per-user: ai trong mảng = đã tắt loại đó
+    mutedMessages: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    mutedCalls: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );

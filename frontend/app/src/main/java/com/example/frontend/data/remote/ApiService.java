@@ -197,11 +197,60 @@ public interface ApiService {
     @GET("chat/conversations")
     Call<ApiResponse<List<Conversation>>> getConversations();
 
+    // Tổng số tin nhắn chưa xem (1-1 + group) → badge tab chat
+    @GET("chat/unread-count")
+    Call<ApiResponse<com.example.frontend.data.model.UnreadCount>> getUnreadCount();
+
     @POST("chat/conversations")
     Call<ApiResponse<Conversation>> getOrCreateConversation(@Body Map<String, String> body);
 
     @GET("chat/conversations/{conversationId}/messages")
     Call<ApiResponse<List<Message>>> getMessages(@Path("conversationId") String conversationId);
+
+    // Body: { targetUserId, nickname } → đặt biệt danh mình gọi đối phương trong conversation.
+    // Trả ApiResponse<Object> (không phải Conversation) vì BE trả conversation chưa populate
+    // members (mảng ObjectId string) → parse Conversation.members:List<User> sẽ nổ. FE chỉ
+    // cần cờ success nên dùng Object cho an toàn.
+    @PATCH("chat/conversations/{conversationId}/nickname")
+    Call<ApiResponse<Object>> setNickname(@Path("conversationId") String conversationId,
+                                          @Body Map<String, String> body);
+
+    // ===== GROUP CHAT =====
+    // Body: { name?: String, memberIds: List<String> } → trả conversation đã populate members
+    @POST("chat/conversations/group")
+    Call<ApiResponse<Conversation>> createGroup(@Body Map<String, Object> body);
+
+    // Body: { userIds: List<String> } → thêm thành viên (1-1 + thêm người = thành group)
+    @POST("chat/conversations/{conversationId}/members")
+    Call<ApiResponse<Conversation>> addGroupMembers(@Path("conversationId") String conversationId,
+                                                    @Body Map<String, Object> body);
+
+    @POST("chat/conversations/{conversationId}/leave")
+    Call<ApiResponse<Object>> leaveConversation(@Path("conversationId") String conversationId);
+
+    // Kick thành viên khỏi GROUP CHAT (chỉ admin) → trả conversation cập nhật (populated members).
+    // ⚠️ Tên KHÁC kickMember(String,String) của feature Group/Society (đã có sẵn) để không trùng signature.
+    @DELETE("chat/conversations/{conversationId}/members/{userId}")
+    Call<ApiResponse<Conversation>> kickConversationMember(@Path("conversationId") String conversationId,
+                                                           @Path("userId") String userId);
+
+    // Body: { name: String }
+    @PATCH("chat/conversations/{conversationId}/name")
+    Call<ApiResponse<Object>> renameGroup(@Path("conversationId") String conversationId,
+                                          @Body Map<String, String> body);
+
+    // Xóa đoạn chat (ẩn-phía-mình)
+    @DELETE("chat/conversations/{conversationId}")
+    Call<ApiResponse<Object>> deleteConversation(@Path("conversationId") String conversationId);
+
+    // Body: { messages?: Boolean, calls?: Boolean } (true = tắt, false = bật lại)
+    @PATCH("chat/conversations/{conversationId}/mute")
+    Call<ApiResponse<Object>> setMute(@Path("conversationId") String conversationId,
+                                      @Body Map<String, Boolean> body);
+
+    // Xóa tin nhắn phía mình (ẩn riêng)
+    @DELETE("chat/messages/{messageId}/me")
+    Call<ApiResponse<Object>> deleteMessageForMe(@Path("messageId") String messageId);
 
     @POST("chat/messages")
     Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);

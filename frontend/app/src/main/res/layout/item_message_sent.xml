@@ -10,18 +10,45 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="end">
+        android:gravity="end|center_vertical">
 
-        <ImageButton
-            android:id="@+id/btnReact"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="4dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_emoji_react"
-            android:alpha="0.5"
-            android:contentDescription="React" />
+        <!-- Action bar (reply + react) ẩn mặc định, hiện khi long-press / hover -->
+        <LinearLayout
+            android:id="@+id/messageActionBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone">
+
+            <ImageButton
+                android:id="@+id/btnReply"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="2dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_reply"
+                android:contentDescription="Trả lời" />
+
+            <ImageButton
+                android:id="@+id/btnReact"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="2dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_emoji_react"
+                android:contentDescription="React" />
+
+            <ImageButton
+                android:id="@+id/btnMore"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_more_vert"
+                android:tint="#888888"
+                android:contentDescription="Thêm" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -33,6 +60,11 @@
             <include
                 android:id="@+id/mediaContainer"
                 layout="@layout/item_message_media" />
+
+            <include
+                android:id="@+id/replyQuote"
+                layout="@layout/item_message_reply_quote"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/tvSentMessage"

@@ -1,0 +1,15 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.Admin" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
+        <item name="colorPrimary">#10B981</item>
+        <item name="colorPrimaryVariant">#064E3B</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <item name="colorSecondary">#10B981</item>
+        <item name="colorSecondaryVariant">#064E3B</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <item name="android:statusBarColor">#064E3B</item>
+
+    </style>
+</resources>

@@ -30,4 +30,14 @@
         android:ellipsize="end"
         tools:text="Tên bạn"
         xmlns:tools="http://schemas.android.com/tools" />
+
+    <!-- Check chỉ hiện ở chế độ multi-select (tạo nhóm) -->
+    <ImageView
+        android:id="@+id/imgFriendPickCheck"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/ic_check"
+        android:visibility="gone"
+        android:contentDescription="Đã chọn" />
 </LinearLayout>
