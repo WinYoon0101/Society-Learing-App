@@ -1,106 +1,146 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingHorizontal="16dp"
+    android:paddingBottom="20dp">
 
-    <!-- THÔNG TIN CÁ NHÂN -->
-    <LinearLayout
+    <!-- ================= THÔNG TIN ================= -->
+
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="@drawable/bg_card">
+        android:layout_marginTop="4dp"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="2dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Thông tin cá nhân"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"/>
-
-        <TextView
-            android:id="@+id/tvLocation"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_home"
-            android:drawablePadding="12dp"
-            android:textColor="#444"
-            android:visibility="visible"
-            android:layout_marginBottom="10dp"/>
+            android:orientation="vertical"
+            android:padding="18dp">
 
-        <TextView
-            android:id="@+id/tvHometown"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_location"
-            android:drawablePadding="12dp"
-            android:textColor="#444"
-            android:visibility="visible"
-            android:layout_marginBottom="10dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Thông tin cá nhân"
+                android:textColor="#111827"
+                android:textSize="19sp"
+                android:textStyle="bold"/>
 
-        <TextView
-            android:id="@+id/tvBirthday"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_calendar"
-            android:drawablePadding="12dp"
-            android:textColor="#444"
-            android:visibility="visible"
-            android:layout_marginBottom="10dp"/>
+            <TextView
+                android:id="@+id/tvLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:drawableStart="@drawable/ic_home"
+                android:drawablePadding="14dp"
+                android:gravity="center_vertical"
+                android:textColor="#4B5563"
+                android:textSize="15sp"/>
 
-        <TextView
-            android:id="@+id/tvGender"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_gender"
-            android:drawablePadding="12dp"
-            android:textColor="#444"
-            android:visibility="visible"
-            android:layout_marginBottom="16dp"/>
+            <TextView
+                android:id="@+id/tvHometown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:drawableStart="@drawable/ic_location"
+                android:drawablePadding="14dp"
+                android:textColor="#4B5563"
+                android:textSize="15sp"/>
 
-        <Button
-            android:id="@+id/btnEditDetails"
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:text="Chỉnh sửa thông tin"
-            android:textAllCaps="false"
-            android:textColor="#000"
-            android:backgroundTint="#E0E0E0"/>
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tvBirthday"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:drawableStart="@drawable/ic_calendar"
+                android:drawablePadding="14dp"
+                android:textColor="#4B5563"
+                android:textSize="15sp"/>
 
-    <LinearLayout
+            <TextView
+                android:id="@+id/tvGender"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:drawableStart="@drawable/ic_gender"
+                android:drawablePadding="14dp"
+                android:textColor="#4B5563"
+                android:textSize="15sp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEditDetails"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginTop="20dp"
+                android:text="Chỉnh sửa thông tin"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:textColor="#10B981"
+                android:backgroundTint="#D1FAE5"
+                app:cornerRadius="14dp"/>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- ================= TẠO BÀI VIẾT ================= -->
+
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnOpenCreatePost"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="15dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_card"
-        android:gravity="center_vertical">
+        android:layout_marginTop="14dp"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="2dp">
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/imgPostAvatar"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_profile" />
-
-        <TextView
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="12dp"
-            android:text="Bạn đang nghĩ gì?"
-            android:textColor="#555555"
-            android:textSize="16sp" />
-    </LinearLayout>
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/imgPostAvatar"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:src="@drawable/ic_profile"
+                app:civ_border_width="2dp"
+                app:civ_border_color="#E5E7EB"/>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:layout_marginStart="14dp"
+                android:background="@drawable/bg_input_post"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:text="Bạn đang nghĩ gì?"
+                    android:textColor="#6B7280"
+                    android:textSize="15sp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- ================= FEED ================= -->
 
     <FrameLayout
         android:id="@+id/feedContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"/>
 
 </LinearLayout>
