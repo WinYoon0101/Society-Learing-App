@@ -126,8 +126,8 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
                 tvLastMessage.setText("Bắt đầu cuộc trò chuyện...");
             }
 
-            // Đã tắt thông báo → hiện icon chuông gạch (BE đã set unread=false khi muted)
-            boolean muted = conversation.getMuted();
+            // Đã tắt thông báo (tin nhắn HOẶC cuộc gọi) → hiện icon chuông gạch
+            boolean muted = conversation.getMuted() || conversation.getMutedCall();
             imgConvMuted.setVisibility(muted ? View.VISIBLE : View.GONE);
 
             // Chấm xanh dương "chưa đọc" (kiểu Messenger) — BE tính sẵn cờ unread (đã loại muted)
