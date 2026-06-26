@@ -252,6 +252,16 @@ public interface ApiService {
     @DELETE("chat/messages/{messageId}/me")
     Call<ApiResponse<Object>> deleteMessageForMe(@Path("messageId") String messageId);
 
+    // Danh sách conversationId user đã TẮT thông báo cuộc gọi (G7.5) — chặn hiện cuộc gọi đến.
+    @GET("chat/muted-calls")
+    Call<ApiResponse<List<String>>> getMutedCalls();
+
+    // Ghi lại cuộc gọi vào đoạn chat (G7.4) → tạo system message "Cuộc gọi video · 0:44" / "... nhỡ".
+    // Body: { callType: "audio"|"video", status: "ended"|"missed", duration: Number (giây) }
+    @POST("chat/conversations/{conversationId}/call-log")
+    Call<ApiResponse<Object>> callLog(@Path("conversationId") String conversationId,
+                                      @Body Map<String, Object> body);
+
     @POST("chat/messages")
     Call<ApiResponse<Message>> sendMessage(@Body Map<String, String> body);
 

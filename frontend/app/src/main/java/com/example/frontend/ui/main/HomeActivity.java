@@ -81,6 +81,13 @@ public class HomeActivity extends AppCompatActivity {
 
         setupBottomTabs(savedInstanceState);
 
+        // G7 — Khởi tạo ZegoCloud Call Kit cho user đang đăng nhập (idempotent).
+        SharedPreferences callPrefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        com.example.frontend.ui.call.ZegoCallManager.init(
+                getApplication(),
+                callPrefs.getString("USER_ID", ""),
+                callPrefs.getString("USERNAME", ""));
+
 
         iconSearch.setOnClickListener(v -> startActivity(new Intent(this, com.example.frontend.ui.search.SearchActivity.class)));
 
@@ -249,6 +256,8 @@ public class HomeActivity extends AppCompatActivity {
         // Cập nhật badge số thông báo chưa đọc (về số thực tế / 0 sau khi đã đọc)
         com.example.frontend.ui.notify.NotificationBadge.refresh(this, tvNotifyBadge);
         refreshChatBadge();
+        // G7.5 — làm tươi danh sách conversation đã tắt thông báo cuộc gọi
+        com.example.frontend.ui.call.ZegoCallManager.refreshMutedCalls();
     }
 
     /** Cập nhật badge số tin nhắn chưa xem ở tab Tin nhắn. */
@@ -324,6 +333,13 @@ public class HomeActivity extends AppCompatActivity {
         // Ngắt kết nối socket
         try {
             com.example.frontend.data.socket.ChatSocketManager.INSTANCE.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // G7 — Gỡ Call Kit khi logout (huỷ đăng ký nhận cuộc gọi đến)
+        try {
+            com.example.frontend.ui.call.ZegoCallManager.unInit();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -105,6 +105,8 @@ dependencies {
     // ZegoCloud (Hỗ trợ Call / Livestream)
     implementation("im.zego:zego_uikit_prebuilt_live_streaming_android:+")
     implementation("im.zego:zego_uikit_signaling_plugin_android:+")
+    // Call Kit 1-1 + group (G7) — cùng hãng Zego, dùng chung signaling plugin ở trên
+    implementation("im.zego:zego_uikit_prebuilt_call_android:+")
 
     // Testing
     testImplementation(libs.junit)

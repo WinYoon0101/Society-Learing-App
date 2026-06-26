@@ -16,6 +16,8 @@ import {
   deleteConversation,
   setMute,
   deleteMessageForMe,
+  callLog,
+  getMutedCalls,
 } from "../controllers/chat.controller";
 
 const router = Router();
@@ -26,6 +28,7 @@ router.use(authenticate);
 // Conversations
 router.get("/conversations", getConversations);
 router.get("/unread-count", getUnreadCount);
+router.get("/muted-calls", getMutedCalls);
 router.post("/conversations", getOrCreateConversation);
 router.post("/conversations/group", createGroup);
 
@@ -41,6 +44,9 @@ router.patch("/conversations/:conversationId/name", renameGroup);
 router.post("/conversations/:conversationId/members", addMembers);
 router.delete("/conversations/:conversationId/members/:userId", kickMember);
 router.post("/conversations/:conversationId/leave", leaveGroup);
+
+// Call log (G7.4)
+router.post("/conversations/:conversationId/call-log", callLog);
 
 // Mute & delete conversation (ẩn-phía-mình)
 router.patch("/conversations/:conversationId/mute", setMute);

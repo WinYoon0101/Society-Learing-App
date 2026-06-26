@@ -158,6 +158,9 @@ public class ChatDetailFragment extends Fragment {
         tvChatName.setOnClickListener(v -> {
             if (!isGroup) openFriendProfile();
         });
+
+        // G7 — nút gọi thoại/video (Zego Call Kit)
+        setupCallButtons(view);
         // Menu 3 chấm: xem trang cá nhân / đổi biệt danh
         btnChatDetailMore.setOnClickListener(this::showChatOptionsMenu);
 
@@ -395,6 +398,81 @@ public class ChatDetailFragment extends Fragment {
         }
     }
 
+    // ─────────────────────── Gọi thoại / video (Zego Call Kit) ───────────────────────
+
+    /**
+     * Cấu hình 2 nút gọi (thoại/video). Invitees:
+     * 1-1 → đối phương; group → tất cả thành viên trừ mình.
+     * Ẩn nút nếu không có ai để gọi (vd nhóm chỉ còn mình).
+     */
+    private void setupCallButtons(View view) {
+        if (view == null) return;
+        com.zegocloud.uikit.prebuilt.call.invite.widget.ZegoSendCallInvitationButton btnVoice =
+                view.findViewById(R.id.btnCallVoice);
+        com.zegocloud.uikit.prebuilt.call.invite.widget.ZegoSendCallInvitationButton btnVideo =
+                view.findViewById(R.id.btnCallVideo);
+        if (btnVoice == null || btnVideo == null) return;
+
+        java.util.List<com.zegocloud.uikit.service.defines.ZegoUIKitUser> invitees = buildInvitees();
+        if (invitees.isEmpty()) {
+            btnVoice.setVisibility(View.GONE);
+            btnVideo.setVisibility(View.GONE);
+            return;
+        }
+
+        btnVoice.setIsVideoCall(false);
+        btnVoice.setResourceID("zego_call");
+        btnVoice.setInvitees(invitees);
+        btnVoice.setCustomData(conversationId); // G7.5 — để callee biết convo nào (check mutedCalls)
+
+        btnVideo.setIsVideoCall(true);
+        btnVideo.setResourceID("zego_call");
+        btnVideo.setInvitees(invitees);
+        btnVideo.setCustomData(conversationId);
+
+        btnVoice.setVisibility(View.VISIBLE);
+        btnVideo.setVisibility(View.VISIBLE);
+
+        // G7.4 — ghi context (conversation + loại gọi) khi bấm, KHÔNG nuốt sự kiện (return false)
+        // để Zego vẫn xử lý click gửi invitation như thường.
+        btnVoice.setOnTouchListener((v, e) -> {
+            if (e.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                com.example.frontend.ui.call.ZegoCallManager.onCallInitiated(conversationId, false);
+            }
+            return false;
+        });
+        btnVideo.setOnTouchListener((v, e) -> {
+            if (e.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                com.example.frontend.ui.call.ZegoCallManager.onCallInitiated(conversationId, true);
+            }
+            return false;
+        });
+    }
+
+    private java.util.List<com.zegocloud.uikit.service.defines.ZegoUIKitUser> buildInvitees() {
+        java.util.List<com.zegocloud.uikit.service.defines.ZegoUIKitUser> list = new java.util.ArrayList<>();
+        if (isGroup) {
+            if (members != null) {
+                for (User m : members) {
+                    if (m == null || m.getId() == null) continue;
+                    if (m.getId().equals(currentUserId)) continue;
+                    list.add(new com.zegocloud.uikit.service.defines.ZegoUIKitUser(m.getId(), nameForInvitee(m)));
+                }
+            }
+        } else if (otherMember != null && otherMember.getId() != null) {
+            list.add(new com.zegocloud.uikit.service.defines.ZegoUIKitUser(
+                    otherMember.getId(), nameForInvitee(otherMember)));
+        }
+        return list;
+    }
+
+    private String nameForInvitee(User u) {
+        String n = getMemberDisplayName(u);
+        if (n != null && !n.isEmpty()) return n;
+        if (u.getUsername() != null) return u.getUsername();
+        return u.getId() != null ? u.getId() : "User";
+    }
+
     // ─────────────────────── Header: profile + options ───────────────────────
 
     /** Mở trang cá nhân của đối phương. Activity đã có sẵn (không sửa). */
@@ -473,6 +551,8 @@ public class ChatDetailFragment extends Fragment {
         adminId = updated.getAdmin();
         if (updated.getNicknames() != null) nicknames = new HashMap<>(updated.getNicknames());
         tvChatName.setText(resolveDisplayName());
+        // G7 — invitees đổi theo danh sách thành viên mới
+        setupCallButtons(getView());
         Toast.makeText(getContext(), "Đã cập nhật thành viên", Toast.LENGTH_SHORT).show();
     }
 
@@ -691,6 +771,9 @@ public class ChatDetailFragment extends Fragment {
                     // cập nhật state local
                     mutedMessages = applyMute(mutedMessages, muteMessages);
                     mutedCalls = applyMute(mutedCalls, muteCalls);
+                    // G7.5 — đồng bộ tập muted-call để chặn cuộc gọi đến ngay (không cần chờ refresh)
+                    com.example.frontend.ui.call.ZegoCallManager
+                            .setMutedCallConversation(conversationId, muteCalls);
                     Toast.makeText(getContext(), "Đã cập nhật thông báo", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getContext(), "Cập nhật thất bại", Toast.LENGTH_SHORT).show();

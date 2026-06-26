@@ -74,6 +74,10 @@ export const getConversations = async (
       const muted =
         Array.isArray(obj.mutedMessages) &&
         obj.mutedMessages.some((u: any) => u.toString() === userId.toString());
+      // Đã tắt thông báo CUỘC GỌI cho user này? (hiện icon riêng ở list — G7.5)
+      const mutedCall =
+        Array.isArray(obj.mutedCalls) &&
+        obj.mutedCalls.some((u: any) => u.toString() === userId.toString());
 
       let unread = false;
       // Conversation đã mute thì KHÔNG tính chưa-đọc (không chấm xanh / không in đậm)
@@ -89,6 +93,7 @@ export const getConversations = async (
       }
       obj.unread = unread;
       obj.muted = muted;
+      obj.mutedCall = mutedCall;
       return obj;
     });
 
@@ -523,6 +528,64 @@ export const renameGroup = async (
 
     // Trả tối giản (tránh members chưa populate)
     res.json({ success: true, data: { name: conversation.name } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// GET /api/chat/muted-calls - Danh sách conversationId mà user đã TẮT thông báo CUỘC GỌI (G7.5).
+// Client dùng để chặn hiện màn cuộc gọi đến cho các conversation này. (Chỉ mutedCalls, KHÔNG dính mutedMessages.)
+export const getMutedCalls = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const convs = await Conversation.find({
+      members: userId,
+      mutedCalls: userId,
+    }).select("_id");
+    res.json({ success: true, data: convs.map((c) => c._id.toString()) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// POST /api/chat/conversations/:conversationId/call-log - Ghi lại 1 cuộc gọi vào đoạn chat (G7.4)
+// Body: { callType?: "audio"|"video", status?: "ended"|"missed", duration?: number (giây) }
+// Tạo system message kiểu "Cuộc gọi video · 0:44" / "Cuộc gọi thoại nhỡ" → cả 2 phía đều thấy.
+export const callLog = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const { conversationId } = req.params;
+    const { callType, status, duration } = req.body as {
+      callType?: string;
+      status?: string;
+      duration?: number;
+    };
+
+    const conversation = await Conversation.findOne({ _id: conversationId, members: userId });
+    if (!conversation) {
+      res.status(403).json({ success: false, message: "Không có quyền truy cập" });
+      return;
+    }
+
+    const kind = callType === "video" ? "video" : "thoại";
+    let text: string;
+    if (status === "missed") {
+      text = `Cuộc gọi ${kind} nhỡ`;
+    } else {
+      const sec = Math.max(0, Math.floor(Number(duration) || 0));
+      const mm = Math.floor(sec / 60);
+      const ss = sec % 60;
+      text = `Cuộc gọi ${kind} · ${mm}:${ss.toString().padStart(2, "0")}`;
+    }
+
+    await sendSystemMessage(conversationId, userId, text);
+    res.json({ success: true, message: "ok" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server" });
   }

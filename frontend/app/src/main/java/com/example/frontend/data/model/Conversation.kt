@@ -48,6 +48,10 @@ data class Conversation(
     @SerializedName("muted")
     val muted: Boolean = false,
 
+    // Đã tắt thông báo cuộc gọi cho mình (BE tính từ mutedCalls) → hiện icon chuông gạch (G7.5)
+    @SerializedName("mutedCall")
+    val mutedCall: Boolean = false,
+
     @SerializedName("createdAt")
     val createdAt: Date? = null,
 
