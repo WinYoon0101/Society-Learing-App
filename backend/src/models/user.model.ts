@@ -8,7 +8,7 @@ export interface IUser extends Document {
   password: string;
   dateOfBirth?: string;
   gender?: String;
-  avatar?: string;
+  avatar?: string | null;
   profileCover?: string;
   bio?: string;
   isVerified: boolean;
@@ -21,7 +21,7 @@ export interface IUser extends Document {
   comparePassword(candidatePassword: string): Promise<boolean>;
   hometown?: string;
   location?: string;
-  cover?: string;
+  cover?: string | null;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -86,7 +86,8 @@ const UserSchema = new Schema<IUser>(
       ref: "Document",
       default: [],
     },
-    savedPosts: { // lưu bài viết
+    savedPosts: {
+      // lưu bài viết
       type: [Schema.Types.ObjectId],
       ref: "Post",
       default: [],

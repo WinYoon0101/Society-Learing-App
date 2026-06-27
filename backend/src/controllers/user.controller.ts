@@ -93,7 +93,7 @@ export const updateProfile = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const { bio, hometown, location, dateOfBirth, gender } = req.body;
+    const { username, bio, hometown, location, dateOfBirth, gender } = req.body;
 
     if (!bio && !hometown && !location && !dateOfBirth && !gender) {
       res.status(400).json({
@@ -106,6 +106,7 @@ export const updateProfile = async (
     const user = await User.findByIdAndUpdate(
       userId,
       {
+        ...(username !== undefined && { username }),
         ...(bio !== undefined && { bio }),
         ...(hometown !== undefined && { hometown }),
         ...(location !== undefined && { location }),
@@ -127,6 +128,7 @@ export const updateProfile = async (
       success: true,
       message: "Cập nhật profile thành công!",
       data: {
+        username: user.username,
         bio: user.bio,
         hometown: user.hometown,
         location: user.location,
@@ -298,4 +300,37 @@ export const getUserById = async (req: AuthRequest, res: Response) => {
       success: false,
     });
   }
+};
+
+export const deleteAvatar = async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.id;
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+  user.avatar = null;
+  await user.save();
+  console.log("Avatar sau khi lưu:", user.avatar);
+  res.json({
+    success: true,
+  });
+};
+
+export const deleteCover = async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.id;
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+  user.cover = null;
+  await user.save();
+  res.json({
+    success: true,
+  });
 };

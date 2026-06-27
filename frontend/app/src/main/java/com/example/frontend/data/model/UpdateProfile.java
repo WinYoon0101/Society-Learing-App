@@ -8,7 +8,8 @@ public class UpdateProfile {
     private String gender;
     private String dateOfBirth;
 
-    public UpdateProfile(String bio, String location, String hometown, String gender, String dateOfBirth) {
+    public UpdateProfile(String username, String bio, String location, String hometown, String gender, String dateOfBirth) {
+        this.username = username;
         this.bio = bio;
         this.location = location;
         this.hometown = hometown;

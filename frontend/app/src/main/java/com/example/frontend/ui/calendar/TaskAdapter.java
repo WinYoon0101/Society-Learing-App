@@ -2,12 +2,14 @@ package com.example.frontend.ui.calendar;
 
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -50,23 +52,30 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         holder.txtTitle.setText(task.getTitle());
         holder.txtDescription.setText(task.getDescription());
         formatDateTime(task.getDueDate(), holder);
+        int priorityColor;
+
         switch (task.getPriority()) {
             case "daily":
-                holder.viewPriority.setBackgroundColor(Color.parseColor("#10B981"));
+                priorityColor = Color.parseColor("#10B981");
                 break;
 
             case "medium":
-                holder.viewPriority.setBackgroundColor(Color.parseColor("#F59E0B"));
+                priorityColor = Color.parseColor("#F59E0B");
                 break;
 
             case "high":
-                holder.viewPriority.setBackgroundColor(Color.parseColor("#EF4444"));
+                priorityColor = Color.parseColor("#EF4444");
                 break;
 
             default:
-                holder.viewPriority.setBackgroundColor(Color.GRAY);
+                priorityColor = Color.GRAY;
                 break;
         }
+        String desc = task.getDescription();
+        holder.txtDescription.setText(
+                desc == null ? "" : desc
+        );
+        holder.viewPriority.setBackgroundColor(priorityColor);
         boolean completed = "completed".equals(task.getStatus());
         if (completed) {
             holder.cardTask.setCardBackgroundColor(Color.parseColor("#F3F4F6"));
@@ -81,14 +90,20 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             holder.txtDescription.setPaintFlags(holder.txtDescription.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
             holder.txtTitle.setTextColor(Color.parseColor("#111827"));
             holder.txtDescription.setTextColor(Color.parseColor("#6B7280"));
+            holder.viewPriority.setBackgroundColor(priorityColor);
         }
         holder.cbDone.setOnCheckedChangeListener(null);
         holder.cbDone.setChecked(completed);
         holder.cbDone.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (!isChecked) {
+                task.setStatus("completed");
+            } else {
+                task.setStatus("pending");
+            }
+            notifyItemChanged(holder.getAdapterPosition());
             if (listener != null) {
                 listener.onToggleStatus(task);
             }
-
         });
 
         holder.btnDelete.setOnClickListener(v -> {

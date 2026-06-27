@@ -49,6 +49,7 @@ public class CalendarActivity extends AppCompatActivity {
     private Chip chipOverdue;
     private List<Chip> chips;
     private TextView txtSelectedDate;
+    private String currentFilter = "daily";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,26 +83,31 @@ public class CalendarActivity extends AppCompatActivity {
             sheet.show(getSupportFragmentManager(), "ADD_TASK");
         });
         chipAll.setOnClickListener(v -> {
+            currentFilter = "all";
             selectChip(chipAll);
             filterTasks("all");
         });
 
         chipDaily.setOnClickListener(v -> {
+            currentFilter = "daily";
             selectChip(chipDaily);
             filterTasks("daily");
         });
 
         chipImportant.setOnClickListener(v -> {
+            currentFilter = "medium";
             selectChip(chipImportant);
             filterTasks("medium");
         });
 
         chipUrgent.setOnClickListener(v -> {
+            currentFilter = "high";
             selectChip(chipUrgent);
             filterTasks("high");
         });
 
         chipOverdue.setOnClickListener(v -> {
+            currentFilter = "overdue";
             selectChip(chipOverdue);
             filterTasks("overdue");
         });
@@ -144,13 +150,18 @@ public class CalendarActivity extends AppCompatActivity {
         loadTasks();
         selectChip(chipDaily);
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadTasks();
+    }
     private void loadTasks() {
         repository.getTasks().enqueue(new Callback<List<Task>>() {
             @Override
             public void onResponse(Call<List<Task>> call, Response<List<Task>> response) {
                 if(response.isSuccessful() && response.body()!=null){
                     allTasks = response.body();
-                    adapter.setTasks(allTasks);
+                    filterTasks(currentFilter);
                     updateProgress();
                 }
 

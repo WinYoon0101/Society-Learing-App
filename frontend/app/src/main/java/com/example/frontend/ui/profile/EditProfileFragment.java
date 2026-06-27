@@ -27,7 +27,7 @@ import java.util.Calendar;
 
 public class EditProfileFragment extends Fragment {
 
-    private EditText edtBio, edtLocation, edtHometown, edtGender, edtBirthday;
+    private EditText edtBio, edtLocation, edtHometown, edtGender, edtBirthday, edtUserName;
     private Button btnSave;
     private ImageButton btnBack;
     private boolean isChanged = false;
@@ -47,6 +47,7 @@ public class EditProfileFragment extends Fragment {
         edtBirthday = view.findViewById(R.id.edtBirthday);
         btnSave = view.findViewById(R.id.btnSave);
         btnBack = view.findViewById(R.id.btnBack);
+        edtUserName = view.findViewById(R.id.edtUserName);
 
         repository = new UserRepository(requireContext());
 
@@ -107,6 +108,7 @@ public class EditProfileFragment extends Fragment {
 
                 User u = r.data;
 
+                edtUserName.setText(u.getUsername());
                 edtBio.setText(u.getBio());
                 edtLocation.setText(u.getLocation());
                 edtHometown.setText(u.getHometown());
@@ -128,7 +130,7 @@ public class EditProfileFragment extends Fragment {
                 }
             }
         };
-
+        edtUserName.addTextChangedListener(watcher);
         edtBio.addTextChangedListener(watcher);
         edtLocation.addTextChangedListener(watcher);
         edtHometown.addTextChangedListener(watcher);
@@ -152,11 +154,13 @@ public class EditProfileFragment extends Fragment {
         }
     }
     private void confirmSave() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Lưu thay đổi?")
-                .setPositiveButton("Lưu", (d, w) -> saveData())
-                .setNegativeButton("Hủy", null)
-                .show();
+        String username = edtUserName.getText().toString().trim();
+        if (username.isEmpty()) {
+            new AlertDialog.Builder(requireContext()).setTitle("Tên người dùng không được để trống").setPositiveButton("OK", null).show();
+            return;
+        }
+        else
+            new AlertDialog.Builder(requireContext()).setTitle("Lưu thay đổi?").setPositiveButton("Lưu", (d, w) -> saveData()).setNegativeButton("Hủy", null).show();
     }
     private void saveData() {
 
@@ -170,6 +174,7 @@ public class EditProfileFragment extends Fragment {
         }
 
         UpdateProfile req = new UpdateProfile(
+                edtUserName.getText().toString(),
                 edtBio.getText().toString(),
                 edtLocation.getText().toString(),
                 edtHometown.getText().toString(),
