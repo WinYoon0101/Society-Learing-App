@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment;
 import com.example.admin.R;
 
 import com.example.admin.ui.dashboard.DashboardFragment;
-import com.example.admin.ui.reports.ReportsFragment;
+import com.example.admin.ui.notifications.NotificationsFragment;
 import com.example.admin.ui.posts.PostsFragment;
 import com.example.admin.ui.users.UsersFragment;
 
@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
         btnNavReports.setOnClickListener(v ->
-                selectTab(1, imgNavReports, new ReportsFragment())
+                selectTab(1, imgNavReports, new NotificationsFragment())
         );
 
         btnNavPosts.setOnClickListener(v ->

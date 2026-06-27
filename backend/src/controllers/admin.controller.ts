@@ -1,4 +1,4 @@
-import { Response } from "express";
+
 import { AuthRequest } from '../middlewares/auth.middleware'; // Import type AuthRequest của bạn
 import Post from '../models/post.model';
 import User from '../models/user.model';
@@ -6,6 +6,9 @@ import Comment from '../models/comment.model';
 import Reaction from '../models/reaction.model';
 import Media from '../models/media.model';
 import Report from '../models/report.model'; 
+import Notification from '../models/notification.model';
+import mongoose from 'mongoose';
+import { Request, Response } from "express";
 
 // =====================================
 // [DASHBOARD] LẤY THỐNG KÊ TỔNG QUAN
@@ -171,12 +174,20 @@ export const updateReportStatusAdmin = async (req: AuthRequest, res: Response): 
 };
 
 // =====================================
-// [POSTS] LẤY TẤT CẢ BÀI VIẾT TOÀN HỆ THỐNG
+// [POSTS] LẤY BÀI VIẾT (CÓ PHÂN TRANG)
 // =====================================
 export const getAllPostsAdmin = async (req: AuthRequest, res: Response): Promise<any> => {
     try {
+        // 1. Lấy page và limit từ query, mặc định là trang 1, mỗi trang 20 bài
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 20;
+        const skip = (page - 1) * limit;
+
+        // 2. Query có thêm skip() và limit()
         const posts = await Post.find()
             .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
             .populate('authorId', 'username avatar email')
             .lean();
 
@@ -235,5 +246,90 @@ export const getAllUsersAdmin = async (req: AuthRequest, res: Response): Promise
     } catch (error) {
         console.error("Lỗi Admin get users:", error);
         return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+};
+
+// =====================================
+// [USERS] KHÓA / MỞ KHÓA TÀI KHOẢN (BAN / UNBAN)
+// =====================================
+export const toggleUserStatusAdmin = async (req: AuthRequest, res: Response): Promise<any> => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
+        }
+
+        // Đảo ngược trạng thái hiện tại (Nếu đang true thì thành false và ngược lại)
+        user.isActive = !user.isActive;
+        await user.save();
+
+        const statusText = user.isActive ? "Mở khóa" : "Khóa";
+        return res.status(200).json({ 
+            success: true, 
+            message: `Đã ${statusText} tài khoản thành công`, 
+            data: user 
+        });
+    } catch (error) {
+        console.error("Lỗi Admin toggle user status:", error);
+        return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+};
+
+// =====================================
+// [NOTIFICATIONS] GỬI THÔNG BÁO HỆ THỐNG
+// =====================================
+export const sendSystemNotification = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const { content, userIds, type = 'system_notice' } = req.body;
+
+        if (!content) {
+            return res.status(400).json({ success: false, message: "Nội dung thông báo không được để trống" });
+        }
+
+        const SYSTEM_SENDER_ID = new mongoose.Types.ObjectId('000000000000000000000000');
+        const SYSTEM_TARGET_ID = new mongoose.Types.ObjectId('111111111111111111111111');
+
+        let targetUserIds: mongoose.Types.ObjectId[] = [];
+
+        // 1. Lọc danh sách người nhận
+        if (userIds && Array.isArray(userIds) && userIds.length > 0) {
+            targetUserIds = userIds; // Gửi cho nhóm cụ thể
+        } else {
+            // Lấy TẤT CẢ user trong hệ thống
+            const allUsers = await User.find({}).select('_id').lean();
+            targetUserIds = allUsers.map(u => u._id as mongoose.Types.ObjectId);
+        }
+
+        if (targetUserIds.length === 0) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng nào để nhận thông báo" });
+        }
+
+        // 2. Chuẩn bị mảng dữ liệu
+        const notificationsToInsert = targetUserIds.map(userId => ({
+            recipient: userId,
+            sender: SYSTEM_SENDER_ID, 
+            type: type, 
+            targetId: SYSTEM_TARGET_ID, 
+            content: content,
+            isRead: false
+        }));
+
+        // 3. Lưu vào database
+        await Notification.insertMany(notificationsToInsert);
+
+        return res.status(200).json({
+            success: true,
+            message: `Đã gửi thông báo hệ thống thành công tới ${targetUserIds.length} người dùng!`,
+            data: {
+                totalSent: targetUserIds.length,
+                type: type
+            }
+        });
+
+    } catch (error) {
+        console.error("Lỗi Admin gửi thông báo hệ thống:", error);
+        return res.status(500).json({ success: false, message: "Lỗi server khi gửi thông báo" });
     }
 };
