@@ -154,11 +154,13 @@ public class EditProfileFragment extends Fragment {
         }
     }
     private void confirmSave() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Lưu thay đổi?")
-                .setPositiveButton("Lưu", (d, w) -> saveData())
-                .setNegativeButton("Hủy", null)
-                .show();
+        String username = edtUserName.getText().toString().trim();
+        if (username.isEmpty()) {
+            new AlertDialog.Builder(requireContext()).setTitle("Tên người dùng không được để trống").setPositiveButton("OK", null).show();
+            return;
+        }
+        else
+            new AlertDialog.Builder(requireContext()).setTitle("Lưu thay đổi?").setPositiveButton("Lưu", (d, w) -> saveData()).setNegativeButton("Hủy", null).show();
     }
     private void saveData() {
 

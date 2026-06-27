@@ -145,6 +145,12 @@ public interface ApiService {
     @PUT("user/cover")
     Call<ApiResponse<CoverResponse>> uploadCover(@Part MultipartBody.Part file);
 
+    @DELETE("user/avatar")
+    Call<ApiResponse<Void>> deleteAvatar();
+
+    @DELETE("user/cover")
+    Call<ApiResponse<Void>> deleteCover();
+
     // ====== DOCUMENTS ======
     @GET("documents/me/list")
     Call<ApiResponse<DocumentListData>> getMyDocuments(@Query("page") int page, @Query("limit") int limit);

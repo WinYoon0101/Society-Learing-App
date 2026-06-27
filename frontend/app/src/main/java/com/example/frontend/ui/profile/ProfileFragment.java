@@ -149,6 +149,10 @@ public class ProfileFragment extends Fragment {
                     tvBio.setVisibility(View.VISIBLE);
                     tvBio.setText(user.getBio());
                 }
+                else {
+                    tvBio.setText("");
+                    tvBio.setVisibility(View.GONE);
+                }
                 oldAvatarUrl = user.getAvatar();
                 oldCoverUrl  = user.getCover();
                 if (!isSelectingImage) {
@@ -185,17 +189,37 @@ public class ProfileFragment extends Fragment {
         repository.getProfile().observe(getViewLifecycleOwner(), result -> {
             if (result.status != Result.Status.SUCCESS || result.data == null) return;
             User user = result.data;
-            setOptional(tvLocation, user.getLocation() != null ? "Đang ở " + user.getLocation() : null);
-            setOptional(tvHometown, user.getHometown() != null ? "Đến từ " + user.getHometown() : null);
             setOptional(tvBirthday, user.getBirthday() != null ? "Sinh ngày " + user.getBirthday() : null);
             setOptional(tvGender,   user.getGender()   != null ? "Giới tính: " + user.getGender() : null);
 
+            String location = user.getLocation();
+
+            if (location != null && !location.trim().isEmpty()) {
+                tvLocation.setVisibility(View.VISIBLE);
+                tvLocation.setText("Đang ở " + location);
+            } else {
+                tvLocation.setVisibility(View.GONE);
+            }
+
+            String hometown = user.getHometown();
+
+            if (hometown != null && !hometown.trim().isEmpty()) {
+                tvHometown.setVisibility(View.VISIBLE);
+                tvHometown.setText("Đến từ " + hometown);
+            } else {
+                tvHometown.setVisibility(View.GONE);
+            }
 
             // Nếu có ô avatar đăng bài thì hiển thị ảnh của user
-            if (imgPostAvatar != null && user.getAvatar() != null) {
-                Glide.with(requireContext()).load(user.getAvatar())
-                        .placeholder(R.drawable.ic_profile)
-                        .into(imgPostAvatar);
+            if (imgPostAvatar != null) {
+                if (user.getAvatar() == null || user.getAvatar().isEmpty()) {
+                    imgPostAvatar.setImageResource(R.drawable.ic_profile);
+                } else {
+                    Glide.with(requireContext())
+                            .load(user.getAvatar())
+                            .placeholder(R.drawable.ic_profile)
+                            .into(imgPostAvatar);
+                }
             }
 
         });
@@ -446,10 +470,26 @@ public class ProfileFragment extends Fragment {
 
     // ─── Edit avatar / cover ──────────────────────────────────────────────────
     private void showEditOptions() {
-        new AlertDialog.Builder(requireContext())
-                .setItems(new String[]{"Đổi Avatar", "Đổi Ảnh bìa"}, (dialog, which) -> {
-                    currentType = (which == 0) ? TYPE_AVATAR : TYPE_COVER;
-                    checkPermissionAndOpenGallery();
+        new AlertDialog.Builder(requireContext()).setItems(new String[]{"Đổi Avatar", "Đổi Ảnh bìa", "Xóa Avatar", "Xóa Ảnh bìa"}, (dialog, which) -> {
+                    switch (which) {
+                        case 0: // Đổi Avatar
+                            currentType = TYPE_AVATAR;
+                            checkPermissionAndOpenGallery();
+                            break;
+
+                        case 1: // Đổi Ảnh bìa
+                            currentType = TYPE_COVER;
+                            checkPermissionAndOpenGallery();
+                            break;
+
+                        case 2: // Xóa Avatar
+                            deleteAvatar();
+                            break;
+
+                        case 3: // Xóa Ảnh bìa
+                            deleteCover();
+                            break;
+                    }
                 }).show();
     }
 
@@ -500,6 +540,8 @@ public class ProfileFragment extends Fragment {
                                 requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
                                         .edit().putString("USER_AVATAR", r.data).apply();
                                 Toast.makeText(requireContext(), "Đổi ảnh đại diện thành công!", Toast.LENGTH_SHORT).show();
+                                loadProfile();
+                                showTabAll();
                             } else if (r.status == Result.Status.ERROR) {
                                 isSelectingImage = false;
                                 rollbackImage();
@@ -563,6 +605,30 @@ public class ProfileFragment extends Fragment {
         super.onResume();
         loadProfile();
         showTabAll();
+    }
+    private void deleteAvatar() {
+        new AlertDialog.Builder(requireContext()).setTitle("Xóa avatar?").setMessage("Avatar sẽ trở về ảnh mặc định.").setPositiveButton("Xóa", (d, w) -> {
+            repository.deleteAvatar().observe(getViewLifecycleOwner(), result -> {
+                if (result.status == Result.Status.SUCCESS) {
+                    oldAvatarUrl = null;
+                    imgAvatar.setImageResource(R.drawable.ic_profile);
+                    loadProfile();
+                    showTabAll();
+                    Toast.makeText(requireContext(), "Đổi ảnh đại diện thành công!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }).setNegativeButton("Hủy", null).show();
+    }
+    private void deleteCover() {
+        new AlertDialog.Builder(requireContext()).setTitle("Xóa ảnh bìa?").setMessage("Ảnh bìa sẽ trở về ảnh mặc định.").setPositiveButton("Xóa", (d, w) -> {
+            repository.deleteCover().observe(getViewLifecycleOwner(), result -> {
+                if (result.status == Result.Status.SUCCESS) {
+                    oldCoverUrl = null;
+                    imgCover.setImageResource(R.drawable.bg_cover_default);
+                    Toast.makeText(requireContext(), "Đổi ảnh bìa thành công!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }).setNegativeButton("Hủy", null).show();
     }
 }
 

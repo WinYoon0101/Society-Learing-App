@@ -301,3 +301,36 @@ export const getUserById = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
+export const deleteAvatar = async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.id;
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+  user.avatar = null;
+  await user.save();
+  console.log("Avatar sau khi lưu:", user.avatar);
+  res.json({
+    success: true,
+  });
+};
+
+export const deleteCover = async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.id;
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+  user.cover = null;
+  await user.save();
+  res.json({
+    success: true,
+  });
+};

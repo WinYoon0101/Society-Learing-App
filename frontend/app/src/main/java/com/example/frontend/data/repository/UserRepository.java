@@ -177,4 +177,57 @@ public class UserRepository {
                 liveData.postValue(Result.error(t.getMessage(),null));}
                 });
     }
+
+    public LiveData<Result<Void>> deleteAvatar() {
+        MutableLiveData<Result<Void>> liveData = new MutableLiveData<>();
+        liveData.setValue(Result.loading());
+
+        api.deleteAvatar().enqueue(new Callback<ApiResponse<Void>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call,
+                                   Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    liveData.postValue(Result.success(null));
+                } else {
+                    liveData.postValue(Result.error("Delete avatar failed"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+
+        return liveData;
+    }
+
+    public LiveData<Result<Void>> deleteCover() {
+        MutableLiveData<Result<Void>> liveData = new MutableLiveData<>();
+        liveData.setValue(Result.loading());
+
+        api.deleteCover().enqueue(new Callback<ApiResponse<Void>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call,
+                                   Response<ApiResponse<Void>> response) {
+
+                if (response.isSuccessful()
+                        && response.body() != null
+                        && response.body().isSuccess()) {
+
+                    liveData.postValue(Result.success(null));
+
+                } else {
+                    liveData.postValue(Result.error("Delete cover failed"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage()));
+            }
+        });
+
+        return liveData;
+    }
 }
