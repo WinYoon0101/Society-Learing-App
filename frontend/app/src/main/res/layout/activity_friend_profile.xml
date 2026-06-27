@@ -1,89 +1,311 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://tools.android.com/tools"
-    android:id="@+id/profileRootContainer"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
-    <androidx.core.widget.NestedScrollView
+    <androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#F5F5F0">
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/imgCover"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/bg_cover_default"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_margin="16dp"
+            android:background="@drawable/bg_circle_white"
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="#10B981"
+
+            app:layout_constraintTop_toTopOf="@id/imgCover"
+            app:layout_constraintStart_toStartOf="@id/imgCover"/>
+
+        <ImageView
+            android:id="@+id/imgAvatar"
+            android:layout_width="110dp"
+            android:layout_height="110dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_profile"
+            android:background="@drawable/bg_cirle"
+            android:clipToOutline="true"
+
+            app:layout_constraintTop_toBottomOf="@id/imgCover"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+
+            android:layout_marginTop="-55dp"/>
+
+        <TextView
+            android:id="@+id/tvFriendName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:textStyle="bold"
+
+            app:layout_constraintTop_toBottomOf="@id/imgAvatar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+
+            android:layout_marginTop="8dp"/>
+
+        <TextView
+            android:id="@+id/tvBio"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:visibility="gone"
+            android:textSize="14sp"
+            android:textColor="#666"
+            android:gravity="center"
+
+            app:layout_constraintTop_toBottomOf="@id/tvFriendName"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"/>
+
+        <TextView
+            android:id="@+id/tvStats"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="13sp"
+            android:textColor="#888"
+            android:gravity="center"
+
+            app:layout_constraintTop_toBottomOf="@id/tvBio"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+
+            android:layout_marginTop="6dp"/>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddFriend"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:text="Bạn bè"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#10B981"
+
+            app:cornerRadius="14dp"
+            app:iconTint="#FFFFFF"
+            app:iconPadding="8dp"
+
+            app:layout_constraintTop_toBottomOf="@id/tvStats"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnMessage"
+
+            android:layout_marginTop="18dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnMessage"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:text="Nhắn tin"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:textColor="#10B981"
+            android:backgroundTint="#D1FAE5"
+
+            app:cornerRadius="14dp"
+            app:icon="@drawable/ic_chat"
+            app:iconTint="#10B981"
+            app:iconPadding="8dp"
+
+            app:layout_constraintTop_toTopOf="@id/btnAddFriend"
+            app:layout_constraintStart_toEndOf="@id/btnAddFriend"
+            app:layout_constraintEnd_toEndOf="parent"
+
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"/>
 
         <LinearLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/btnAddFriend"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+            <LinearLayout
+                android:id="@+id/tabAll"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:background="@drawable/bg_tab_select">
+
+                <TextView
+                    android:id="@+id/txtAll"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Giới thiệu"
+                    android:textColor="#10B981"
+                    android:textStyle="bold"
+                    android:textSize="15sp"/>
+
+                <!-- Giữ id để Java không lỗi -->
+                <View
+                    android:id="@+id/lineAll"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"/>
+
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/tabPic"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                app:layout_constraintTop_toBottomOf="@id/tabLayout"
+                app:layout_constraintStart_toStartOf="parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:background="@android:color/transparent">
+
+                <TextView
+                    android:id="@+id/txtPic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ảnh"
+                    android:textColor="#6B7280"
+                    android:textStyle="bold"
+                    android:textSize="15sp"/>
+
+                <View
+                    android:id="@+id/linePic"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"/>
+
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/tabFriends"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:background="@android:color/transparent">
+
+                <TextView
+                    android:id="@+id/txtFriends"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bạn bè"
+                    android:textColor="#6B7280"
+                    android:textStyle="bold"
+                    android:textSize="15sp"/>
+
+                <View
+                    android:id="@+id/lineFriends"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"/>
+
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/tabProfile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            app:layout_constraintTop_toBottomOf="@id/tabLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            android:padding="18dp">
 
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:background="#FFFFFF"
-                android:paddingHorizontal="8dp"
-                android:elevation="2dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Thông tin cá nhân"
+                android:textColor="#111827"
+                android:textSize="19sp"
+                android:textStyle="bold"/>
 
-                <ImageButton
-                    android:id="@+id/btnBack"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_centerVertical="true"
-                    android:src="@drawable/ic_arrow_back"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    app:tint="#283633"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:text="Trang cá nhân"
-                    android:textSize="17sp"
-                    android:textStyle="bold"
-                    android:textColor="#283633"/>
-            </RelativeLayout>
-
-            <LinearLayout
+            <TextView
+                android:id="@+id/tvLocation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="#FFFFFF"
-                android:paddingVertical="24dp"
-                android:gravity="center"
-                android:layout_marginBottom="8dp">
+                android:layout_marginTop="18dp"
+                android:drawableStart="@drawable/ic_home"
+                android:drawablePadding="14dp"
+                android:gravity="center_vertical"
+                android:textColor="#4B5563"
+                android:textSize="15sp"/>
 
-                <de.hdodenhof.circleimageview.CircleImageView
-                    android:id="@+id/imgAvatar"
-                    android:layout_width="90dp"
-                    android:layout_height="90dp"
-                    android:src="@drawable/ic_user"/>
-
-                <TextView
-                    android:id="@+id/tvFriendName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="#111827"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnMessage"
-                    android:layout_width="160dp"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="16dp"
-                    android:text="💬 Nhắn tin"
-                    android:textSize="14sp"
-                    android:textAllCaps="false"
-                    android:backgroundTint="#059669"
-                    android:textColor="#FFFFFF"/>
-            </LinearLayout>
-
-            <FrameLayout
-                android:id="@+id/friendPostsContainer"
+            <TextView
+                android:id="@+id/tvHometown"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:drawableStart="@drawable/ic_location"
+                android:drawablePadding="14dp"
+                android:textColor="#4B5563"
+                android:textSize="15sp"/>
+
+            <TextView
+                android:id="@+id/tvBirthday"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:drawableStart="@drawable/ic_calendar"
+                android:drawablePadding="14dp"
+                android:textColor="#4B5563"
+                android:textSize="15sp"/>
+
+            <TextView
+                android:id="@+id/tvGender"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:drawableStart="@drawable/ic_gender"
+                android:drawablePadding="14dp"
+                android:textColor="#4B5563"
+                android:textSize="15sp"/>
 
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+        <LinearLayout
+            android:id="@+id/tabPost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintTop_toBottomOf="@id/tabProfile"
+            app:layout_constraintStart_toStartOf="parent"
+            android:padding="18dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="18dp"
+            android:layout_marginBottom="10dp"
+            android:text="Bài viết"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="#1F2937"/>
 
-</FrameLayout>
+        <FrameLayout
+            android:id="@+id/friendPostsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

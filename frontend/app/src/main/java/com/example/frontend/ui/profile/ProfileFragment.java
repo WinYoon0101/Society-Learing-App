@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -38,6 +39,7 @@ import com.example.frontend.data.model.User;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.data.repository.UserRepository;
+import com.example.frontend.ui.main.HomeActivity;
 import com.example.frontend.utils.FileUtils;
 import com.example.frontend.utils.Result;
 import com.google.android.material.button.MaterialButton;
@@ -67,11 +69,12 @@ public class ProfileFragment extends Fragment {
     private TextView tvName, tvStats, tvBio;
     private Button btnEdit;
     private LinearLayout tabAll, tabFriends, tabPic;
-    private View lineAll, lineFriends, linePic;
+    TextView txtAll, txtPic, txtFriends;
     private FrameLayout contentContainer;
 
     private UserRepository repository;
     private ApiService apiService;
+    private Button btnChat;
 
     // ─── Launchers ────────────────────────────────────────────────────────────
     private final ActivityResultLauncher<String> pickImageLauncher =
@@ -106,10 +109,11 @@ public class ProfileFragment extends Fragment {
         tabAll         = view.findViewById(R.id.tabAll);
         tabFriends     = view.findViewById(R.id.tabFriends);
         tabPic         = view.findViewById(R.id.tabPic);
-        lineAll        = view.findViewById(R.id.lineAll);
-        lineFriends    = view.findViewById(R.id.lineFriends);
-        linePic        = view.findViewById(R.id.linePic);
+        txtAll = view.findViewById(R.id.txtAll);
+        txtPic = view.findViewById(R.id.txtPic);
+        txtFriends = view.findViewById(R.id.txtFriends);
         contentContainer = view.findViewById(R.id.contentContainer);
+        btnChat = view.findViewById(R.id.btnMessage);
 
         repository = new UserRepository(requireContext());
         apiService = ApiClient.getApiService(requireContext());
@@ -118,11 +122,13 @@ public class ProfileFragment extends Fragment {
 
         btnEdit.setOnClickListener(v -> showEditOptions());
 
-        tabAll.setOnClickListener(v -> { selectTab(lineAll); showTabAll(); });
-        tabFriends.setOnClickListener(v -> { selectTab(lineFriends); showTabFriends(); });
-        tabPic.setOnClickListener(v -> { selectTab(linePic); showTabPictures(); });
-
-        selectTab(lineAll);
+        tabAll.setOnClickListener(v -> {selectTab(tabAll);showTabAll();});
+        tabFriends.setOnClickListener(v -> {selectTab(tabFriends);showTabFriends();});
+        tabPic.setOnClickListener(v -> {selectTab(tabPic);showTabPictures();});
+        btnChat.setOnClickListener(v -> {
+            ((HomeActivity) requireActivity()).openChat();
+        });
+        selectTab(tabAll);
         showTabAll();
     }
 
@@ -514,11 +520,24 @@ public class ProfileFragment extends Fragment {
             Glide.with(requireContext()).load(oldCoverUrl).placeholder(R.drawable.bg_cover_default).into(imgCover);
     }
 
-    private void selectTab(View activeLine) {
-        lineAll.setVisibility(View.INVISIBLE);
-        lineFriends.setVisibility(View.INVISIBLE);
-        linePic.setVisibility(View.INVISIBLE);
-        activeLine.setVisibility(View.VISIBLE);
+    private void selectTab(LinearLayout selectedTab) {
+        tabAll.setBackgroundResource(android.R.color.transparent);
+        tabPic.setBackgroundResource(android.R.color.transparent);
+        tabFriends.setBackgroundResource(android.R.color.transparent);
+
+        txtAll.setTextColor(Color.parseColor("#6B7280"));
+        txtPic.setTextColor(Color.parseColor("#6B7280"));
+        txtFriends.setTextColor(Color.parseColor("#6B7280"));
+
+        selectedTab.setBackgroundResource(R.drawable.bg_tab_selected);
+
+        if (selectedTab == tabAll) {
+            txtAll.setTextColor(Color.parseColor("#10B981"));
+        } else if (selectedTab == tabPic) {
+            txtPic.setTextColor(Color.parseColor("#10B981"));
+        } else if (selectedTab == tabFriends) {
+            txtFriends.setTextColor(Color.parseColor("#10B981"));
+        }
     }
 
     private void setOptional(TextView tv, String text) {

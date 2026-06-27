@@ -2,7 +2,11 @@ package com.example.frontend.ui.profile;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.util.Log;
@@ -12,31 +16,87 @@ import androidx.lifecycle.MutableLiveData;
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.model.Conversation;
+import com.example.frontend.data.model.Friend;
+import com.example.frontend.data.model.User;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.data.repository.ChatRepository;
+import com.example.frontend.data.repository.FriendRepository;
+import com.example.frontend.data.repository.UserRepository;
 import com.example.frontend.ui.chat.ChatDetailActivity;
+import com.example.frontend.utils.Constants;
 import com.example.frontend.utils.Result;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.gson.Gson;
+
+import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class FriendProfileActivity extends AppCompatActivity {
-
-    private String friendId;
     private ChatRepository chatRepository;
-    private final MutableLiveData<Result<Conversation>> convLive = new MutableLiveData<>();
+    private UserRepository userRepository;
+    private FriendRepository friendRepository;
+    private MutableLiveData<Result<Conversation>> convLive = new MutableLiveData<>();
+    private ImageView imgCover;
+    private CircleImageView imgAvatar;
+    private TextView tvFriendName;
+    private TextView tvBio;
+    private TextView tvStats;
+    private TextView tvLocation;
+    private TextView tvHometown;
+    private TextView tvBirthday;
+    private TextView tvGender;
+    private MaterialButton btnFriend;
     private MaterialButton btnMessage;
+    private ImageButton btnBack;
+    private LinearLayout tabAll;
+    private LinearLayout tabPic;
+    private LinearLayout tabFriends;
+    private FrameLayout friendPostsContainer;
+    private MutableLiveData<Result<User>> userLiveData = new MutableLiveData<>();
+    private MutableLiveData<Result<List<Friend>>> friendLiveData = new MutableLiveData<>();
+    private MutableLiveData<Result<List<Friend>>> pendingLiveData = new MutableLiveData<>();
+    private MutableLiveData<Result<Object>> actionLiveData = new MutableLiveData<>();
+    private User currentUser;
+    private String friendId;
+    private boolean isFriend = false;
+    private boolean isPending = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friend_profile);
 
-        friendId = getIntent().getStringExtra("FRIEND_ID");
-        String friendName   = getIntent().getStringExtra("FRIEND_NAME");
-        String friendAvatar = getIntent().getStringExtra("FRIEND_AVATAR");
+        imgCover = findViewById(R.id.imgCover);
+        imgAvatar = findViewById(R.id.imgAvatar);
+
+        tvFriendName = findViewById(R.id.tvFriendName);
+        tvBio = findViewById(R.id.tvBio);
+        tvStats = findViewById(R.id.tvStats);
+
+        tvLocation = findViewById(R.id.tvLocation);
+        tvHometown = findViewById(R.id.tvHometown);
+        tvBirthday = findViewById(R.id.tvBirthday);
+        tvGender = findViewById(R.id.tvGender);
+
+        btnFriend = findViewById(R.id.btnAddFriend);
+        btnMessage = findViewById(R.id.btnMessage);
+
+        btnBack = findViewById(R.id.btnBack);
+
+        tabAll = findViewById(R.id.tabAll);
+        tabPic = findViewById(R.id.tabPic);
+        tabFriends = findViewById(R.id.tabFriends);
+
+        friendPostsContainer = findViewById(R.id.friendPostsContainer);
+        friendId = getIntent().getStringExtra("userId");
+        if(friendId == null){
+            finish();
+            return;
+        }
 
         ImageButton btnBack = findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> finish());
@@ -45,13 +105,9 @@ public class FriendProfileActivity extends AppCompatActivity {
         TextView tvName = findViewById(R.id.tvFriendName);
         btnMessage = findViewById(R.id.btnMessage);
 
-        tvName.setText(friendName != null ? friendName : "");
-        if (friendAvatar != null && !friendAvatar.isEmpty()) {
-            Glide.with(this).load(friendAvatar)
-                    .placeholder(R.drawable.ic_user).into(imgAvatar);
-        }
-
         chatRepository = new ChatRepository(this);
+        friendRepository = new FriendRepository(this);
+        userRepository = new UserRepository(this);
 
         // Nút nhắn tin → tạo/lấy conversation → mở ChatDetailActivity
         btnMessage.setOnClickListener(v -> {
@@ -102,5 +158,115 @@ public class FriendProfileActivity extends AppCompatActivity {
                     .replace(R.id.friendPostsContainer, ProfileFeedFragment.forUser(friendId))
                     .commit();
         }
+
+        actionLiveData.observe(this,result->{
+            if(result.status==Result.Status.SUCCESS){
+                Toast.makeText(this, "Đã hủy kết bạn", Toast.LENGTH_SHORT).show();
+                isFriend=false;
+                isPending=false;
+                updateFriendButton();
+            }
+        });
+    }
+    private void init(){
+        loadUser();
+        loadFriendStatus();
+        initClick();
+    }
+    private void loadUser(){userRepository.getUserById(friendId,userLiveData);
+        userLiveData.observe(this,result->{
+            if(result.status== Result.Status.SUCCESS){
+                currentUser=result.data;
+                bindUser();
+            }
+        });
+    }
+    private void bindUser(){
+        if(currentUser==null) return;
+        tvFriendName.setText(currentUser.getUsername());
+        tvBio.setText(currentUser.getBio());
+        tvLocation.setText(currentUser.getLocation());
+        tvHometown.setText(currentUser.getHometown());
+        tvBirthday.setText(currentUser.getBirthday());
+        tvGender.setText(currentUser.getGender());
+        Glide.with(this).load(currentUser.getAvatar()).placeholder(R.drawable.ic_profile).into(imgAvatar);
+        Glide.with(this).load(currentUser.getCover()).placeholder(R.drawable.bg_cover_default).into(imgCover);
+        tvStats.setText(currentUser.getFriendCount()+" bạn bè");
+    }
+    private void loadFriendStatus() {
+        friendRepository.getFriends(friendLiveData);
+        friendRepository.getPendingRequests(pendingLiveData);
+        friendLiveData.observe(this, result -> {
+            if (result.status != Result.Status.SUCCESS || result.data == null)
+                return;
+            isFriend = false;
+            for (Friend f : result.data) {
+                if (f.getId().equals(friendId)) {
+                    isFriend = true;
+                    break;
+                }
+            }
+            updateFriendButton();
+        });
+
+        pendingLiveData.observe(this, result -> {
+            if (result.status != Result.Status.SUCCESS || result.data == null)
+                return;
+            isPending = false;
+            for (Friend f : result.data) {
+                if (f.getId().equals(friendId)) {
+                    isPending = true;
+                    break;
+                }
+            }
+            updateFriendButton();
+        });
+    }
+    private void updateFriendButton() {
+        if (isFriend) {
+            btnFriend.setText("Bạn bè");
+            btnFriend.setBackgroundTintList(getColorStateList(R.color.green));
+            btnFriend.setTextColor(getColor(R.color.white));
+        }
+        else if (isPending) {
+            btnFriend.setText("Đã gửi lời mời");
+            btnFriend.setEnabled(false);
+            btnFriend.setBackgroundTintList(getColorStateList(R.color.gray));
+        }
+
+        else {
+            btnFriend.setEnabled(true);
+            btnFriend.setText("Thêm bạn bè");
+            btnFriend.setBackgroundTintList(getColorStateList(R.color.gray));
+            btnFriend.setTextColor(getColor(R.color.black));
+        }
+    }
+    private void initClick() {
+        btnFriend.setOnClickListener(v -> {
+            if (isFriend) {
+                showFriendBottomSheet();
+            }
+            else if (!isPending) {
+                friendRepository.sendFriendRequest(friendId, actionLiveData);
+            }
+        });
+    }
+    private void showFriendBottomSheet() {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View view = getLayoutInflater().inflate(R.layout.bottom_friend_action, null);
+        dialog.setContentView(view);
+        LinearLayout btnRemove = view.findViewById(R.id.btnRemoveFriend);
+        btnRemove.setOnClickListener(v -> {
+            dialog.dismiss();
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Hủy kết bạn")
+                    .setMessage("Bạn có chắc chắn muốn hủy kết bạn với " + currentUser.getUsername() + " không?")
+                    .setNegativeButton("Hủy", null)
+                    .setPositiveButton("Xác nhận", (d, which) -> {
+                        friendRepository.removeFriend(friendId, actionLiveData);
+                    })
+                    .show();
+        });
+        dialog.show();
     }
 }

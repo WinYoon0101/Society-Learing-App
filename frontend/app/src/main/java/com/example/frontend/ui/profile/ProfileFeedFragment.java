@@ -2,14 +2,17 @@ package com.example.frontend.ui.profile;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,6 +22,8 @@ import com.example.frontend.data.model.Post;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.ui.feed.CreatePostFragment;
+import com.example.frontend.ui.feed.FeedViewModel;
+import com.example.frontend.ui.feed.PostAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +38,10 @@ public class ProfileFeedFragment extends Fragment {
     public static final String ARG_USER_ID = "userId";
 
     private RecyclerView rvPosts;
-    private ProfilePostAdapter adapter;
+    private PostAdapter adapter;;
     private ApiService apiService;
     private TextView tvEmpty;
+    private FeedViewModel viewModel;
 
     public static ProfileFeedFragment forUser(String userId) {
         ProfileFeedFragment f = new ProfileFeedFragment();
@@ -58,7 +64,32 @@ public class ProfileFeedFragment extends Fragment {
         rvPosts  = view.findViewById(R.id.rvPosts);
         tvEmpty  = view.findViewById(R.id.tvEmptyPosts);
         rvPosts.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter  = new ProfilePostAdapter(getContext(), new ArrayList<>());
+        adapter = new PostAdapter(getContext(), new ArrayList<>(), (targetId, type) -> {
+            // Fix lỗi truyền Null cho Backend khi người dùng ấn Hủy Like
+            String reactionToSend = (type == null) ? "Like" : type;
+
+            if (viewModel != null) {
+                // CHÚ Ý: Truyền đúng chữ "Post" (không có s) để Backend Node.js nhận diện đúng
+                Log.d("DEBUG_REACT", "👉 Đang gửi API thả tim lên Server: " + reactionToSend);
+                viewModel.toggleReaction(targetId, "Post", reactionToSend);
+            }
+        });
+        adapter.setOnPostSaveListener(postId -> {
+            String token = "Bearer " + requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("JWT_TOKEN", "");
+            Toast.makeText(getContext(), "Đang xử lý...", Toast.LENGTH_SHORT).show();
+            viewModel.toggleSavePost(token, postId); // Ra lệnh cho ViewModel gọi API Lưu
+        });
+
+        // =======================================================
+        // BẮT SÓNG LỆNH XÓA TỪ ADAPTER TRUYỀN RA
+        // =======================================================
+        adapter.setOnPostDeleteListener(postId -> {
+            // Lấy Token của bạn để gửi lên Server chứng minh thân phận
+            String token = "Bearer " + requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).getString("JWT_TOKEN", "");
+
+            Toast.makeText(getContext(), "Đang xóa...", Toast.LENGTH_SHORT).show();
+            viewModel.deletePost(token, postId); // Ra lệnh cho ViewModel gọi API Xóa
+        });
         rvPosts.setAdapter(adapter);
         apiService = ApiClient.getApiService(requireContext());
 
@@ -72,7 +103,8 @@ public class ProfileFeedFragment extends Fragment {
                         .commit();
             });
         }
-
+        viewModel = new ViewModelProvider(this).get(FeedViewModel.class);
+        viewModel.init(getContext());
         loadPosts();
     }
 
