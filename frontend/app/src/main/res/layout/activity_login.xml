@@ -116,7 +116,7 @@
                         android:text="Ghi nhớ"
                         android:textSize="13sp"
                         android:textColor="#555555"
-                        android:buttonTint="#CCCCCC" />
+                        android:buttonTint="@drawable/checkbox_tint" />
 
                     <Space
                         android:layout_width="0dp"
