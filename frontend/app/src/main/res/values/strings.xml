@@ -18,4 +18,9 @@
     <string name="facebook_app_id">973642669011654</string>
     <string name="fb_login_protocol_scheme">fb973642669011654</string>
     <string name="facebook_client_token">b1001ff4899b69fa408d492e7fa4ed11</string>
+    <string name="tag_friends_title">Gắn thẻ bạn bè</string>
+    <string name="tag_count_default">0 đã chọn</string>
+    <string name="tag_search_hint">Tìm tên bạn bè</string>
+    <string name="tag_section_label">BẠN BÈ GỢI Ý</string>
+    <string name="tag_done">Xong</string>
 </resources>

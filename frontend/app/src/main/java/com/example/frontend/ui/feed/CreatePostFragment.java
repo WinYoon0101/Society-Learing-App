@@ -11,7 +11,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import androidx.appcompat.app.AlertDialog;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,9 +25,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
+import com.example.frontend.data.model.Friend;
 import com.example.frontend.data.model.User;
+import com.example.frontend.data.model.ApiResponse;
+import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.repository.UserRepository;
 import com.example.frontend.utils.Result;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +40,7 @@ public class CreatePostFragment extends Fragment {
     private EditText edtContent;
     private ImageView btnBack;
     private Button btnPost;
-    private LinearLayout btnPickImage, optFeeling, optTag, optVideo;
+    private LinearLayout btnPickImage, optFeeling, optTag;
     private LinearLayout btnPrivacy;
     private TextView tvPrivacyText;
     private ImageView imgPrivacyIcon;
@@ -128,7 +131,6 @@ public class CreatePostFragment extends Fragment {
             Toast.makeText(getContext(), "Đang đăng bài...", Toast.LENGTH_SHORT).show();
             List<String> tagIds = new ArrayList<>();
             for (User u : selectedTags) tagIds.add(u.getId());
-
             viewModel.uploadPost(getContext(), content, selectedPrivacy, selectedFeeling, selectedImageUris, groupId, tagIds, null);
         });
 
@@ -178,34 +180,80 @@ public class CreatePostFragment extends Fragment {
         }
     }
 
+    private void loadFriends(UserSearchAdapter adapter) {
+        ApiClient.getApiService(requireContext()).getFriends()
+                .enqueue(new retrofit2.Callback<ApiResponse<List<Friend>>>() {
+                    @Override
+                    public void onResponse(retrofit2.Call<ApiResponse<List<Friend>>> call,
+                                           retrofit2.Response<ApiResponse<List<Friend>>> response) {
+                        if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                            List<Friend> friends = response.body().getData();
+                            List<User> friendUsers = new ArrayList<>();
+                            if (friends != null) {
+                                for (Friend f : friends) {
+                                    friendUsers.add(new User(f.getId(), f.getUsername(), f.getAvatar()));
+                                }
+                            }
+                            adapter.updateData(friendUsers);
+                        }
+                    }
+                    @Override
+                    public void onFailure(retrofit2.Call<ApiResponse<List<Friend>>> call, Throwable t) {}
+                });
+    }
+
+    // 👉 ĐÃ FIX: Sử dụng BottomSheetDialog chuẩn thay cho AlertDialog
     private void openTagDialog() {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_user_search, null);
-        AlertDialog dialog = new AlertDialog.Builder(requireContext()).setView(dialogView).create();
+        bottomSheetDialog.setContentView(dialogView);
+
         EditText edtSearch = dialogView.findViewById(R.id.edtSearchUser);
         RecyclerView rvResults = dialogView.findViewById(R.id.rvUserResults);
         Button btnDone = dialogView.findViewById(R.id.btnDoneSearch);
+        TextView tvTagCount = dialogView.findViewById(R.id.tvTagCount);
+
         rvResults.setLayoutManager(new LinearLayoutManager(getContext()));
         UserSearchAdapter adapter = new UserSearchAdapter(new ArrayList<>(), selectedTags);
         rvResults.setAdapter(adapter);
+
+        if (tvTagCount != null) tvTagCount.setText(selectedTags.size() + " đã chọn");
+
+        adapter.setOnSelectionChangedListener(count -> {
+            if (tvTagCount != null) tvTagCount.setText(count + " đã chọn");
+        });
+
+        loadFriends(adapter);
 
         edtSearch.addTextChangedListener(new android.text.TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String q = s.toString().trim();
                 if (!q.isEmpty()) {
-                    com.example.frontend.data.remote.ApiClient.getApiService(requireContext()).searchUsers(q)
-                            .enqueue(new retrofit2.Callback<com.example.frontend.data.model.ApiResponse<java.util.List<User>>>() {
-                                @Override public void onResponse(retrofit2.Call<com.example.frontend.data.model.ApiResponse<java.util.List<User>>> call, retrofit2.Response<com.example.frontend.data.model.ApiResponse<java.util.List<User>>> response) {
-                                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) adapter.updateData(response.body().getData());
+                    ApiClient.getApiService(requireContext()).searchUsers(q)
+                            .enqueue(new retrofit2.Callback<ApiResponse<List<User>>>() {
+                                @Override public void onResponse(retrofit2.Call<ApiResponse<List<User>>> call,
+                                                                 retrofit2.Response<ApiResponse<List<User>>> response) {
+                                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess())
+                                        adapter.updateData(response.body().getData());
                                 }
-                                @Override public void onFailure(retrofit2.Call<com.example.frontend.data.model.ApiResponse<java.util.List<User>>> call, Throwable t) {}
+                                @Override public void onFailure(retrofit2.Call<ApiResponse<List<User>>> call, Throwable t) {}
                             });
-                } else adapter.updateData(new ArrayList<>());
+                } else {
+                    loadFriends(adapter);
+                }
             }
             @Override public void afterTextChanged(android.text.Editable s) {}
         });
-        btnDone.setOnClickListener(v -> { selectedTags = adapter.getSelectedUsers(); updateMetaText(); dialog.dismiss(); });
-        dialog.show();
+
+        btnDone.setOnClickListener(v -> {
+            selectedTags.clear();
+            selectedTags.addAll(adapter.getSelectedUsers());
+            updateMetaText();
+            bottomSheetDialog.dismiss();
+        });
+
+        bottomSheetDialog.show();
     }
 
     private void observeViewModel() {
@@ -219,7 +267,9 @@ public class CreatePostFragment extends Fragment {
                 else if (getActivity() != null) { getActivity().setResult(android.app.Activity.RESULT_OK); getActivity().finish(); }
             }
         });
-        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> { if (error != null) Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show(); });
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
+            if (error != null) Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+        });
     }
 
     private final ActivityResultLauncher<String> imagePickerLauncher = registerForActivityResult(
@@ -241,8 +291,14 @@ public class CreatePostFragment extends Fragment {
                 User user = result.data;
                 SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = prefs.edit();
-                if (user.getUsername() != null && !user.getUsername().isEmpty()) { editor.putString("USERNAME", user.getUsername()); if (tvUserName != null) tvUserName.setText(user.getUsername()); }
-                if (user.getAvatar() != null && !user.getAvatar().isEmpty()) { editor.putString("USER_AVATAR", user.getAvatar()); if (imgAvatar != null) Glide.with(this).load(user.getAvatar()).into(imgAvatar); }
+                if (user.getUsername() != null && !user.getUsername().isEmpty()) {
+                    editor.putString("USERNAME", user.getUsername());
+                    if (tvUserName != null) tvUserName.setText(user.getUsername());
+                }
+                if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+                    editor.putString("USER_AVATAR", user.getAvatar());
+                    if (imgAvatar != null) Glide.with(this).load(user.getAvatar()).into(imgAvatar);
+                }
                 editor.apply();
             }
         });
