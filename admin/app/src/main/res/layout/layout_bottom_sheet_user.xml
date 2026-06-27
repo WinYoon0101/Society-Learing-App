@@ -51,9 +51,17 @@
             android:layout_marginTop="16dp" android:padding="12dp" android:background="@drawable/bg_info_box"
             android:text="Tiểu sử..." android:textColor="#4B5563" />
 
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp">
-            <Button android:id="@+id/bs_btnToggleStatus" android:layout_width="0dp" android:layout_height="55dp" android:layout_weight="1" android:text="Khóa TK" app:cornerRadius="14dp" />
-            <Button android:id="@+id/bs_btnSendMessage" android:layout_width="0dp" android:layout_height="55dp" android:layout_marginStart="16dp" android:layout_weight="1" android:backgroundTint="#F3F4F6" android:text="Gửi thông báo" android:textColor="#374151" app:cornerRadius="14dp" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/bs_btnToggleStatus"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="24dp"
+            android:text="Khóa tài khoản"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#B91C1C"
+            android:backgroundTint="#FEE2E2"
+            app:cornerRadius="14dp" />
     </LinearLayout>
 </LinearLayout>

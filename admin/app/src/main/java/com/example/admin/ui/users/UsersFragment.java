@@ -140,7 +140,7 @@ public class UsersFragment extends Fragment {
             tvStatus.setTextColor(Color.parseColor("#991B1B"));
             tvStatus.setBackgroundColor(Color.parseColor("#FEE2E2"));
 
-            btnToggleStatus.setText("Mở khóa");
+            btnToggleStatus.setText("Mở khóa tài khoản");
             btnToggleStatus.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#D1FAE5")));
             btnToggleStatus.setTextColor(Color.parseColor("#065F46"));
         }

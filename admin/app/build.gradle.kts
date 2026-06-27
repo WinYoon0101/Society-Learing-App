@@ -10,6 +10,10 @@ android {
         }
     }
 
+    androidResources {
+        noCompress.add("tflite")
+    }
+
     defaultConfig {
         applicationId = "com.example.admin"
         minSdk = 24
@@ -33,6 +37,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
 }
 
 dependencies {
@@ -46,4 +51,6 @@ dependencies {
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("org.tensorflow:tensorflow-lite:2.16.1")
+    implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0")
 }

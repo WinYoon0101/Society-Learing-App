@@ -6,7 +6,8 @@ import {
     deletePostByAdmin,
     getAllReportsAdmin,       
     updateReportStatusAdmin,
-    toggleUserStatusAdmin
+    toggleUserStatusAdmin,
+    sendSystemNotification
 } from '../controllers/admin.controller';
 
 const router = express.Router();
@@ -27,5 +28,7 @@ router.get('/reports', getAllReportsAdmin);
 router.patch('/reports/:id/status', updateReportStatusAdmin); // Xử lý (đổi status)
 
 router.put('/users/:id/toggle-status', toggleUserStatusAdmin); 
+
+router.post('/notifications/send', sendSystemNotification);
 
 export default router;
