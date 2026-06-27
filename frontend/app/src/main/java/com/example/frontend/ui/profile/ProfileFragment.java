@@ -212,6 +212,7 @@ public class ProfileFragment extends Fragment {
             Intent intent = new Intent(requireContext(), CreatePostActivity.class);
             startActivity(intent);
         });
+
     }
 
     // ─── Tab FRIENDS ─────────────────────────────────────────────────────────
@@ -557,7 +558,12 @@ public class ProfileFragment extends Fragment {
         if (text != null && !text.isEmpty()) { tv.setVisibility(View.VISIBLE); tv.setText(text); }
         else tv.setVisibility(View.GONE);
     }
-
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadProfile();
+        showTabAll();
+    }
 }
 
 

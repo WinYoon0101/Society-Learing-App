@@ -93,7 +93,7 @@ export const updateProfile = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const { bio, hometown, location, dateOfBirth, gender } = req.body;
+    const { username, bio, hometown, location, dateOfBirth, gender } = req.body;
 
     if (!bio && !hometown && !location && !dateOfBirth && !gender) {
       res.status(400).json({
@@ -106,6 +106,7 @@ export const updateProfile = async (
     const user = await User.findByIdAndUpdate(
       userId,
       {
+        ...(username !== undefined && { username }),
         ...(bio !== undefined && { bio }),
         ...(hometown !== undefined && { hometown }),
         ...(location !== undefined && { location }),
@@ -127,6 +128,7 @@ export const updateProfile = async (
       success: true,
       message: "Cập nhật profile thành công!",
       data: {
+        username: user.username,
         bio: user.bio,
         hometown: user.hometown,
         location: user.location,
