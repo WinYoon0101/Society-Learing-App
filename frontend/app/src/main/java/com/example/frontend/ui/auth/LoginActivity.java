@@ -1,5 +1,8 @@
 package com.example.frontend.ui.auth;
+import org.json.JSONObject;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -77,6 +80,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private LoginButton fbLoginButton;
 
+    @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -551,19 +555,75 @@ public class LoginActivity extends AppCompatActivity {
                             break;
 
                         case ERROR:
-
                             btnLogin.setEnabled(true);
-
                             btnLogin.setText("Đăng nhập");
 
-                            Toast.makeText(
-                                    this,
-                                    result.message,
-                                    Toast.LENGTH_LONG
-                            ).show();
+                            // 1. Dịch lỗi từ JSON sang Text
+                            String cleanMessage = parseErrorMessage(result.message);
 
+                            // 2. Kiểm tra xem lỗi có phải do bị khóa không
+                            if (cleanMessage.toLowerCase().contains("vô hiệu hóa") || cleanMessage.toLowerCase().contains("khóa")) {
+                                showAccountDisabledDialog(cleanMessage);
+                            } else {
+                                Toast.makeText(LoginActivity.this, cleanMessage, Toast.LENGTH_LONG).show();
+                            }
                             break;
                     }
                 });
+    }
+    // Hàm bóc tách chuỗi lỗi JSON thành text bình thường
+    private String parseErrorMessage(String rawMessage) {
+        try {
+            JSONObject jsonObject = new JSONObject(rawMessage);
+            if (jsonObject.has("message")) {
+                return jsonObject.getString("message"); // Lấy đúng phần thông báo
+            }
+        } catch (Exception e) {
+            // Nếu không phải chuỗi JSON thì trả về nguyên gốc
+        }
+        return rawMessage;
+    }
+
+    // Hàm hiển thị Dialog khi tài khoản bị khóa
+    private void showAccountDisabledDialog(String message) {
+        // Tạo Dialog
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.setContentView(R.layout.dialog_account_disabled);
+
+        // Làm trong suốt nền mặc định của Dialog để thấy được góc bo tròn của CardView
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            // Set chiều rộng chiếm 90% màn hình
+            dialog.getWindow().setLayout((int) (getResources().getDisplayMetrics().widthPixels * 0.90), android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        dialog.setCancelable(false); // Bắt buộc phải bấm nút mới tắt được
+
+        // Ánh xạ View
+        MaterialButton btnCloseDialog = dialog.findViewById(R.id.btnCloseDialog);
+        MaterialButton btnContactSupport = dialog.findViewById(R.id.btnContactSupport);
+
+
+
+        // Xử lý nút Đóng
+        btnCloseDialog.setOnClickListener(v -> dialog.dismiss());
+
+        // Xử lý nút Liên hệ hỗ trợ
+        btnContactSupport.setOnClickListener(v -> {
+            dialog.dismiss();
+            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+            emailIntent.setData(android.net.Uri.parse("mailto:hotro@society.com"));
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Hỗ trợ tài khoản bị vô hiệu hóa");
+            emailIntent.putExtra(Intent.EXTRA_TEXT, "Chào admin, tài khoản của tôi (email đăng nhập: " + edtEmail.getText().toString() + ") đang bị vô hiệu hóa. Xin vui lòng xem xét lại.");
+
+            try {
+                startActivity(Intent.createChooser(emailIntent, "Gửi email hỗ trợ qua..."));
+            } catch (android.content.ActivityNotFoundException ex) {
+                Toast.makeText(LoginActivity.this, "Không tìm thấy ứng dụng gửi email.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Hiển thị Dialog
+        dialog.show();
     }
 }
