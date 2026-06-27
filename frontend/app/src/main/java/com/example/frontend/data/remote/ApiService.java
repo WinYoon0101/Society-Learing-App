@@ -511,7 +511,7 @@ public interface ApiService {
     @DELETE("task/{id}")
     Call<Void> deleteTask(@Path("id") String id);
 
-    @PATCH("task/{id}/toggle")
+    @PATCH("task/{id}/status")
     Call<Task> toggleStatus(@Path("id") String id);
 
 

@@ -202,7 +202,10 @@ public class BottomSheetAddTask extends BottomSheetDialogFragment {
             @Override
             public void onResponse(Call<Task> call, Response<Task> response) {
                 if(response.isSuccessful()){
-                    Toast.makeText(requireContext(),"Đã thêm công việc",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Đã thêm công việc", Toast.LENGTH_SHORT).show();
+                    if(listener != null){
+                        listener.onTaskSaved();
+                    }
                     dismiss();
                 }else{
                     Toast.makeText(requireContext(),"Thêm thất bại",Toast.LENGTH_SHORT).show();}
