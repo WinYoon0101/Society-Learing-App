@@ -39,7 +39,9 @@ import com.example.frontend.data.model.User;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.data.repository.UserRepository;
+import com.example.frontend.ui.feed.CreatePostActivity;
 import com.example.frontend.ui.main.HomeActivity;
+import com.example.frontend.ui.story.CreateStoryActivity;
 import com.example.frontend.utils.FileUtils;
 import com.example.frontend.utils.Result;
 import com.google.android.material.button.MaterialButton;
@@ -75,6 +77,7 @@ public class ProfileFragment extends Fragment {
     private UserRepository repository;
     private ApiService apiService;
     private Button btnChat;
+    private Button btnStory;
 
     // ─── Launchers ────────────────────────────────────────────────────────────
     private final ActivityResultLauncher<String> pickImageLauncher =
@@ -114,6 +117,7 @@ public class ProfileFragment extends Fragment {
         txtFriends = view.findViewById(R.id.txtFriends);
         contentContainer = view.findViewById(R.id.contentContainer);
         btnChat = view.findViewById(R.id.btnMessage);
+        btnStory = view.findViewById(R.id.btnAddStory);
 
         repository = new UserRepository(requireContext());
         apiService = ApiClient.getApiService(requireContext());
@@ -130,6 +134,8 @@ public class ProfileFragment extends Fragment {
         });
         selectTab(tabAll);
         showTabAll();
+        btnStory.setOnClickListener(v->{Intent intent = new Intent(requireContext(), CreateStoryActivity.class);
+            startActivity(intent);});
     }
 
     // ─── Load profile header ──────────────────────────────────────────────────
@@ -168,6 +174,7 @@ public class ProfileFragment extends Fragment {
         TextView tvBirthday = v.findViewById(R.id.tvBirthday);
         TextView tvGender   = v.findViewById(R.id.tvGender);
         Button btnEditDetails = v.findViewById(R.id.btnEditDetails);
+        LinearLayout btnCreatePost = v.findViewById(R.id.btnCreatePost);
 
 
         // FIX: Tải ảnh avatar vào phần "Bạn đang nghĩ gì"
@@ -200,6 +207,11 @@ public class ProfileFragment extends Fragment {
         getChildFragmentManager().beginTransaction()
                 .replace(feedContainer.getId(), new ProfileFeedFragment())
                 .commit();
+
+        btnCreatePost.setOnClickListener(b -> {
+            Intent intent = new Intent(requireContext(), CreatePostActivity.class);
+            startActivity(intent);
+        });
     }
 
     // ─── Tab FRIENDS ─────────────────────────────────────────────────────────
@@ -529,7 +541,7 @@ public class ProfileFragment extends Fragment {
         txtPic.setTextColor(Color.parseColor("#6B7280"));
         txtFriends.setTextColor(Color.parseColor("#6B7280"));
 
-        selectedTab.setBackgroundResource(R.drawable.bg_tab_selected);
+        selectedTab.setBackgroundResource(R.drawable.bg_tab_select);
 
         if (selectedTab == tabAll) {
             txtAll.setTextColor(Color.parseColor("#10B981"));
