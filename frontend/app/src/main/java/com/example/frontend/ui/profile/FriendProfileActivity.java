@@ -92,23 +92,22 @@ public class FriendProfileActivity extends AppCompatActivity {
         tabFriends = findViewById(R.id.tabFriends);
 
         friendPostsContainer = findViewById(R.id.friendPostsContainer);
-        friendId = getIntent().getStringExtra("userId");
+        friendId = getIntent().getStringExtra("USER_ID");
+        Toast.makeText(this,
+                "friendId = " + friendId,
+                Toast.LENGTH_LONG).show();
         if(friendId == null){
             finish();
             return;
         }
-
-        ImageButton btnBack = findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> finish());
 
-        CircleImageView imgAvatar = findViewById(R.id.imgAvatar);
-        TextView tvName = findViewById(R.id.tvFriendName);
         btnMessage = findViewById(R.id.btnMessage);
 
         chatRepository = new ChatRepository(this);
         friendRepository = new FriendRepository(this);
         userRepository = new UserRepository(this);
-
+        init();
         // Nút nhắn tin → tạo/lấy conversation → mở ChatDetailActivity
         btnMessage.setOnClickListener(v -> {
             Log.d("CHAT_DEBUG", "friendId = " + friendId);
@@ -160,13 +159,17 @@ public class FriendProfileActivity extends AppCompatActivity {
         }
 
         actionLiveData.observe(this,result->{
+
+            if(result==null) return;
+
             if(result.status==Result.Status.SUCCESS){
-                Toast.makeText(this, "Đã hủy kết bạn", Toast.LENGTH_SHORT).show();
-                isFriend=false;
-                isPending=false;
-                updateFriendButton();
+
+                loadFriendStatus();
+
             }
+
         });
+
     }
     private void init(){
         loadUser();
@@ -175,38 +178,75 @@ public class FriendProfileActivity extends AppCompatActivity {
     }
     private void loadUser(){userRepository.getUserById(friendId,userLiveData);
         userLiveData.observe(this,result->{
-            if(result.status== Result.Status.SUCCESS){
+
+            if(result==null) return;
+
+            if(result.status==Result.Status.SUCCESS){
+
                 currentUser=result.data;
+
                 bindUser();
+
             }
+            else if(result.status==Result.Status.ERROR){
+
+                Toast.makeText(this,
+                        result.message,
+                        Toast.LENGTH_SHORT).show();
+
+            }
+
         });
     }
     private void bindUser(){
         if(currentUser==null) return;
         tvFriendName.setText(currentUser.getUsername());
-        tvBio.setText(currentUser.getBio());
+        tvBio.setText(
+                currentUser.getBio()==null ?
+                        "" :
+                        currentUser.getBio()
+        );
         tvLocation.setText(currentUser.getLocation());
         tvHometown.setText(currentUser.getHometown());
         tvBirthday.setText(currentUser.getBirthday());
         tvGender.setText(currentUser.getGender());
-        Glide.with(this).load(currentUser.getAvatar()).placeholder(R.drawable.ic_profile).into(imgAvatar);
-        Glide.with(this).load(currentUser.getCover()).placeholder(R.drawable.bg_cover_default).into(imgCover);
+        Glide.with(this).load(currentUser.getAvatar()).placeholder(R.drawable.ic_profile).error(R.drawable.ic_profile).into(imgAvatar);
+        Glide.with(this).load(currentUser.getCover()).placeholder(R.drawable.bg_cover_default).error(R.drawable.bg_cover_default).into(imgCover);
         tvStats.setText(currentUser.getFriendCount()+" bạn bè");
     }
     private void loadFriendStatus() {
         friendRepository.getFriends(friendLiveData);
         friendRepository.getPendingRequests(pendingLiveData);
-        friendLiveData.observe(this, result -> {
-            if (result.status != Result.Status.SUCCESS || result.data == null)
-                return;
-            isFriend = false;
-            for (Friend f : result.data) {
-                if (f.getId().equals(friendId)) {
-                    isFriend = true;
-                    break;
+        friendLiveData.observe(this,result->{
+
+            if(result==null) return;
+
+            if(result.status==Result.Status.SUCCESS){
+
+                isFriend=false;
+
+                for(Friend f:result.data){
+
+                    if(f.getId().equals(friendId)){
+
+                        isFriend=true;
+
+                        break;
+
+                    }
+
                 }
+
+                updateFriendButton();
+
             }
-            updateFriendButton();
+
+            else if(result.status==Result.Status.ERROR){
+
+                Log.e("FRIEND",result.message);
+
+            }
+
         });
 
         pendingLiveData.observe(this, result -> {
@@ -268,5 +308,11 @@ public class FriendProfileActivity extends AppCompatActivity {
                     .show();
         });
         dialog.show();
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadUser();
+        loadFriendStatus();
     }
 }
