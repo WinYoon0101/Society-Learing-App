@@ -67,4 +67,10 @@ public class Post {
 
     public String getMyReaction() { return myReaction; }
     public void setMyReaction(String myReaction) { this.myReaction = myReaction; }
+
+    @com.google.gson.annotations.SerializedName("feeling")
+    private String feeling;
+
+    public String getFeeling() { return feeling; }
+    public void setFeeling(String feeling) { this.feeling = feeling; }
 }

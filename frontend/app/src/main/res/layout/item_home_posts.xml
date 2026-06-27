@@ -38,7 +38,6 @@
             app:layout_constraintEnd_toStartOf="@id/btnMoreOptions"
             app:layout_constraintStart_toEndOf="@id/imgAvatar"
             app:layout_constraintTop_toTopOf="@id/imgAvatar" />
-
         <LinearLayout
             android:id="@+id/layoutTimePrivacy"
             android:layout_width="wrap_content"

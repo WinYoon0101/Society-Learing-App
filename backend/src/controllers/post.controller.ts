@@ -10,33 +10,22 @@ import User from '../models/user.model';
 import Friend from '../models/friend.model';
 import Notification from '../models/notification.model';
 
-// =====================================
-// API ĐĂNG BÀI
-// =====================================
 export const createPost = async (req: AuthRequest, res: Response) => {
     try {
-        const { content, privacy, groupId, tags, initialReaction } = req.body;
+        const { content, privacy, groupId, tags, initialReaction, feeling } = req.body;
         const authorId = req.user?.id;
 
-        // Mặc định bài được duyệt; với nhóm bật "yêu cầu duyệt" và người đăng không phải admin → pending
         let postStatus = "approved";
-        // Lưu lại để thông báo cho admin nếu bài cần duyệt
         let pendingAdminIds: any[] = [];
         let pendingGroupName = "";
 
-        // Nếu đăng vào nhóm, kiểm tra user có phải thành viên không
         if (groupId) {
             const group = await Group.findById(groupId).lean();
-            if (!group) {
-                return res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
-            }
+            if (!group) return res.status(404).json({ success: false, message: "Không tìm thấy nhóm" });
             const isMember = group.member.some((m) => m.userId.toString() === authorId);
-            if (!isMember) {
-                return res.status(403).json({ success: false, message: "Bạn không phải thành viên của nhóm này" });
-            }
-            const isAdmin = group.member.some(
-                (m) => m.userId.toString() === authorId && m.role === "admin"
-            );
+            if (!isMember) return res.status(403).json({ success: false, message: "Bạn không phải thành viên của nhóm này" });
+            
+            const isAdmin = group.member.some((m) => m.userId.toString() === authorId && m.role === "admin");
             if (group.requirePostApproval && !isAdmin) {
                 postStatus = "pending";
                 pendingAdminIds = group.member.filter((m) => m.role === "admin").map((m) => m.userId);
@@ -44,20 +33,16 @@ export const createPost = async (req: AuthRequest, res: Response) => {
             }
         }
 
-        // ====================================================
-        // Tự động bóc tách Hashtag từ nội dung bài viết
-        // ====================================================
-        // Regex hỗ trợ tiếng Việt có dấu 
         const hashtagRegex = /#[\p{L}\p{N}_]+/gu; 
         const extractedHashtags = content ? content.match(hashtagRegex) || [] : [];
         const uniqueHashtags = [...new Set(extractedHashtags)];
-        // ====================================================
 
         const newPost = new Post({
             authorId: authorId,
             groupId: groupId || null,
             content: content,
             privacy: privacy || "Public",
+            feeling: feeling || "", 
             status: postStatus,
             tags: tags ? (Array.isArray(tags) ? tags : JSON.parse(tags)) : [],
             hashtags: uniqueHashtags
@@ -65,46 +50,45 @@ export const createPost = async (req: AuthRequest, res: Response) => {
 
         const savePost = await newPost.save();
 
-        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-            const mediaDocument = req.files.map((file: any) => {
-                const isVideo = file.mimetype.includes('video');
-                return {
-                    userId: authorId,
-                    url: file.path,
-                    fileType: isVideo ? 'video' : 'image',
-                    sourceType: 'post',
-                    targetId: savePost._id
-                };
-            });
-            await Media.insertMany(mediaDocument);
-        }
-
-        if (initialReaction) {
-            try {
-                const react = new Reaction({
-                    userId: authorId,
-                    targetId: savePost._id,
-                    targetType: 'Post',
-                    type: initialReaction
+        let mediaDocuments: any[] = [];
+        if (req.files) {
+            if (Array.isArray(req.files)) {
+                mediaDocuments = req.files.map((file: any) => {
+                    const isVideo = file.mimetype.includes('video');
+                    return { userId: authorId, url: file.path, fileType: isVideo ? 'video' : 'image', sourceType: 'post', targetId: savePost._id };
                 });
-                await react.save();
-            } catch (e) {
-                doc: console.error('Không thể lưu reaction ban đầu:', e);
+            } else {
+                const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+                const imageFiles = files['images'] || [];
+                const videoFiles = files['videos'] || [];
+
+                imageFiles.forEach((file: any) => {
+                    mediaDocuments.push({ userId: authorId, url: file.path, fileType: 'image', sourceType: 'post', targetId: savePost._id });
+                });
+                videoFiles.forEach((file: any) => {
+                    mediaDocuments.push({ userId: authorId, url: file.path, fileType: 'video', sourceType: 'post', targetId: savePost._id });
+                });
             }
         }
 
-        // Thông báo cho admin nếu bài đang chờ duyệt
+        if (mediaDocuments.length > 0) await Media.insertMany(mediaDocuments);
+
+        if (initialReaction) {
+            try {
+                const react = new Reaction({ userId: authorId, targetId: savePost._id, targetType: 'Post', type: initialReaction });
+                await react.save();
+            } catch (e) {
+                console.error('Không thể lưu reaction ban đầu:', e);
+            }
+        }
+
         if (postStatus === "pending" && pendingAdminIds.length > 0) {
             try {
                 const author = await User.findById(authorId).select("username");
                 const authorName = author?.username || "Một thành viên";
                 await Notification.insertMany(
                     pendingAdminIds.map((adminId) => ({
-                        recipient: adminId,
-                        sender: authorId,
-                        type: "group_post_pending",
-                        targetId: groupId,
-                        postId: savePost._id, // để màn duyệt bài làm nổi bật đúng bài này
+                        recipient: adminId, sender: authorId, type: "group_post_pending", targetId: groupId, postId: savePost._id, 
                         content: `${authorName} đã đăng một bài viết chờ duyệt trong nhóm ${pendingGroupName}`,
                     }))
                 );
@@ -115,58 +99,28 @@ export const createPost = async (req: AuthRequest, res: Response) => {
 
         res.status(201).json({
             success: true,
-            message: postStatus === "pending"
-                ? "Bài viết đã được gửi, đang chờ quản trị viên duyệt"
-                : "Đăng bài thành công",
-            status: postStatus,
-            PostId: savePost._id,
+            message: postStatus === "pending" ? "Bài viết đã được gửi, đang chờ quản trị viên duyệt" : "Đăng bài thành công",
+            status: postStatus, PostId: savePost._id,
         });
-
     } catch(error) {
         console.error("Lỗi đăng bài", error);
-        res.status(500).json({
-            success: false,
-            message: "Lỗi hệ thống khi đăng bài"
-        });
+        res.status(500).json({ success: false, message: "Lỗi hệ thống khi đăng bài" });
     }
 };
 
-// =====================================
-// API LẤY BÀI VIẾT TRANG HOME (FEED) - ĐÃ SỬA GỘP LOGIC PRIVACY
-// =====================================
 export const getFeed = async (req: AuthRequest, res: Response) => {
     try {
         const currentUserId = req.user?.id;
-
-        // 1. Lấy danh sách ID các nhóm mà User này đã tham gia làm thành viên
-        const userGroups = await Group.find({
-            $or: [
-                { 'member.userId': currentUserId },
-                { 'members.userId': currentUserId }
-            ]
-        }).select('_id').lean();
-
+        const userGroups = await Group.find({ $or: [{ 'member.userId': currentUserId }, { 'members.userId': currentUserId }] }).select('_id').lean();
         const groupIds = userGroups.map(g => g._id);
 
-        // 2. Lấy danh sách ID bạn bè đã kết bạn thành công
         const friendships = await Friend.find({
-            $or: [
-                { requester: currentUserId, status: "accepted" },
-                { recipient: currentUserId, status: "accepted" },
-            ],
+            $or: [{ requester: currentUserId, status: "accepted" }, { recipient: currentUserId, status: "accepted" }],
         }).lean();
+        const friendIds = friendships.map(f => f.requester.toString() === currentUserId ? f.recipient : f.requester);
 
-        const friendIds = friendships.map(f =>
-            f.requester.toString() === currentUserId ? f.recipient : f.requester
-        );
-
-        // 3. Tìm bài viết thỏa mãn các điều kiện riêng tư bảo mật:
-        // - Hoặc là bài viết có chế độ "Public" ở bên ngoài nhóm.
-        // - Hoặc là bài viết nằm trong nhóm mà user đã tham gia.
-        // - Hoặc là bài viết của CHÍNH MÌNH ngoài nhóm (hiển thị tất cả Public, Friends, Private).
-        // - Hoặc là bài viết của BẠN BÈ ngoài nhóm (chỉ hiển thị nếu bài viết đó ở chế độ Public hoặc Friends).
         const posts = await Post.find({
-            status: { $ne: "pending" }, // bài đang chờ duyệt không lọt feed chung
+            status: { $ne: "pending" },
             $or: [
                 { privacy: "Public", groupId: null },
                 { groupId: { $in: groupIds } },
@@ -176,15 +130,14 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
         })
             .sort({ createdAt: -1 })
             .populate('authorId', 'username avatar')
-            .populate('tags', 'username')
+            .populate('tags', 'username avatar') 
             .lean();
 
-        // 4. Map nạp thêm dữ liệu tương tác chi tiết (Ảnh, Reaction, Comment)
         const postsWithDetails = await Promise.all(posts.map(async (post) => {
             const postIdObj = new mongoose.Types.ObjectId(post._id.toString());
-
-            const mediaList = await Media.find({ targetId: post._id, fileType: 'image' });
-            const imageUrls = mediaList.map(media => media.url);
+            const mediaList = await Media.find({ targetId: post._id });
+            const imageUrls = mediaList.filter(m => m.fileType === 'image').map(m => m.url);
+            const videoUrls = mediaList.filter(m => m.fileType === 'video').map(m => m.url);
 
             const commentCount = await Comment.countDocuments({ postId: post._id });
             const countReaction = await Reaction.countDocuments({ targetId: postIdObj });
@@ -192,76 +145,50 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
             let myReaction = null;
             if (currentUserId) {
                 const myReactDoc = await Reaction.findOne({ targetId: postIdObj, userId: currentUserId });
-                if (myReactDoc) {
-                    myReaction = myReactDoc.type;
-                }
+                if (myReactDoc) myReaction = myReactDoc.type;
             }
 
             const topReactDocs = await Reaction.aggregate([
-                { $match: { targetId: postIdObj } },
-                { $group: { _id: "$type", count: { $sum: 1 } } },
-                { $sort: { count: -1 } },
-                { $limit: 2 }
+                { $match: { targetId: postIdObj } }, { $group: { _id: "$type", count: { $sum: 1 } } },
+                { $sort: { count: -1 } }, { $limit: 2 }
             ]);
-            const topReactions = topReactDocs.map(doc => doc._id);
-
             return {
-                ...post,
-                images: imageUrls,
-                countComment: commentCount,
-                countReaction: countReaction,
-                myReaction: myReaction,
-                topReactions: topReactions
+                ...post, images: imageUrls, videos: videoUrls, countComment: commentCount, countReaction: countReaction,
+                myReaction: myReaction, topReactions: topReactDocs.map(doc => doc._id)
             };
         }));
-
         res.status(200).json({ success: true, data: postsWithDetails });
     } catch (error) {
-        console.error("Lỗi lấy feed", error);
         res.status(500).json({ success: false, message: "Lỗi lấy feed" });
     }
 };
 
-// =====================================
-// API XÓA BÀI VIẾT
-// =====================================
 export const deletePost = async (req: AuthRequest, res: Response) => {
     try {
         const postId = req.params.id;
         const userId = req.user?.id;
-
         const post = await Post.findById(postId);
-
-        if (!post) {
-            return res.status(404).json({ success: false, message: "Không tìm thấy bài viết" });
-        }
+        if (!post) return res.status(404).json({ success: false, message: "Không tìm thấy bài viết" });
 
         let hasPermission = false;
-        if (post.authorId.toString() === userId) {
-            hasPermission = true;
-        }
+        if (post.authorId.toString() === userId) hasPermission = true;
         if (!hasPermission && post.groupId) {
             const group = await Group.findById(post.groupId);
-            if (group && group.creatorId.toString() === userId) {
-                hasPermission = true;
-            }
+            if (group && group.creatorId.toString() === userId) hasPermission = true;
         }
-
-        if (!hasPermission) {
-            return res.status(403).json({ success: false, message: "Bạn không có quyền xóa bài này!" });
-        }
+        if (!hasPermission) return res.status(403).json({ success: false, message: "Bạn không có quyền xóa bài này!" });
 
         await Media.deleteMany({ targetId: postId });
         await Post.findByIdAndDelete(postId);
         await Comment.deleteMany({ postId: postId });
         await Reaction.deleteMany({ targetId: postId });
-
         res.status(200).json({ success: true, message: "Đã xóa bài viết!" });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi hệ thống khi xóa bài" });
     }
 };
 
+// CÁC HÀM CÒN LẠI (getMyPosts, getSavedPosts...) GIỮ NGUYÊN NHƯ FILE BẠN ĐÃ CÓ.
 export const toggleSavePost = async (req: AuthRequest, res: Response): Promise<any> => {
     try {
         const userId = req.user?.id;

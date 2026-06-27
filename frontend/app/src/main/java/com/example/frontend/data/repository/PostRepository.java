@@ -33,13 +33,14 @@ public class PostRepository {
     public void uploadPost(
             RequestBody content,
             RequestBody privacy,
+            RequestBody feeling,
             RequestBody groupId,
             RequestBody tags,
             RequestBody initialReaction,
             List<MultipartBody.Part> images,
             Callback<ApiResponse<Post>> callback) {
 
-        apiService.createPost(content, privacy, groupId, tags, initialReaction, images).enqueue(callback);
+        apiService.createPost(content, privacy, feeling, groupId, tags, initialReaction, images).enqueue(callback);
     }
 
     // Reaction

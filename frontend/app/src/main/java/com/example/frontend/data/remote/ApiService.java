@@ -277,6 +277,7 @@ public interface ApiService {
     Call<ApiResponse<Post>> createPost(
             @Part("content") RequestBody content,
             @Part("privacy") RequestBody privacy,
+            @Part("feeling") RequestBody feeling,
             @Part("groupId") RequestBody groupId,
             @Part("tags") RequestBody tags,
             @Part("initialReaction") RequestBody initialReaction,

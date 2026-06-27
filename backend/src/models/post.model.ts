@@ -7,7 +7,8 @@ export interface IPost extends Document {
     sharedPostId?: mongoose.Types.ObjectId;
     content: string;
     privacy: string;
-    status: string; // "approved" | "pending" — bài nhóm cần duyệt sẽ là "pending"
+    feeling: string; // 👉 BỔ SUNG CẢM XÚC
+    status: string; // "approved" | "pending"
     tags: mongoose.Types.ObjectId[];
     hashtags: string[];
     countReaction: number;
@@ -43,13 +44,15 @@ const PostSchema: Schema = new Schema<IPost>(
             default: "Public",
             enum: ['Public', 'Private', 'Friends'],
         },
-        // Trạng thái duyệt: bài đăng vào nhóm bật "yêu cầu duyệt" (và không phải admin) sẽ là "pending"
+        feeling: { 
+            type: String,
+            default: "",
+        },
         status: {
             type: String,
             default: "approved",
             enum: ['approved', 'pending'],
         },
-        // Tagged users in the post
         tags: [{ type: Schema.Types.ObjectId, ref: 'User' }],
         countReaction: {
             type: Number,
@@ -69,28 +72,21 @@ const PostSchema: Schema = new Schema<IPost>(
         },        
     },
     {
-        timestamps: true, // Tự tạo ra createdAt và updatedAt
+        timestamps: true,
     }
 )
 
 PostSchema.index({ hashtags: 1, createdAt: -1 });
 
 PostSchema.virtual('mediaFiles', {
-    ref: 'Media',            // Chạy sang bảng Media để tìm
-    localField: '_id',       // Dùng ID của bài Post này
-    foreignField: 'targetId' // Tìm những dòng nào trong bảng Media có targetId khớp
+    ref: 'Media',            
+    localField: '_id',       
+    foreignField: 'targetId' 
 });
 
-// 1. Tối ưu khi load "Trang cá nhân" (Tìm bài viết theo người đăng)
 PostSchema.index({ authorId: 1 });
-
-// 2. Tối ưu khi load "Trang Nhóm" (Tìm bài viết theo nhóm)
 PostSchema.index({ groupId: 1 });
-
-// 3. Tối ưu khi load "Bảng tin" (Sắp xếp bài viết mới nhất lên đầu)
 PostSchema.index({ createdAt: -1 });
-
-// 4. Compound Index: Tối ưu khi vừa tìm theo người đăng, vừa sắp xếp giờ
 PostSchema.index({ authorId: 1, createdAt: -1 });
 
 const Post = mongoose.model<IPost>('Post', PostSchema);

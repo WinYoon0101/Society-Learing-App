@@ -111,7 +111,13 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     suffix = " và " + (tags.size() - 1) + " người khác";
                 }
 
-                String fullText = authorName + prefix + taggedName + suffix;
+                String feelingText = "";
+
+                if (post.getFeeling() != null && !post.getFeeling().trim().isEmpty()) {
+                    feelingText = " đang cảm thấy " + getFeelingTextInVietnamese(post.getFeeling());
+                }
+
+                String fullText = authorName + prefix + taggedName + suffix + feelingText;
                 SpannableString spannableString = new SpannableString(fullText);
 
                 ClickableSpan authorSpan = new ClickableSpan() {
@@ -159,9 +165,14 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 holder.tvUserName.setOnClickListener(null);
 
             } else {
-                holder.tvUserName.setText(authorName);
+                String displayName = authorName;
+
+                if (post.getFeeling() != null && !post.getFeeling().trim().isEmpty()) {
+                    displayName += " đang cảm thấy " + getFeelingTextInVietnamese(post.getFeeling());
+                }
                 holder.tvUserName.setOnClickListener(goToAuthorProfile);
                 holder.tvUserName.setMovementMethod(null);
+                holder.tvUserName.setText(displayName);
             }
 
             Glide.with(context).load(post.getAuthorId().getAvatar()).placeholder(R.drawable.ic_user).into(holder.imgAvatar);
@@ -476,12 +487,15 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         TextView imgLikeIcon;
         TextView tvLikeLabel;
 
+
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
             tvUserName = itemView.findViewById(R.id.tvAuthorName);
             tvTime = itemView.findViewById(R.id.tvTime);
             tvContent = itemView.findViewById(R.id.tvContent);
             imgAvatar = itemView.findViewById(R.id.imgAvatar);
+
+
 
             btnMoreOptions = itemView.findViewById(R.id.btnMoreOptions);
             btnShare = itemView.findViewById(R.id.btnShare);
@@ -507,4 +521,23 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             tvLikeLabel = itemView.findViewById(R.id.tvLikeCount);
         }
     }
+    private String getFeelingTextInVietnamese(String type) {
+        if (type == null) return "";
+        switch (type) {
+            case "Like": return "tuyệt vời 👍";
+            case "Love": return "được yêu ❤️";
+            case "Haha": return "vui vẻ 😆";
+            case "Wow": return "ngạc nhiên 😮";
+            case "Sad": return "buồn 😢";
+            case "Angry": return "tức giận 😡";
+            case "Lucky": return "may mắn 🍀";
+            case "Loved": return "đong đầy tình yêu 🥰";
+            case "Sick": return "mệt mỏi 🤒";
+            case "Question": return "tò mò 🤔";
+            case "Cool": return "rất ngầu 😎";
+            case "Smart": return "thông minh 🧠";
+            default: return type;
+        }
+    }
 }
+
