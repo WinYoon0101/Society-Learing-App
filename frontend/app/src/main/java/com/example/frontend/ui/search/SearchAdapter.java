@@ -19,6 +19,7 @@ import com.example.frontend.data.model.Group;
 import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.SearchItem;
 import com.example.frontend.data.model.User;
+import com.example.frontend.ui.profile.FriendProfileActivity;
 
 // LƯU Ý: Import các Activity đích của bạn vào đây
 // import com.example.frontend.ui.profile.UserProfileActivity;
@@ -88,12 +89,13 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             // XỬ LÝ CLICK: Chuyển đến Trang cá nhân
             userHolder.itemView.setOnClickListener(v -> {
                 try {
-                    /*
-                    Intent intent = new Intent(context, UserProfileActivity.class);
+
+                    Intent intent = new Intent(context, FriendProfileActivity.class);
                     intent.putExtra("USER_ID", user.getId()); // Gửi ID của user qua màn hình Profile
                     context.startActivity(intent);
-                    */
+
                     Toast.makeText(context, "Sẽ chuyển đến Profile của: " + user.getUsername(), Toast.LENGTH_SHORT).show();
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
