@@ -25,6 +25,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import com.example.admin.data.model.User;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class PostsFragment extends Fragment {
     private RecyclerView rvPosts;
@@ -73,38 +74,105 @@ public class PostsFragment extends Fragment {
         adapter = new PostAdapter(new PostAdapter.OnPostActionListener() {
             @Override
             public void onDeleteClick(Post post, int position) {
-                apiService.deletePostByAdmin(post.getId()).enqueue(new Callback<ApiResponse<Object>>() {
-                    @Override
-                    public void onResponse(Call<ApiResponse<Object>> c, Response<ApiResponse<Object>> r) {
-                        displayPosts.remove(position);
-                        adapter.notifyItemRemoved(position);
-                        allPosts.remove(post);
-                    }
-                    @Override public void onFailure(Call<ApiResponse<Object>> c, Throwable t) {}
-                });
+                // Thêm hộp thoại xác nhận
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Xóa bài viết")
+                        .setMessage("Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.")
+                        .setPositiveButton("Xóa", (dialog, which) -> {
+                            // Gọi API Xóa
+                            apiService.deletePostByAdmin(post.getId()).enqueue(new Callback<ApiResponse<Object>>() {
+                                @Override
+                                public void onResponse(Call<ApiResponse<Object>> c, Response<ApiResponse<Object>> r) {
+                                    if (r.isSuccessful()) {
+                                        displayPosts.remove(position);
+                                        adapter.notifyItemRemoved(position);
+                                        allPosts.remove(post);
+                                        Toast.makeText(getContext(), "Đã xóa bài viết", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(getContext(), "Lỗi khi xóa bài viết", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                                @Override
+                                public void onFailure(Call<ApiResponse<Object>> c, Throwable t) {
+                                    Toast.makeText(getContext(), "Mất kết nối mạng!", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        })
+                        .setNegativeButton("Hủy", null)
+                        .show();
             }
 
             @Override
             public void onBanUserClick(Post post, int position) {
-                if (post.getAuthor() != null) {
-                    apiService.toggleUserStatus(post.getAuthor().getId()).enqueue(new Callback<ApiResponse<User>>() {
-                        @Override
-                        public void onResponse(Call<ApiResponse<User>> c, Response<ApiResponse<User>> r) {
-                            Toast.makeText(getContext(), "Đã khóa User", Toast.LENGTH_SHORT).show();
-                        }
-                        @Override
-                        public void onFailure(Call<ApiResponse<User>> c, Throwable t) {
-                            Toast.makeText(getContext(), "Lỗi mạng!", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
+                if (post.getAuthor() == null) return;
+
+                String authorName = post.getAuthor().getUsername();
+                boolean isCurrentlyActive = post.getAuthor().isActive();
+
+                // Xác định tên hành động
+                String actionName = isCurrentlyActive ? "Khóa" : "Mở khóa";
+                String confirmMessage = isCurrentlyActive
+                        ? "Bạn muốn khóa tài khoản của người dùng: " + authorName + "?"
+                        : "Bạn muốn mở khóa tài khoản cho người dùng: " + authorName + "?";
+
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(actionName + " tài khoản")
+                        .setMessage(confirmMessage)
+                        .setPositiveButton("Xác nhận", (dialog, which) -> {
+
+                            // Gọi API Khóa/Mở khóa
+                            apiService.toggleUserStatus(post.getAuthor().getId()).enqueue(new Callback<ApiResponse<User>>() {
+                                @Override
+                                public void onResponse(Call<ApiResponse<User>> c, Response<ApiResponse<User>> r) {
+                                    if (r.isSuccessful()) {
+                                        // 1. Lấy trạng thái mới
+                                        boolean newState = !isCurrentlyActive;
+
+                                        // 2. Tìm tất cả các bài viết của người này để cập nhật nút thành Mở khóa/Khóa cùng lúc
+                                        for (int i = 0; i < displayPosts.size(); i++) {
+                                            if (displayPosts.get(i).getAuthor() != null &&
+                                                    displayPosts.get(i).getAuthor().getId().equals(post.getAuthor().getId())) {
+
+                                                displayPosts.get(i).getAuthor().setActive(newState);
+                                                adapter.notifyItemChanged(i); // Refresh giao diện item
+                                            }
+                                        }
+                                        Toast.makeText(getContext(), "Đã " + actionName.toLowerCase() + " người dùng: " + authorName, Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(getContext(), "Lỗi khi xử lý thao tác", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                                @Override
+                                public void onFailure(Call<ApiResponse<User>> c, Throwable t) {
+                                    Toast.makeText(getContext(), "Mất kết nối mạng!", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        })
+                        .setNegativeButton("Hủy", null)
+                        .show();
             }
 
             @Override
             public void onApproveClick(Post post, int position) {
-                // Xóa khỏi danh sách hiển thị coi như đã duyệt/an toàn
-                displayPosts.remove(position);
-                adapter.notifyItemRemoved(position);
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Bỏ qua cảnh báo")
+                        .setMessage("Xác nhận bài viết này an toàn và không vi phạm?")
+                        .setPositiveButton("Xác nhận", (dialog, which) -> {
+                            // Cập nhật local state: Đánh dấu là an toàn
+                            post.setToxicLocally(false);
+
+                            if (showToxicOnly) {
+                                // Nếu đang ở tab "Vi phạm", xóa bài khỏi danh sách hiển thị
+                                displayPosts.remove(position);
+                                adapter.notifyItemRemoved(position);
+                            } else {
+                                // Nếu đang ở tab "Tất cả", chỉ cần update UI để ẩn tag đỏ đi
+                                adapter.notifyItemChanged(position);
+                            }
+                            Toast.makeText(getContext(), "Đã xác nhận bài viết an toàn", Toast.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("Hủy", null)
+                        .show();
             }
         });
 

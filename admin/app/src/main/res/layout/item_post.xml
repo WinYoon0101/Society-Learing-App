@@ -4,144 +4,174 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="4dp"
+    android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="8dp"
     app:cardBackgroundColor="@android:color/white"
-    app:cardCornerRadius="16dp"
+    app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
-    app:strokeColor="#F1F5F9"
-    app:strokeWidth="1.5dp">
+    app:strokeColor="#E2E8F0"
+    app:strokeWidth="1dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:layout_height="wrap_content">
 
-        <!-- Avatar: Tự động bo tròn mượt mà -->
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/ivAvatar"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:scaleType="centerCrop"
-            android:src="@mipmap/ic_launcher_round"
+        <View
+            android:id="@+id/viewToxicIndicator"
+            android:layout_width="4dp"
+            android:layout_height="0dp"
+            android:background="#EF4444"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- User Name -->
-        <TextView
-            android:id="@+id/tvAuthorName"
+        <LinearLayout
+            android:id="@+id/llHeader"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="8dp"
-            android:text="Nguyễn Văn A"
-            android:textColor="#0F172A"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/tvTime"
-            app:layout_constraintEnd_toStartOf="@+id/cvAiTag"
-            app:layout_constraintStart_toEndOf="@id/ivAvatar"
-            app:layout_constraintTop_toTopOf="@id/ivAvatar"
-            app:layout_constraintVertical_chainStyle="packed" />
-
-        <!-- Time -->
-        <TextView
-            android:id="@+id/tvTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:text="2 giờ trước"
-            android:textColor="#64748B"
-            android:textSize="13sp"
-            app:layout_constraintBottom_toBottomOf="@id/ivAvatar"
-            app:layout_constraintStart_toEndOf="@id/ivAvatar"
-            app:layout_constraintTop_toBottomOf="@id/tvAuthorName" />
-
-        <!-- AI Tag (Badge) -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cvAiTag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:cardBackgroundColor="#FEF2F2"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#FECACA"
-            app:strokeWidth="1dp"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/ivAvatar">
+            app:layout_constraintStart_toEndOf="@id/viewToxicIndicator"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:id="@+id/tvAiTag"
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivAvatar"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher_round"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvAuthorName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tên Tác Giả"
+                    android:textColor="#0F172A"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Thời gian"
+                    android:textColor="#64748B"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cvAiTag"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="4dp"
-                android:text="VI PHẠM"
-                android:textColor="#DC2626"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-        </com.google.android.material.card.MaterialCardView>
+                android:visibility="gone"
+                app:cardBackgroundColor="#FEF2F2"
+                app:cardCornerRadius="6dp"
+                app:strokeColor="#FECACA"
+                app:strokeWidth="1dp">
+                <TextView
+                    android:id="@+id/tvAiTag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:text="Cảnh báo"
+                    android:textColor="#DC2626"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
 
-        <!-- Post Content (Bỏ bong bóng xám đi để nhìn sạch và thoáng hơn) -->
         <TextView
             android:id="@+id/tvContent"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:lineSpacingExtra="4dp"
-            android:text="Đây là nội dung bài viết. Giao diện phẳng giúp người dùng tập trung vào nội dung hơn là các khối hộp bọc ngoài."
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="8dp"
+            android:text="Nội dung bài viết..."
             android:textColor="#334155"
-            android:textSize="15sp"
-            app:layout_constraintTop_toBottomOf="@id/ivAvatar" />
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/viewToxicIndicator"
+            app:layout_constraintTop_toBottomOf="@id/llHeader" />
 
-        <!-- Post Image -->
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivPostImage"
-            android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:layout_marginTop="12dp"
+            android:layout_width="0dp"
+            android:layout_height="160dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="12dp"
             android:scaleType="centerCrop"
             android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/viewToxicIndicator"
             app:layout_constraintTop_toBottomOf="@id/tvContent"
             app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium" />
 
-        <!-- Action Buttons -->
+        <View
+            android:id="@+id/divider"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:background="#F1F5F9"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/viewToxicIndicator"
+            app:layout_constraintTop_toBottomOf="@id/ivPostImage" />
+
         <LinearLayout
-            android:id="@+id/llActions"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
             android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/ivPostImage">
+            android:padding="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/viewToxicIndicator"
+            app:layout_constraintTop_toBottomOf="@id/divider">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDelete"
+                android:id="@+id/btnApprove"
+                style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="0dp"
-                android:layout_height="52dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:backgroundTint="#EF4444"
-                android:text="Xóa Bài"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                app:cornerRadius="10dp" />
+                android:text="Bỏ qua"
+                android:textColor="#10B981"
+                android:textSize="13sp"
+                app:iconTint="#10B981" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBan"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="0dp"
-                android:layout_height="52dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="12dp"
                 android:text="Khóa User"
-                android:textAllCaps="false"
-                android:textColor="#475569"
-                android:textSize="15sp"
-                app:cornerRadius="10dp"
-                app:strokeColor="#CBD5E1"
-                app:strokeWidth="1.5dp" />
+                android:textColor="#F59E0B"
+                android:textSize="13sp"
+                app:icon="@android:drawable/ic_secure"
+                app:iconTint="#F59E0B" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDelete"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Xóa Bài"
+                android:textColor="#EF4444"
+                android:textSize="13sp"
+                app:icon="@android:drawable/ic_menu_delete"
+                app:iconTint="#EF4444" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
