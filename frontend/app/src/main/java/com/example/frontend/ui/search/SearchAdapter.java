@@ -20,6 +20,8 @@ import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.SearchItem;
 import com.example.frontend.data.model.User;
 import com.example.frontend.ui.feed.HashtagTextHelper;
+import com.example.frontend.ui.feed.PostDetailActivity;
+import com.example.frontend.ui.group.GroupDetailActivity;
 import com.example.frontend.ui.profile.FriendProfileActivity;
 
 // LƯU Ý: Import các Activity đích của bạn vào đây
@@ -95,7 +97,6 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     intent.putExtra("USER_ID", user.getId()); // Gửi ID của user qua màn hình Profile
                     context.startActivity(intent);
 
-                    Toast.makeText(context, "Sẽ chuyển đến Profile của: " + user.getUsername(), Toast.LENGTH_SHORT).show();
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -136,14 +137,13 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             // XỬ LÝ CLICK: Chuyển đến Trang Chi tiết Nhóm
             groupHolder.itemView.setOnClickListener(v -> {
                 try {
-                    /*
                     Intent intent = new Intent(context, GroupDetailActivity.class);
-                    intent.putExtra("GROUP_ID", group.getId()); // Gửi ID của group qua màn hình Group Detail
+                    // Kiểm tra xem GroupDetailActivity của bạn nhận key là "GROUP_ID" hay "EXTRA_GROUP_ID" nhé
+                    intent.putExtra("GROUP_ID", group.getId());
                     context.startActivity(intent);
-                    */
-                    Toast.makeText(context, "Sẽ chuyển đến Nhóm: " + group.getGroupName(), Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    Toast.makeText(context, "Lỗi khi mở nhóm", Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -181,14 +181,12 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             // XỬ LÝ CLICK: Chuyển đến Trang Chi tiết Bài Viết
             postHolder.itemView.setOnClickListener(v -> {
                 try {
-                    /*
                     Intent intent = new Intent(context, PostDetailActivity.class);
-                    intent.putExtra("POST_ID", post.getId()); // Gửi ID của post qua màn hình Post Detail
+                    intent.putExtra("POST_ID", post.getId());
                     context.startActivity(intent);
-                    */
-                    Toast.makeText(context, "Sẽ mở bài viết của: " + postHolder.tvAuthorName.getText().toString(), Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    Toast.makeText(context, "Lỗi khi mở bài viết", Toast.LENGTH_SHORT).show();
                 }
             });
         }
