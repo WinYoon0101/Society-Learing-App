@@ -206,6 +206,7 @@ public class FriendProfileActivity extends AppCompatActivity {
     private void init(){
         loadUser();
         loadFriendStatus();
+        loadFriendCount();
         initClick();
         selectTab(tabAll);
         showTabAll();
@@ -242,7 +243,7 @@ public class FriendProfileActivity extends AppCompatActivity {
                     .error(R.drawable.anhbia)
                     .into(imgCover);
         }
-        tvStats.setText(currentUser.getFriendCount()+" bạn bè");
+
     }
     private void loadFriendStatus(){
         friendRepository.checkFriendStatus(friendId, friendStatusLiveData);
@@ -497,5 +498,17 @@ public class FriendProfileActivity extends AppCompatActivity {
             friendRepository.declineFriendRequest(friendId, actionLiveData);
         });
         dialog.show();
+    }
+
+    private void loadFriendCount() {
+        friendRepository.getFriendsByUser(friendId, friendLiveData);
+        friendLiveData.observe(this, result -> {
+            if (result == null) return;
+            if (result.status == Result.Status.SUCCESS) {
+                List<Friend> list = result.data;
+                int count = list == null ? 0 : list.size();
+                tvStats.setText(count + " bạn bè");
+            }
+        });
     }
 }
