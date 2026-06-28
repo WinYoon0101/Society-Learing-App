@@ -26,6 +26,7 @@ import com.example.frontend.R;
 import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Conversation;
 import com.example.frontend.data.model.Friend;
+import com.example.frontend.data.model.FriendStatus;
 import com.example.frontend.data.model.Media;
 import com.example.frontend.data.model.User;
 import com.example.frontend.data.remote.ApiClient;
@@ -80,10 +81,16 @@ public class FriendProfileActivity extends AppCompatActivity {
     private MutableLiveData<Result<Object>> actionLiveData = new MutableLiveData<>();
     private User currentUser;
     private String friendId;
-    private boolean isFriend = false;
-    private boolean isPending = false;
     private FrameLayout contentContainer;
     private MutableLiveData<Result<List<Friend>>> profileFriendsLiveData = new MutableLiveData<>();
+    private enum FriendState {
+        NONE,
+        SENT,
+        RECEIVED,
+        FRIEND
+    }
+    private FriendState friendState = FriendState.NONE;
+    private MutableLiveData<Result<FriendStatus>> friendStatusLiveData=new MutableLiveData<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -225,66 +232,74 @@ public class FriendProfileActivity extends AppCompatActivity {
         Glide.with(this).load(currentUser.getCover()).placeholder(R.drawable.bg_cover_default).error(R.drawable.bg_cover_default).into(imgCover);
         tvStats.setText(currentUser.getFriendCount()+" bạn bè");
     }
-    private void loadFriendStatus() {
-        friendRepository.getFriendsByUser(friendId, profileFriendsLiveData);
-        friendRepository.getPendingRequests(pendingLiveData);
-        profileFriendsLiveData.observe(this,result->{
+    private void loadFriendStatus(){
+        friendRepository.checkFriendStatus(friendId, friendStatusLiveData);
+        friendStatusLiveData.observe(this,result->{
             if(result==null) return;
-            if(result.status==Result.Status.SUCCESS){
-                List<Friend> list=result.data;
-                tvStats.setText(list.size()+" bạn bè");
-                isFriend=false;
-                for(Friend f:result.data){
-                    if(f.getId().equals(friendId)){
-                        isFriend=true;
-                        break;
-                    }
-                }
-                updateFriendButton();
-            }
-            else if(result.status==Result.Status.ERROR){
-                Log.e("FRIEND",result.message);
-            }
-        });
-        pendingLiveData.observe(this, result -> {
-            if (result.status != Result.Status.SUCCESS || result.data == null)
-                return;
-            isPending = false;
-            for (Friend f : result.data) {
-                if (f.getId().equals(friendId)) {
-                    isPending = true;
+            if(result.status!=Result.Status.SUCCESS) return;
+            String state=result.data.getState();
+            switch(state){
+                case "friend":
+                    friendState=FriendState.FRIEND;
                     break;
-                }
+
+                case "sent":
+                    friendState=FriendState.SENT;
+                    break;
+
+                case "received":
+                    friendState=FriendState.RECEIVED;
+                    break;
+
+                default:
+                    friendState=FriendState.NONE;
+
             }
             updateFriendButton();
         });
     }
-    private void updateFriendButton() {
-        if (isFriend) {
-            btnFriend.setText("Bạn bè");
-            btnFriend.setBackgroundTintList(getColorStateList(R.color.green));
-            btnFriend.setTextColor(getColor(R.color.white));
-        }
-        else if (isPending) {
-            btnFriend.setText("Đã gửi lời mời");
-            btnFriend.setEnabled(false);
-            btnFriend.setBackgroundTintList(getColorStateList(R.color.gray));
+    private void updateFriendButton(){
+        switch(friendState){
+            case FRIEND:
+                btnFriend.setEnabled(true);
+                btnFriend.setText("Bạn bè");
+                break;
+
+            case SENT:
+                btnFriend.setEnabled(true);
+                btnFriend.setText("Đã gửi lời mời");
+                break;
+
+            case RECEIVED:
+                btnFriend.setEnabled(true);
+                btnFriend.setText("Chờ xác nhận");
+                break;
+
+            default:
+                btnFriend.setEnabled(true);
+                btnFriend.setText("Thêm bạn bè");
+
         }
 
-        else {
-            btnFriend.setEnabled(true);
-            btnFriend.setText("Thêm bạn bè");
-            btnFriend.setBackgroundTintList(getColorStateList(R.color.gray));
-            btnFriend.setTextColor(getColor(R.color.black));
-        }
     }
     private void initClick() {
-        btnFriend.setOnClickListener(v -> {
-            if (isFriend) {
-                showFriendBottomSheet();
-            }
-            else if (!isPending) {
-                friendRepository.sendFriendRequest(friendId, actionLiveData);
+        btnFriend.setOnClickListener(v->{
+            switch(friendState){
+                case NONE:
+                    friendRepository.sendFriendRequest(friendId, actionLiveData);
+                    break;
+
+                case SENT:
+                    showCancelRequestDialog();
+                    break;
+
+                case RECEIVED:
+                    showAcceptRejectBottomSheet();
+                    break;
+
+                case FRIEND:
+                    showFriendBottomSheet();
+                    break;
             }
         });
     }
@@ -445,5 +460,30 @@ public class FriendProfileActivity extends AppCompatActivity {
             public void onFailure(Call<ApiResponse<List<Media>>> call, Throwable t) {
                 Toast.makeText(FriendProfileActivity.this, "Lỗi tải ảnh", Toast.LENGTH_SHORT).show();}
         });
+    }
+    private void showCancelRequestDialog() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Hủy lời mời")
+                .setMessage("Bạn có chắc chắn muốn hủy lời mời kết bạn không?")
+                .setNegativeButton("Không", null)
+                .setPositiveButton("Xác nhận", (dialog, which) -> {
+                    friendRepository.declineFriendRequest(friendId, actionLiveData);
+                }).show();
+    }
+
+    private void showAcceptRejectBottomSheet() {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View view = getLayoutInflater().inflate(R.layout.bottom_pending_action, null);
+        dialog.setContentView(view);
+        LinearLayout btnAccept = view.findViewById(R.id.btnAcceptFriend);
+        LinearLayout btnDecline = view.findViewById(R.id.btnDeclineFriend);
+        btnAccept.setOnClickListener(v -> {dialog.dismiss();
+            friendRepository.acceptFriendRequest(friendId, actionLiveData);
+        });
+        btnDecline.setOnClickListener(v -> {
+            dialog.dismiss();
+            friendRepository.declineFriendRequest(friendId, actionLiveData);
+        });
+        dialog.show();
     }
 }

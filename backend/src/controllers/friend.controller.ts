@@ -46,12 +46,10 @@ export const sendFriendRequest = async (
     }
 
     if (userA === userB) {
-      res
-        .status(400)
-        .json({
-          success: false,
-          message: "Bạn không thể tự gửi lời mời kết bạn cho chính mình.",
-        });
+      res.status(400).json({
+        success: false,
+        message: "Bạn không thể tự gửi lời mời kết bạn cho chính mình.",
+      });
       return;
     }
 
@@ -82,12 +80,10 @@ export const sendFriendRequest = async (
         return;
       }
       if (existingFriendship.status === "pending") {
-        res
-          .status(400)
-          .json({
-            success: false,
-            message: "Đã tồn tại lời mời kết bạn đang chờ xử lý.",
-          });
+        res.status(400).json({
+          success: false,
+          message: "Đã tồn tại lời mời kết bạn đang chờ xử lý.",
+        });
         return;
       }
 
@@ -159,12 +155,10 @@ export const acceptFriendRequest = async (
     });
 
     if (!request) {
-      res
-        .status(404)
-        .json({
-          success: false,
-          message: "Không tìm thấy lời mời kết bạn này.",
-        });
+      res.status(404).json({
+        success: false,
+        message: "Không tìm thấy lời mời kết bạn này.",
+      });
       return;
     }
 
@@ -273,12 +267,10 @@ export const getFriends = async (
     const userId = req.user?.id;
 
     if (!userId) {
-      res
-        .status(401)
-        .json({
-          success: false,
-          message: "Không tìm thấy thông tin xác thực.",
-        });
+      res.status(401).json({
+        success: false,
+        message: "Không tìm thấy thông tin xác thực.",
+      });
       return;
     }
 
@@ -317,12 +309,10 @@ export const getPendingRequests = async (
     const userId = req.user?.id;
 
     if (!userId) {
-      res
-        .status(401)
-        .json({
-          success: false,
-          message: "Không tìm thấy thông tin xác thực.",
-        });
+      res.status(401).json({
+        success: false,
+        message: "Không tìm thấy thông tin xác thực.",
+      });
       return;
     }
 
@@ -646,6 +636,76 @@ export const getFriendsByUserId = async (
       data: friends,
     });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+export const checkFriendStatus = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const myId = req.user?.id;
+    const otherId = req.params.id;
+    const relation = await Friend.findOne({
+      $or: [
+        {
+          requester: myId,
+          recipient: otherId,
+        },
+        {
+          requester: otherId,
+          recipient: myId,
+        },
+      ],
+    });
+    if (!relation) {
+      res.json({
+        success: true,
+        data: {
+          state: "none",
+        },
+      });
+      return;
+    }
+    if (relation.status === "accepted") {
+      res.json({
+        success: true,
+        data: {
+          state: "friend",
+        },
+      });
+      return;
+    }
+    if (relation.status === "pending") {
+      // mình gửi
+      if (relation.requester.toString() === myId) {
+        res.json({
+          success: true,
+          data: {
+            state: "sent",
+          },
+        });
+      } else {
+        res.json({
+          success: true,
+          data: {
+            state: "received",
+          },
+        });
+      }
+      return;
+    }
+    res.json({
+      success: true,
+      data: {
+        state: "none",
+      },
+    });
+  } catch (err) {
     res.status(500).json({
       success: false,
       message: "Server Error",

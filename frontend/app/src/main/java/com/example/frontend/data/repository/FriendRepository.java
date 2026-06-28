@@ -3,6 +3,7 @@ import androidx.lifecycle.MutableLiveData;
 import android.content.Context;
 import com.example.frontend.data.model.ApiResponse;
 import com.example.frontend.data.model.Friend;
+import com.example.frontend.data.model.FriendStatus;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.utils.Result;
@@ -244,5 +245,23 @@ public void getFriendSuggestions(MutableLiveData<Result<List<Friend>>> resultLiv
                     }
                 });
 
+    }
+
+    public void checkFriendStatus(String userId, MutableLiveData<Result<FriendStatus>> liveData){
+        liveData.postValue(Result.loading(null));
+        apiService.checkFriendStatus(userId).enqueue(new Callback<ApiResponse<FriendStatus>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<FriendStatus>> call, Response<ApiResponse<FriendStatus>> response) {
+                if(response.isSuccessful() && response.body()!=null){
+                    liveData.postValue(Result.success(response.body().getData()));
+                }
+                else{
+                    liveData.postValue(Result.error("Không lấy được trạng thái", null));
+                }
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<FriendStatus>> call, Throwable t) {
+                liveData.postValue(Result.error(t.getMessage(), null));}
+        });
     }
 }
