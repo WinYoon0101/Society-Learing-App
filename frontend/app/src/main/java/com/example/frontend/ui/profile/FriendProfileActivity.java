@@ -392,6 +392,7 @@ public class FriendProfileActivity extends AppCompatActivity {
             if (result == null) return;
             if (result.status == Result.Status.SUCCESS) {
                 List<Friend> list = result.data;
+                tvStats.setText(list.size() + " bạn bè");
                 if (list == null || list.isEmpty()) {
                     tvEmpty.setVisibility(View.VISIBLE);
                     rv.setVisibility(View.GONE);
