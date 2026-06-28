@@ -78,19 +78,49 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         h.dotUnread.setVisibility(n.isRead() ? View.GONE : View.VISIBLE);
         h.itemView.setBackgroundColor(n.isRead() ? Color.WHITE : Color.parseColor("#ECFDF5"));
 
-        // Load Avatar
-        if (n.getSender() != null && n.getSender().getAvatar() != null && !n.getSender().getAvatar().isEmpty()) {
-            Glide.with(context).load(n.getSender().getAvatar())
-                    .placeholder(R.drawable.ic_user).into(h.imgAvatar);
+        // ==========================================
+        // 1. XỬ LÝ HIỂN THỊ AVATAR / ICON HỆ THỐNG
+        // ==========================================
+        String type = n.getType(); // Lấy type từ model (VD: system_warning)
+
+        if (type != null && type.startsWith("system_")) {
+            // Đây là thông báo hệ thống -> Dừng load ảnh mạng
+            Glide.with(context).clear(h.imgAvatar);
+            h.imgAvatar.setPadding(20, 20, 20, 20); // Thu nhỏ icon lại
+
+            switch (type) {
+                case "system_warning":
+                    h.imgAvatar.setImageResource(R.drawable.ic_warning);
+                    break;
+                case "system_event":
+                    h.imgAvatar.setImageResource(R.drawable.ic_event);
+                    break;
+                case "system_notice":
+                default:
+                    h.imgAvatar.setImageResource(R.drawable.ic_notice);
+                    break;
+            }
         } else {
-            h.imgAvatar.setImageResource(R.drawable.ic_user);
+            // Đây là thông báo thường -> Reset lại UI
+            h.imgAvatar.setPadding(0, 0, 0, 0);
+            h.imgAvatar.setCircleBackgroundColor(Color.TRANSPARENT);
+
+            if (n.getSender() != null && n.getSender().getAvatar() != null && !n.getSender().getAvatar().isEmpty()) {
+                Glide.with(context).load(n.getSender().getAvatar())
+                        .placeholder(R.drawable.ic_user).into(h.imgAvatar);
+            } else {
+                Glide.with(context).clear(h.imgAvatar);
+                h.imgAvatar.setImageResource(R.drawable.ic_user);
+            }
         }
 
-        // Xử lý Click điều hướng
+        // ==========================================
+        // 2. XỬ LÝ SỰ KIỆN CLICK
+        // ==========================================
         h.itemView.setOnClickListener(v -> {
-            Log.d("NOTI_DEBUG", "Type: " + n.getTargetType() + " | Id: " + n.getTargetId());
+            Log.d("NOTI_DEBUG", "Type: " + n.getTargetType() + " | Id: " + n.getTargetId() + " | SysType: " + type);
 
-            // 1. Cập nhật trạng thái đã đọc lên Server và UI
+            // Cập nhật trạng thái đã đọc lên Server và UI
             if (!n.isRead()) {
                 n.setRead(true);
                 notifyItemChanged(pos);
@@ -100,7 +130,13 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 });
             }
 
-            // 2. Chuyển trang
+            // Nếu là thông báo hệ thống
+            if (type != null && type.startsWith("system_")) {
+                Toast.makeText(context, "Đã xem thông báo hệ thống", Toast.LENGTH_SHORT).show();
+                return; // Dừng lại, không chạy code chuyển trang bên dưới
+            }
+
+            // Chuyển trang cho thông báo thông thường
             String targetType = n.getTargetType();
             String targetId = n.getTargetId();
 

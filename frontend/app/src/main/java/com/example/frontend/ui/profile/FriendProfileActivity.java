@@ -41,7 +41,7 @@ public class FriendProfileActivity extends AppCompatActivity {
     private FriendRepository friendRepository;
     private MutableLiveData<Result<Conversation>> convLive = new MutableLiveData<>();
     private ImageView imgCover;
-    private CircleImageView imgAvatar;
+    private ImageView imgAvatar;
     private TextView tvFriendName;
     private TextView tvBio;
     private TextView tvStats;
