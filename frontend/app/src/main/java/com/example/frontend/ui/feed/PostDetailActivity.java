@@ -36,6 +36,7 @@ import java.util.List;
 public class PostDetailActivity extends AppCompatActivity {
 
     public static final String EXTRA_POST_FEELING = "POST_FEELING";
+    public static final String EXTRA_POST_VIDEOS = "POST_VIDEOS";
     public static final String EXTRA_TAG_IDS = "TAG_IDS";
     public static final String EXTRA_TAG_NAMES = "TAG_NAMES";
     public static final String EXTRA_TAG_AVATARS = "TAG_AVATARS";
@@ -300,6 +301,7 @@ public class PostDetailActivity extends AppCompatActivity {
             List<User> tags = readTaggedUsersFromIntent();
 
             ArrayList<String> postImages = getIntent().getStringArrayListExtra("POST_IMAGES");
+            ArrayList<String> postVideos = getIntent().getStringArrayListExtra(EXTRA_POST_VIDEOS);
             int commentCount = getIntent().getIntExtra("COMMENT_COUNT", 0);
             int reactionCount = getIntent().getIntExtra("REACTION_COUNT", 0);
             String myReaction = getIntent().getStringExtra("MY_REACTION");
@@ -314,15 +316,7 @@ public class PostDetailActivity extends AppCompatActivity {
 
             if (tvTime != null) tvTime.setText(formatTime(postTime));
 
-            if (postImages != null && !postImages.isEmpty() && rvPostImagesFeed != null) {
-                currentPostImageUrl = postImages.get(0);
-                rvPostImagesFeed.setVisibility(View.VISIBLE);
-                PostImageAdapter imageAdapter = new PostImageAdapter(this, postImages);
-                rvPostImagesFeed.setAdapter(imageAdapter);
-            } else if (rvPostImagesFeed != null) {
-                currentPostImageUrl = "";
-                rvPostImagesFeed.setVisibility(View.GONE);
-            }
+            bindPostMedia(postImages, postVideos);
 
             if (tvCommentCount != null) tvCommentCount.setText(String.valueOf(commentCount));
 
@@ -445,16 +439,21 @@ public class PostDetailActivity extends AppCompatActivity {
                     post.getTopReactions()
             );
 
-            if (post.getImages() != null && !post.getImages().isEmpty() && rvPostImagesFeed != null) {
-                currentPostImageUrl = post.getImages().get(0);
-                rvPostImagesFeed.setVisibility(View.VISIBLE);
-                PostImageAdapter imageAdapter = new PostImageAdapter(this, post.getImages());
-                rvPostImagesFeed.setAdapter(imageAdapter);
-            } else if (rvPostImagesFeed != null) {
-                currentPostImageUrl = "";
-                rvPostImagesFeed.setVisibility(View.GONE);
-            }
+            bindPostMedia(post.getImages(), post.getVideos());
         });
+    }
+
+    private void bindPostMedia(List<String> images, List<String> videos) {
+        boolean hasImages = images != null && !images.isEmpty();
+        boolean hasVideos = videos != null && !videos.isEmpty();
+        if ((hasImages || hasVideos) && rvPostImagesFeed != null) {
+            currentPostImageUrl = hasImages ? images.get(0) : "";
+            rvPostImagesFeed.setVisibility(View.VISIBLE);
+            rvPostImagesFeed.setAdapter(new PostImageAdapter(this, images, videos));
+        } else if (rvPostImagesFeed != null) {
+            currentPostImageUrl = "";
+            rvPostImagesFeed.setVisibility(View.GONE);
+        }
     }
 
     private boolean showSharePostSheet() {

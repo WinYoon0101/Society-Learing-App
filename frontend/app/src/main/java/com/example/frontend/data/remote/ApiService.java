@@ -287,7 +287,8 @@ public interface ApiService {
             @Part("groupId") RequestBody groupId,
             @Part("tags") RequestBody tags,
             @Part("initialReaction") RequestBody initialReaction,
-            @Part List<MultipartBody.Part> images
+            @Part List<MultipartBody.Part> images,
+            @Part List<MultipartBody.Part> videos
     );
 
     @DELETE("posts/{id}")

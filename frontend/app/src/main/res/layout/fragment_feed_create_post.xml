@@ -199,7 +199,7 @@
                 android:id="@+id/optImage"
                 style="@style/OptionListItemStyle">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_image" app:tint="#4CAF50"/>
-                <TextView style="@style/OptionListTextStyle" android:text="Ảnh"/>
+                <TextView style="@style/OptionListTextStyle" android:text="Ảnh/video"/>
             </LinearLayout>
 
             <LinearLayout

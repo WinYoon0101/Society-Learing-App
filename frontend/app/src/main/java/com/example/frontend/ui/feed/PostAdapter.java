@@ -283,9 +283,11 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             });
         }
 
-        if (post.getImages() != null && !post.getImages().isEmpty()) {
+        boolean hasImages = post.getImages() != null && !post.getImages().isEmpty();
+        boolean hasVideos = post.getVideos() != null && !post.getVideos().isEmpty();
+        if (hasImages || hasVideos) {
             holder.rvPostImages.setVisibility(View.VISIBLE);
-            PostImageAdapter imageAdapter = new PostImageAdapter(context, post.getImages());
+            PostImageAdapter imageAdapter = new PostImageAdapter(context, post.getImages(), post.getVideos());
             holder.rvPostImages.setAdapter(imageAdapter);
         } else {
             holder.rvPostImages.setVisibility(View.GONE);
@@ -366,6 +368,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
                 if (post.getImages() != null) {
                     intent.putStringArrayListExtra("POST_IMAGES", new ArrayList<>(post.getImages()));
+                }
+                if (post.getVideos() != null) {
+                    intent.putStringArrayListExtra(PostDetailActivity.EXTRA_POST_VIDEOS, new ArrayList<>(post.getVideos()));
                 }
 
                 intent.putExtra("COMMENT_COUNT", post.getcountComment());

@@ -148,6 +148,14 @@ const autoFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.
   }
 };
 
+const postMediaFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  if (file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("Chi chap nhan anh hoac video cho bai viet."));
+  }
+};
+
 // ─── Exports ──────────────────────────────────────────────────────────────────
 
 export const uploadImage = multer({
@@ -173,6 +181,15 @@ export const uploadMedia = multer({
   fileFilter: autoFilter,
   limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
 }).array("media", 5);
+
+export const uploadPostMedia = multer({
+  storage: autoStorage,
+  fileFilter: postMediaFilter,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
+}).fields([
+  { name: "images", maxCount: 10 },
+  { name: "videos", maxCount: 5 },
+]);
 
 export const uploadImages = multer({
   storage: imageStorage,

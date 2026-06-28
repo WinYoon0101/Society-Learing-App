@@ -227,11 +227,9 @@ export const getSavedPosts = async (req: AuthRequest, res: Response): Promise<an
 
         const formattedPosts = posts.map((post: any) => {
             const postObj = post.toJSON({ virtuals: true });
-            if (postObj.mediaFiles && postObj.mediaFiles.length > 0) {
-                postObj.images = postObj.mediaFiles.map((media: any) => media.url);
-            } else {
-                postObj.images = [];
-            }
+            const mediaFiles = postObj.mediaFiles || [];
+            postObj.images = mediaFiles.filter((media: any) => media.fileType === 'image').map((media: any) => media.url);
+            postObj.videos = mediaFiles.filter((media: any) => media.fileType === 'video').map((media: any) => media.url);
             delete postObj.mediaFiles;
             return postObj;
         });
@@ -256,8 +254,9 @@ export const getMyPosts = async (req: AuthRequest, res: Response) => {
             .lean();
 
         const postsWithDetails = await Promise.all(posts.map(async (post) => {
-            const mediaList = await Media.find({ targetId: post._id, fileType: 'image' });
-            const imageUrls = mediaList.map(m => m.url);
+            const mediaList = await Media.find({ targetId: post._id });
+            const imageUrls = mediaList.filter(m => m.fileType === 'image').map(m => m.url);
+            const videoUrls = mediaList.filter(m => m.fileType === 'video').map(m => m.url);
             const countComment = await Comment.countDocuments({ postId: post._id });
             const countReaction = await Reaction.countDocuments({ targetId: post._id });
             const myReactDoc = await Reaction.findOne({ targetId: post._id, userId });
@@ -269,6 +268,7 @@ export const getMyPosts = async (req: AuthRequest, res: Response) => {
             return {
                 ...post,
                 images: imageUrls,
+                videos: videoUrls,
                 countComment,
                 countReaction,
                 myReaction: myReactDoc?.type ?? null,
@@ -297,8 +297,9 @@ export const getPostsByUser = async (req: AuthRequest, res: Response) => {
             .lean();
 
         const postsWithDetails = await Promise.all(posts.map(async (post) => {
-            const mediaList = await Media.find({ targetId: post._id, fileType: 'image' });
-            const imageUrls = mediaList.map(m => m.url);
+            const mediaList = await Media.find({ targetId: post._id });
+            const imageUrls = mediaList.filter(m => m.fileType === 'image').map(m => m.url);
+            const videoUrls = mediaList.filter(m => m.fileType === 'video').map(m => m.url);
             const countComment = await Comment.countDocuments({ postId: post._id });
             const countReaction = await Reaction.countDocuments({ targetId: post._id });
             const myReactDoc = await Reaction.findOne({ targetId: post._id, userId: currentUserId });
@@ -310,6 +311,7 @@ export const getPostsByUser = async (req: AuthRequest, res: Response) => {
             return {
                 ...post,
                 images: imageUrls,
+                videos: videoUrls,
                 countComment,
                 countReaction,
                 myReaction: myReactDoc?.type ?? null,
@@ -343,8 +345,9 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<any>
 
         const postIdObj = new mongoose.Types.ObjectId(post._id.toString());
 
-        const mediaList = await Media.find({ targetId: post._id, fileType: 'image' });
-        const imageUrls = mediaList.map(m => m.url);
+        const mediaList = await Media.find({ targetId: post._id });
+        const imageUrls = mediaList.filter(m => m.fileType === 'image').map(m => m.url);
+        const videoUrls = mediaList.filter(m => m.fileType === 'video').map(m => m.url);
 
         const countComment = await Comment.countDocuments({ postId: post._id });
         const countReaction = await Reaction.countDocuments({ targetId: postIdObj });
@@ -368,6 +371,7 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<any>
         const postDetail = {
             ...post,
             images: imageUrls,
+            videos: videoUrls,
             countComment: countComment,
             countReaction: countReaction,
             myReaction: myReaction,
