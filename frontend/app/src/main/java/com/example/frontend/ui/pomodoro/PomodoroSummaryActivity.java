@@ -52,31 +52,34 @@ public class PomodoroSummaryActivity extends AppCompatActivity {
         int happy = stats.getOrDefault("HAPPY", 0);
         int neutral = stats.getOrDefault("NEUTRAL", 0);
         int stress = stats.getOrDefault("ANGER", 0) + stats.getOrDefault("SAD", 0);
-        int surprised = stats.getOrDefault("SURPRISED", 0);
 
-        int total = happy + neutral + stress + surprised;
+        // Cộng gộp cả ngạc nhiên (SURPRISED) và không có mặt (NO_FACE) thành tổng số lần XAO NHÃNG
+        int distracted = stats.getOrDefault("SURPRISED", 0) + stats.getOrDefault("NO_FACE", 0);
+
+        // Tính tổng dựa trên biến distracted mới
+        int total = happy + neutral + stress + distracted;
         if (total == 0) total = 1;
 
         // Tính toán phần trăm
         int pHappy = (happy * 100) / total;
         int pNeutral = (neutral * 100) / total;
         int pStress = (stress * 100) / total;
-        int pSurprised = (surprised * 100) / total;
+        int pDistracted = (distracted * 100) / total; // Phần trăm xao nhãng tổng hợp
 
-        // Hiển thị lên UI (có animation chạy thanh bar)
+        // Hiển thị lên UI
         progressHappy.setProgress(pHappy, true);
         progressNeutral.setProgress(pNeutral, true);
         progressStress.setProgress(pStress, true);
-        progressSurprised.setProgress(pSurprised, true);
+        progressSurprised.setProgress(pDistracted, true);
 
-        // Hiệu suất: Tập trung (Neutral) + Tinh thần tốt (Happy/2) - Xao nhãng (Surprised/2)
-        int efficiency = Math.max(0, pNeutral + (pHappy / 2) - (pSurprised / 2));
+        // Hiệu suất: Tập trung (Neutral) + Tinh thần tốt (Happy/2) - Xao nhãng tổng hợp (pDistracted/2)
+        int efficiency = Math.max(0, pNeutral + (pHappy / 2) - (pDistracted / 2));
         txtEfficiency.setText(efficiency + "%");
 
-        // Lời khuyên AI tiếng Việt "vibe" Vibely
+        // Lời khuyên AI tiếng Việt cập nhật theo biến pDistracted mới
         String advice;
-        if (pSurprised > 25) {
-            advice = "Phiên này bạn hơi dễ bị xao nhãng rồi đó nha. Hãy cất điện thoại và chọn chỗ yên tĩnh hơn đi!";
+        if (pDistracted > 25) {
+            advice = "Phiên này bạn hơi dễ bị xao nhãng rồi đó nha (có lúc ngó lơ hoặc rời khỏi camera luôn nè). Hãy cất điện thoại và chọn chỗ yên tĩnh hơn đi!";
         } else if (pNeutral > 60) {
             advice = "Đỉnh của chóp! Khả năng tập trung của bạn cực kỳ ổn định. Tiếp tục phát huy nhé!";
         } else if (pStress > 30) {

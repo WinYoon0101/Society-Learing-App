@@ -61,6 +61,15 @@ public class PomodoroActivity extends AppCompatActivity {
     private android.media.MediaPlayer mediaPlayer;
     private int currentMusicRes = R.raw.lofi;
 
+    private final String[] noFaceMessages = {
+            "Ủa, bạn đi đâu mất rồi? Quay lại bàn học thôi nào! 🏃‍♂️",
+            "Đừng để xao nhãng nè, tập trung học tập bạn nhé! 👀",
+            "Camera không thấy bạn đâu cả. Tập trung cao độ nào! 🔥",
+            "Thời gian Pomodoro đang chạy, nghiêm túc học tập nào! ⏰",
+            "Học tiếp thôi, ngó chỗ khác là AI biết liền đó nha! 😉",
+            "Nào nào, tập trung vào mục tiêu hôm nay thôi bạn ơi! 💪"
+    };
+
 
     // --- MUSIC LOGIC ---
     private void playSelectedMusic(int resId) {
@@ -209,6 +218,7 @@ public class PomodoroActivity extends AppCompatActivity {
         emotionStats.put("SAD", 0);
         emotionStats.put("ANGER", 0);
         emotionStats.put("SURPRISED", 0);
+        emotionStats.put("NO_FACE", 0);
     }
 
     private void startCamera() {
@@ -256,6 +266,15 @@ public class PomodoroActivity extends AppCompatActivity {
                         handleSmartLogic(emotion);
                     }
                 }
+            } else {
+                // Cộng điểm mất tập trung
+                emotionStats.put("NO_FACE", emotionStats.getOrDefault("NO_FACE", 0) + 1);
+
+                // --- XỬ LÝ NGẪU NHIÊN THÔNG BÁO KHI KHÔNG THẤY MẶT ---
+                runOnUiThread(() -> {
+                    int randomIndex = new java.util.Random().nextInt(noFaceMessages.length);
+                    txtAIMessage.setText(noFaceMessages[randomIndex]);
+                });
             }
         }).addOnCompleteListener(task -> imageProxy.close());
     }
