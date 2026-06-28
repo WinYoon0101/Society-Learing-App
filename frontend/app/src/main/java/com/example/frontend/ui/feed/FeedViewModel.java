@@ -23,6 +23,7 @@ public class FeedViewModel extends ViewModel {
 
     // Biến theo dõi trạng thái xóa bài viết
     private final MutableLiveData<String> deleteStatus = new MutableLiveData<>();
+    private final MutableLiveData<String> saveStatus = new MutableLiveData<>();
 
     public void init(Context context) {
         if (repository == null) {
@@ -37,6 +38,10 @@ public class FeedViewModel extends ViewModel {
     // Getter cho trạng thái xóa
     public LiveData<String> getDeleteStatus() {
         return deleteStatus;
+    }
+
+    public LiveData<String> getSaveStatus() {
+        return saveStatus;
     }
 
     public void loadPosts() {
@@ -93,14 +98,20 @@ public class FeedViewModel extends ViewModel {
                 public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                     if (response.isSuccessful()) {
                         Log.d("DEBUG_SAVE", "✅ Đã lưu/bỏ lưu bài viết thành công!");
+                        String msg = response.body() != null && response.body().getMessage() != null
+                                ? response.body().getMessage()
+                                : "Đã xử lý lưu bài viết";
+                        saveStatus.setValue(msg);
                     } else {
                         Log.e("DEBUG_SAVE", "❌ Lỗi khi lưu bài viết: " + response.code());
+                        saveStatus.setValue("Lỗi khi lưu bài viết: " + response.code());
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                     Log.e("DEBUG_SAVE", "❌ Lỗi mạng: " + t.getMessage());
+                    saveStatus.setValue("Lỗi mạng, không thể lưu bài viết: " + t.getMessage());
                 }
             });
         }

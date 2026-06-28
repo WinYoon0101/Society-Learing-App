@@ -155,6 +155,12 @@ public class FeedFragment extends Fragment {
             }
         });
 
+        viewModel.getSaveStatus().observe(getViewLifecycleOwner(), status -> {
+            if (status != null) {
+                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
+            }
+        });
+
         // =======================================================
         // 4. Nút mở màn hình tạo bài viết
         // =======================================================

@@ -46,7 +46,9 @@ public class ApiClient {
                         String token = prefs.getString("JWT_TOKEN", "");
 
                         Request newRequest = chain.request().newBuilder()
-                                .addHeader("Authorization", "Bearer " + token)
+                                // Dùng header() thay vì addHeader() để tránh gửi trùng Authorization
+                                // khi một số API đã truyền @Header("Authorization") từ Retrofit.
+                                .header("Authorization", "Bearer " + token)
                                 .build();
                         return chain.proceed(newRequest);
                     })
