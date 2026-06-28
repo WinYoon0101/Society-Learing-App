@@ -532,4 +532,10 @@ public interface ApiService {
 
     @GET("user/{id}")
     Call<ApiResponse<User>> getUserById(@Path("id") String id);
+
+    @GET("media/user/{id}")
+    Call<ApiResponse<List<Media>>> getUserMedia(@Path("id") String userId,@Query("fileType") String fileType);
+
+    @GET("friends/user/{id}")
+    Call<ApiResponse<List<Friend>>> getFriendsByUser(@Path("id") String userId);
 }

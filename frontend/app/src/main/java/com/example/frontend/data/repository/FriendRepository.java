@@ -204,4 +204,45 @@ public void getFriendSuggestions(MutableLiveData<Result<List<Friend>>> resultLiv
         }
     });
 }
+    public void getFriendsByUser(
+            String userId,
+            MutableLiveData<Result<List<Friend>>> resultLiveData
+    ){
+
+        resultLiveData.postValue(Result.loading(null));
+
+        apiService.getFriendsByUser(userId)
+                .enqueue(new Callback<ApiResponse<List<Friend>>>() {
+
+                    @Override
+                    public void onResponse(
+                            Call<ApiResponse<List<Friend>>> call,
+                            Response<ApiResponse<List<Friend>>> response) {
+
+                        if(response.isSuccessful()
+                                && response.body()!=null){
+
+                            resultLiveData.postValue(
+                                    Result.success(response.body().getData())
+                            );
+
+                        }else{
+
+                            resultLiveData.postValue(
+                                    Result.error("Không lấy được bạn bè",null)
+                            );
+
+                        }
+
+                    }
+
+                    @Override
+                    public void onFailure(Call<ApiResponse<List<Friend>>> call, Throwable t) {
+                        resultLiveData.postValue(
+                                Result.error(t.getMessage(),null)
+                        );
+                    }
+                });
+
+    }
 }
