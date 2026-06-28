@@ -21,7 +21,6 @@ public class FeedViewModel extends ViewModel {
     private PostRepository repository;
     private final MutableLiveData<List<Post>> postsLiveData = new MutableLiveData<>();
 
-    // Biến theo dõi trạng thái xóa bài viết
     private final MutableLiveData<String> deleteStatus = new MutableLiveData<>();
     private final MutableLiveData<String> saveStatus = new MutableLiveData<>();
 
@@ -35,13 +34,20 @@ public class FeedViewModel extends ViewModel {
         return postsLiveData;
     }
 
-    // Getter cho trạng thái xóa
     public LiveData<String> getDeleteStatus() {
         return deleteStatus;
     }
 
     public LiveData<String> getSaveStatus() {
         return saveStatus;
+    }
+
+    public void clearDeleteStatus() {
+        deleteStatus.setValue(null);
+    }
+
+    public void clearSaveStatus() {
+        saveStatus.setValue(null);
     }
 
     public void loadPosts() {
@@ -64,9 +70,6 @@ public class FeedViewModel extends ViewModel {
         }
     }
 
-    // ==========================================================
-    // HÀM XỬ LÝ GỌI API XÓA BÀI VIẾT
-    // ==========================================================
     public void deletePost(String token, String postId) {
         if (repository != null) {
             repository.deletePost(token, postId, new Callback<ApiResponse<Object>>() {
@@ -74,7 +77,7 @@ public class FeedViewModel extends ViewModel {
                 public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                     if (response.isSuccessful()) {
                         deleteStatus.setValue("SUCCESS");
-                        loadPosts(); // Tự động load lại bảng tin sau khi xóa thành công
+                        loadPosts();
                     } else {
                         deleteStatus.setValue("Lỗi khi xóa bài viết: " + response.code());
                     }
@@ -88,53 +91,49 @@ public class FeedViewModel extends ViewModel {
         }
     }
 
-    // ==========================================================
-    // ĐÃ THÊM: HÀM XỬ LÝ GỌI API LƯU / BỎ LƯU BÀI VIẾT
-    // ==========================================================
     public void toggleSavePost(String token, String postId) {
         if (repository != null) {
             repository.toggleSavePost(token, postId, new Callback<ApiResponse<Object>>() {
                 @Override
                 public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                     if (response.isSuccessful()) {
-                        Log.d("DEBUG_SAVE", "✅ Đã lưu/bỏ lưu bài viết thành công!");
+                        Log.d("DEBUG_SAVE", "Đã lưu/bỏ lưu bài viết thành công!");
+
                         String msg = response.body() != null && response.body().getMessage() != null
                                 ? response.body().getMessage()
                                 : "Đã xử lý lưu bài viết";
+
                         saveStatus.setValue(msg);
                     } else {
-                        Log.e("DEBUG_SAVE", "❌ Lỗi khi lưu bài viết: " + response.code());
+                        Log.e("DEBUG_SAVE", "Lỗi khi lưu bài viết: " + response.code());
                         saveStatus.setValue("Lỗi khi lưu bài viết: " + response.code());
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
-                    Log.e("DEBUG_SAVE", "❌ Lỗi mạng: " + t.getMessage());
+                    Log.e("DEBUG_SAVE", "Lỗi mạng: " + t.getMessage());
                     saveStatus.setValue("Lỗi mạng, không thể lưu bài viết: " + t.getMessage());
                 }
             });
         }
     }
 
-    // ==========================================================
-    // HÀM XỬ LÝ GỌI API THẢ CẢM XÚC LÊN SERVER
-    // ==========================================================
     public void toggleReaction(String targetId, String targetType, String type) {
         if (repository != null) {
             repository.toggleReaction(targetId, targetType, type, new Callback<ApiResponse<Object>>() {
                 @Override
                 public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                     if (response.isSuccessful()) {
-                        Log.d("DEBUG_REACT", "✅ Gửi Cảm xúc lên Server THÀNH CÔNG!");
+                        Log.d("DEBUG_REACT", "Gửi cảm xúc lên Server thành công!");
                     } else {
-                        Log.e("DEBUG_REACT", "❌ Server báo lỗi khi thả Cảm xúc: " + response.code());
+                        Log.e("DEBUG_REACT", "Server báo lỗi khi thả cảm xúc: " + response.code());
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
-                    Log.e("DEBUG_REACT", "❌ Lỗi mạng, không thể kết nối tới Server: " + t.getMessage());
+                    Log.e("DEBUG_REACT", "Lỗi mạng, không thể kết nối tới Server: " + t.getMessage());
                 }
             });
         }
