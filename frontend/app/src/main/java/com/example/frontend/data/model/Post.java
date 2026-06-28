@@ -12,9 +12,6 @@ public class Post {
     @SerializedName("images")
     private List<String> images;
 
-    @SerializedName("videos")
-    private List<String> videos;
-
     private User authorId;
 
     @SerializedName("groupId")
@@ -49,9 +46,6 @@ public class Post {
 
     public List<String> getImages() { return images; }
     public void setImages(List<String> images) { this.images = images; }
-
-    public List<String> getVideos() { return videos; }
-    public void setVideos(List<String> videos) { this.videos = videos; }
 
     public User getAuthorId() { return authorId; }
     public void setAuthorId(User authorId) { this.authorId = authorId; }

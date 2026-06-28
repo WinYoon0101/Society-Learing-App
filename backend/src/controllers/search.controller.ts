@@ -164,9 +164,8 @@ export const searchEverything = async (req: AuthRequest, res: Response): Promise
         const postsWithDetails = await Promise.all(rawPosts.map(async (post) => {
             const postIdObj = new mongoose.Types.ObjectId(post._id.toString());
 
-            const mediaList = await Media.find({ targetId: post._id });
-            const imageUrls = mediaList.filter(media => media.fileType === 'image').map(media => media.url);
-            const videoUrls = mediaList.filter(media => media.fileType === 'video').map(media => media.url);
+            const mediaList = await Media.find({ targetId: post._id, fileType: 'image' });
+            const imageUrls = mediaList.map(media => media.url);
 
             const commentCount = await Comment.countDocuments({ postId: post._id });
             const countReaction = await Reaction.countDocuments({ targetId: postIdObj });
@@ -190,7 +189,6 @@ export const searchEverything = async (req: AuthRequest, res: Response): Promise
             return {
                 ...post,
                 images: imageUrls,
-                videos: videoUrls,
                 countComment: commentCount,
                 countReaction: countReaction,
                 myReaction: myReaction,

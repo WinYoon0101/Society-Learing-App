@@ -38,10 +38,9 @@ public class PostRepository {
             RequestBody tags,
             RequestBody initialReaction,
             List<MultipartBody.Part> images,
-            List<MultipartBody.Part> videos,
             Callback<ApiResponse<Post>> callback) {
 
-        apiService.createPost(content, privacy, feeling, groupId, tags, initialReaction, images, videos).enqueue(callback);
+        apiService.createPost(content, privacy, feeling, groupId, tags, initialReaction, images).enqueue(callback);
     }
 
     // Reaction

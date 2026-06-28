@@ -1,6 +1,5 @@
 package com.example.frontend.ui.friend;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.frontend.R;
 import com.example.frontend.data.model.Friend; // Nhớ import model Friend
-import com.example.frontend.ui.profile.FriendProfileActivity;
 
 public class FriendFragment extends Fragment {
 
@@ -57,17 +55,6 @@ public class FriendFragment extends Fragment {
                 Toast.makeText(getContext(), "Đã xóa lời mời", Toast.LENGTH_SHORT).show();
             }
 
-            // ---- ĐÂY LÀ ĐOẠN BẠN CẦN THÊM VÀO ĐỂ SỬA LỖI ----
-            @Override
-            public void onAvatarClick(Friend friend) {
-                // MỞ TRANG CÁ NHÂN TẠI ĐÂY
-                Intent intent = new Intent(requireContext(), FriendProfileActivity.class);
-                intent.putExtra("FRIEND_ID", friend.getId());
-                intent.putExtra("FRIEND_NAME", friend.getUsername());
-                startActivity(intent);
-            }
-            // ---------------------------------------------------
-
             @Override public void onAddFriendClick(Friend friend) {}
             @Override public void onRemoveSuggestClick(Friend friend) {}
         });
@@ -80,17 +67,6 @@ public class FriendFragment extends Fragment {
         // ===============================================
         RecyclerView rvSuggestions = view.findViewById(R.id.rvFriendSuggestions);
         suggestionAdapter = new FriendAdapter(true, new FriendAdapter.OnFriendActionListener() {
-
-            @Override
-            public void onAvatarClick(Friend friend) {
-                // MỞ TRANG CÁ NHÂN TẠI ĐÂY
-                Intent intent = new Intent(requireContext(), FriendProfileActivity.class);
-                // Dựa vào cấu hình của FriendProfileActivity để truyền ID
-                intent.putExtra("FRIEND_ID", friend.getId());
-                // Có thể truyền thêm tên hoặc ảnh nếu cần load nhanh
-                intent.putExtra("FRIEND_NAME", friend.getUsername());
-                startActivity(intent);
-            }
             @Override
             public void onAddFriendClick(Friend friend) {
                 suggestionAdapter.updateItemStatus(friend.getId(), true);

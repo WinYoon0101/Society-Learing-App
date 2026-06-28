@@ -159,18 +159,9 @@ public class ProfileFragment extends Fragment {
                     Glide.with(requireContext()).load(user.getAvatar())
                             .placeholder(R.drawable.ic_profile)
                             .skipMemoryCache(true).into(imgAvatar);
-                    // Xử lý Load Ảnh bìa
-                    String coverUrl = user.getCover();
-                    if (coverUrl == null || coverUrl.trim().isEmpty()) {
-                        imgCover.setImageResource(R.drawable.anhbia);
-                    } else {
-                        Glide.with(requireContext())
-                                .load(coverUrl)
-                                .placeholder(R.drawable.anhbia)
-                                .error(R.drawable.anhbia)
-                                .skipMemoryCache(true)
-                                .into(imgCover);
-                    }
+                    Glide.with(requireContext()).load(user.getCover())
+                            .placeholder(R.drawable.bg_cover_default)
+                            .skipMemoryCache(true).into(imgCover);
                 }
             }
         });
@@ -578,23 +569,10 @@ public class ProfileFragment extends Fragment {
     }
 
     private void rollbackImage() {
-        if (currentType == TYPE_AVATAR) {
-            Glide.with(requireContext())
-                    .load(oldAvatarUrl)
-                    .placeholder(R.drawable.ic_profile)
-                    .error(R.drawable.ic_profile)
-                    .into(imgAvatar);
-        } else {
-            if (oldCoverUrl == null || oldCoverUrl.trim().isEmpty()) {
-                imgCover.setImageResource(R.drawable.anhbia);
-            } else {
-                Glide.with(requireContext())
-                        .load(oldCoverUrl)
-                        .placeholder(R.drawable.anhbia)
-                        .error(R.drawable.anhbia)
-                        .into(imgCover);
-            }
-        }
+        if (currentType == TYPE_AVATAR)
+            Glide.with(requireContext()).load(oldAvatarUrl).placeholder(R.drawable.ic_profile).into(imgAvatar);
+        else
+            Glide.with(requireContext()).load(oldCoverUrl).placeholder(R.drawable.bg_cover_default).into(imgCover);
     }
 
     private void selectTab(LinearLayout selectedTab) {
@@ -642,18 +620,15 @@ public class ProfileFragment extends Fragment {
         }).setNegativeButton("Hủy", null).show();
     }
     private void deleteCover() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Xóa ảnh bìa?")
-                .setMessage("Ảnh bìa sẽ trở về ảnh mặc định.")
-                .setPositiveButton("Xóa", (d, w) -> {
-                    repository.deleteCover().observe(getViewLifecycleOwner(), result -> {
-                        if (result.status == Result.Status.SUCCESS) {
-                            oldCoverUrl = null;
-                            imgCover.setImageResource(R.drawable.anhbia); // Đổi thành anhbia
-                            Toast.makeText(requireContext(), "Xóa ảnh bìa thành công!", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }).setNegativeButton("Hủy", null).show();
+        new AlertDialog.Builder(requireContext()).setTitle("Xóa ảnh bìa?").setMessage("Ảnh bìa sẽ trở về ảnh mặc định.").setPositiveButton("Xóa", (d, w) -> {
+            repository.deleteCover().observe(getViewLifecycleOwner(), result -> {
+                if (result.status == Result.Status.SUCCESS) {
+                    oldCoverUrl = null;
+                    imgCover.setImageResource(R.drawable.bg_cover_default);
+                    Toast.makeText(requireContext(), "Đổi ảnh bìa thành công!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }).setNegativeButton("Hủy", null).show();
     }
 }
 

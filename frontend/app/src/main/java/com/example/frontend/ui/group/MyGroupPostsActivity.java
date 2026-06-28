@@ -168,13 +168,11 @@ public class MyGroupPostsActivity extends AppCompatActivity {
             h.tvContent.setVisibility(
                     p.getContent() != null && !p.getContent().isEmpty() ? View.VISIBLE : View.GONE);
 
-            boolean hasImages = p.getImages() != null && !p.getImages().isEmpty();
-            boolean hasVideos = p.getVideos() != null && !p.getVideos().isEmpty();
-            if (hasImages || hasVideos) {
+            if (p.getImages() != null && !p.getImages().isEmpty()) {
                 h.rvImages.setVisibility(View.VISIBLE);
                 h.rvImages.setLayoutManager(new LinearLayoutManager(
                         h.rvImages.getContext(), LinearLayoutManager.HORIZONTAL, false));
-                h.rvImages.setAdapter(new PostImageAdapter(h.rvImages.getContext(), p.getImages(), p.getVideos()));
+                h.rvImages.setAdapter(new PostImageAdapter(h.rvImages.getContext(), p.getImages()));
             } else {
                 h.rvImages.setVisibility(View.GONE);
             }

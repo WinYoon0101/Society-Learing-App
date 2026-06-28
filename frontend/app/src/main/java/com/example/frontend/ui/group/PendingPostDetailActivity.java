@@ -36,7 +36,6 @@ public class PendingPostDetailActivity extends AppCompatActivity {
     public static final String EXTRA_CONTENT = "content";
     public static final String EXTRA_TIME = "time";
     public static final String EXTRA_IMAGES = "images";
-    public static final String EXTRA_VIDEOS = "videos";
 
     // Kết quả trả về
     public static final String RESULT_POST_ID = "resultPostId";
@@ -73,7 +72,6 @@ public class PendingPostDetailActivity extends AppCompatActivity {
         String content = getIntent().getStringExtra(EXTRA_CONTENT);
         String time = getIntent().getStringExtra(EXTRA_TIME);
         ArrayList<String> images = getIntent().getStringArrayListExtra(EXTRA_IMAGES);
-        ArrayList<String> videos = getIntent().getStringArrayListExtra(EXTRA_VIDEOS);
 
         tvAuthor.setText(authorName != null ? authorName : "");
         tvTime.setText(time != null ? time : "");
@@ -86,12 +84,10 @@ public class PendingPostDetailActivity extends AppCompatActivity {
             imgAvatar.setImageResource(R.drawable.ic_user);
         }
 
-        boolean hasImages = images != null && !images.isEmpty();
-        boolean hasVideos = videos != null && !videos.isEmpty();
-        if (hasImages || hasVideos) {
+        if (images != null && !images.isEmpty()) {
             rvImages.setVisibility(View.VISIBLE);
             rvImages.setLayoutManager(new LinearLayoutManager(this));
-            rvImages.setAdapter(new PostImageAdapter(this, images, videos));
+            rvImages.setAdapter(new PostImageAdapter(this, images));
         } else {
             rvImages.setVisibility(View.GONE);
         }

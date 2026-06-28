@@ -42,16 +42,9 @@ public class ImagePreviewAdapter extends RecyclerView.Adapter<ImagePreviewAdapte
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
         Uri uri = imageUris.get(position);
-        String mimeType = context.getContentResolver().getType(uri);
-        boolean isVideo = mimeType != null && mimeType.startsWith("video/");
 
         // Load ảnh vào ImageView
-        Glide.with(context)
-                .load(uri)
-                .placeholder(isVideo ? R.drawable.ic_video : R.drawable.ic_image)
-                .error(isVideo ? R.drawable.ic_video : R.drawable.ic_image)
-                .into(holder.imgItem);
-        holder.imgPlayIcon.setVisibility(isVideo ? View.VISIBLE : View.GONE);
+        Glide.with(context).load(uri).into(holder.imgItem);
 
         // Bắt sự kiện bấm nút X
         holder.btnRemove.setOnClickListener(v -> {
@@ -71,13 +64,12 @@ public class ImagePreviewAdapter extends RecyclerView.Adapter<ImagePreviewAdapte
 
     // Class ViewHolder giờ chỉ chứa đúng 2 View có thật trong XML
     public static class ImageViewHolder extends RecyclerView.ViewHolder {
-        ImageView imgItem, btnRemove, imgPlayIcon;
+        ImageView imgItem, btnRemove;
 
         public ImageViewHolder(@NonNull View itemView) {
             super(itemView);
             imgItem = itemView.findViewById(R.id.imgItem);
             btnRemove = itemView.findViewById(R.id.btnRemove);
-            imgPlayIcon = itemView.findViewById(R.id.imgPlayIcon);
         }
     }
 }

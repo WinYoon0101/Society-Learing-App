@@ -12,11 +12,11 @@ import {
     rejectPost,
 } from '../controllers/post.controller';
 import { authenticate } from '../middlewares/auth.middleware';
-import { uploadPostMedia } from '../middlewares/upload.middleware';
+import { uploadImages } from '../middlewares/upload.middleware';
 
 const router = express.Router();
 
-router.post('/create', authenticate, uploadPostMedia, createPost);
+router.post('/create', authenticate, uploadImages, createPost);
 router.get('/feed', authenticate, getFeed);
 router.get('/me', authenticate, getMyPosts);
 router.get('/my/saved', authenticate, getSavedPosts);

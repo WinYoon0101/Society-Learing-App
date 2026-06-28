@@ -22,18 +22,6 @@
 
     <!-- Nút X góc trên cùng bên phải để xóa ảnh -->
     <ImageView
-        android:id="@+id/imgPlayIcon"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_centerInParent="true"
-        android:background="@drawable/bg_circle_avatar"
-        android:backgroundTint="#99000000"
-        android:padding="12dp"
-        android:src="@drawable/ic_play"
-        android:visibility="gone"
-        app:tint="#FFFFFF" />
-
-    <ImageView
         android:id="@+id/btnRemove"
         android:layout_width="24dp"
         android:layout_height="24dp"
