@@ -41,7 +41,7 @@ const videoStorage = new CloudinaryStorage({
   }),
 });
 
-// SỬA LỖI Ở ĐÂY: Phân tách logic cho ảnh và tài liệu raw
+// Phân tách logic cho ảnh và tài liệu raw
 const documentStorage = new CloudinaryStorage({
   cloudinary,
   params: async (req: any, file: Express.Multer.File) => {
