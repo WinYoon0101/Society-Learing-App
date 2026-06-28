@@ -88,7 +88,7 @@ export const getGroupPosts = async (req: AuthRequest, res: Response): Promise<vo
 
                 const [mediaList, countComment, countReaction, myReactDoc, topReactDocs] =
                     await Promise.all([
-                        Media.find({ targetId: post._id, fileType: "image" }).lean(),
+                        Media.find({ targetId: post._id }).lean(),
                         Comment.countDocuments({ postId: post._id }),
                         Reaction.countDocuments({ targetId: postIdObj }),
                         Reaction.findOne({ targetId: postIdObj, userId: userId }).lean(),
@@ -102,7 +102,8 @@ export const getGroupPosts = async (req: AuthRequest, res: Response): Promise<vo
 
                 return {
                     ...post,
-                    images: mediaList.map((m) => m.url),
+                    images: mediaList.filter((m) => m.fileType === "image").map((m) => m.url),
+                    videos: mediaList.filter((m) => m.fileType === "video").map((m) => m.url),
                     countComment,
                     countReaction,
                     countShare: post.countShare ?? 0,
@@ -777,7 +778,7 @@ export const getPostsByGroup = async (req: AuthRequest, res: Response): Promise<
 
                 const [mediaList, countComment, countReaction, myReactDoc, topReactDocs] =
                     await Promise.all([
-                        Media.find({ targetId: post._id, fileType: "image" }).lean(),
+                        Media.find({ targetId: post._id }).lean(),
                         Comment.countDocuments({ postId: post._id }),
                         Reaction.countDocuments({ targetId: postIdObj }),
                         Reaction.findOne({ targetId: postIdObj, userId: userObjectId }).lean(),
@@ -791,7 +792,8 @@ export const getPostsByGroup = async (req: AuthRequest, res: Response): Promise<
 
                 return {
                     ...post,
-                    images: mediaList.map((m) => m.url),
+                    images: mediaList.filter((m) => m.fileType === "image").map((m) => m.url),
+                    videos: mediaList.filter((m) => m.fileType === "video").map((m) => m.url),
                     countComment,
                     countReaction,
                     countShare: post.countShare ?? 0,
@@ -846,10 +848,11 @@ export const getPendingPosts = async (req: AuthRequest, res: Response): Promise<
 
         const postsWithDetails = await Promise.all(
             posts.map(async (post) => {
-                const mediaList = await Media.find({ targetId: post._id, fileType: "image" }).lean();
+                const mediaList = await Media.find({ targetId: post._id }).lean();
                 return {
                     ...post,
-                    images: mediaList.map((m) => m.url),
+                    images: mediaList.filter((m) => m.fileType === "image").map((m) => m.url),
+                    videos: mediaList.filter((m) => m.fileType === "video").map((m) => m.url),
                     countComment: 0,
                     countReaction: 0,
                     myReaction: null,

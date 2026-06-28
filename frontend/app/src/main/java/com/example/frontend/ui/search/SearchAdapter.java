@@ -174,6 +174,13 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 Glide.with(context)
                         .load(post.getImages().get(0))
                         .into(postHolder.imgPostImage);
+            } else if (post.getVideos() != null && !post.getVideos().isEmpty()) {
+                postHolder.imgPostImage.setVisibility(View.VISIBLE);
+                Glide.with(context)
+                        .load(post.getVideos().get(0))
+                        .placeholder(R.drawable.ic_video)
+                        .error(R.drawable.ic_video)
+                        .into(postHolder.imgPostImage);
             } else {
                 postHolder.imgPostImage.setVisibility(View.GONE);
             }

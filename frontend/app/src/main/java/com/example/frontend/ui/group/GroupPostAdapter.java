@@ -101,9 +101,11 @@ public class GroupPostAdapter extends RecyclerView.Adapter<GroupPostAdapter.VH> 
                 p.getContent() != null && !p.getContent().isEmpty() ? View.VISIBLE : View.GONE);
 
         // Ảnh
-        if (p.getImages() != null && !p.getImages().isEmpty()) {
+        boolean hasImages = p.getImages() != null && !p.getImages().isEmpty();
+        boolean hasVideos = p.getVideos() != null && !p.getVideos().isEmpty();
+        if (hasImages || hasVideos) {
             h.rvPostImages.setVisibility(View.VISIBLE);
-            PostImageAdapter imageAdapter = new PostImageAdapter(h.rvPostImages.getContext(), p.getImages());
+            PostImageAdapter imageAdapter = new PostImageAdapter(h.rvPostImages.getContext(), p.getImages(), p.getVideos());
             h.rvPostImages.setAdapter(imageAdapter);
         } else {
             h.rvPostImages.setVisibility(View.GONE);
@@ -178,6 +180,9 @@ public class GroupPostAdapter extends RecyclerView.Adapter<GroupPostAdapter.VH> 
             }
             if (p.getImages() != null) {
                 intent.putStringArrayListExtra("POST_IMAGES", new ArrayList<>(p.getImages()));
+            }
+            if (p.getVideos() != null) {
+                intent.putStringArrayListExtra(PostDetailActivity.EXTRA_POST_VIDEOS, new ArrayList<>(p.getVideos()));
             }
             intent.putExtra("COMMENT_COUNT", p.getCountComment());
             intent.putExtra("REACTION_COUNT", p.getCountReaction());

@@ -124,6 +124,9 @@ public class PendingPostsActivity extends AppCompatActivity {
         if (p.getImages() != null) {
             i.putStringArrayListExtra(PendingPostDetailActivity.EXTRA_IMAGES, new ArrayList<>(p.getImages()));
         }
+        if (p.getVideos() != null) {
+            i.putStringArrayListExtra(PendingPostDetailActivity.EXTRA_VIDEOS, new ArrayList<>(p.getVideos()));
+        }
         startActivityForResult(i, REQ_DETAIL);
     }
 
@@ -201,11 +204,13 @@ public class PendingPostsActivity extends AppCompatActivity {
             h.tvContent.setVisibility(
                     p.getContent() != null && !p.getContent().isEmpty() ? View.VISIBLE : View.GONE);
 
-            if (p.getImages() != null && !p.getImages().isEmpty()) {
+            boolean hasImages = p.getImages() != null && !p.getImages().isEmpty();
+            boolean hasVideos = p.getVideos() != null && !p.getVideos().isEmpty();
+            if (hasImages || hasVideos) {
                 h.rvImages.setVisibility(View.VISIBLE);
                 h.rvImages.setLayoutManager(new LinearLayoutManager(
                         h.rvImages.getContext(), LinearLayoutManager.HORIZONTAL, false));
-                h.rvImages.setAdapter(new PostImageAdapter(h.rvImages.getContext(), p.getImages()));
+                h.rvImages.setAdapter(new PostImageAdapter(h.rvImages.getContext(), p.getImages(), p.getVideos()));
             } else {
                 h.rvImages.setVisibility(View.GONE);
             }

@@ -169,7 +169,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="40dp"
                     android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_btn_green"
+                    app:backgroundTint="@color/group_primary"
+                    app:cornerRadius="8dp"
                     android:paddingStart="18dp"
                     android:paddingEnd="18dp"
                     android:text="👥 Mời"
@@ -183,14 +184,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="40dp"
                     android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_btn_green"
-                    android:paddingStart="18dp"
+                    app:backgroundTint="@color/group_primary" app:cornerRadius="8dp"                     android:paddingStart="18dp"
                     android:paddingEnd="18dp"
                     android:text="Tham gia"
                     android:textAllCaps="false"
                     android:textColor="@color/group_surface"
-                    android:textSize="14sp"
-                    android:visibility="gone" />
+                    android:textSize="14sp" />
             </LinearLayout>
 
             <TextView
