@@ -5,55 +5,61 @@ import Friend from "../models/friend.model";
 import User from "../models/user.model";
 import Notification from "../models/notification.model";
 
-
 // Hàm hỗ trợ tạo thông báo nhanh
 const createFriendNotification = async (
-    senderId: string, 
-    recipientId: string, 
-    type: string, 
-    content: string, 
-    targetId: string
+  senderId: string,
+  recipientId: string,
+  type: string,
+  content: string,
+  targetId: string,
 ) => {
-    try {
-        const newNotification = new Notification({
-            recipient: recipientId,
-            sender: senderId,
-            targetId: targetId,
-            type: type,
-            content: content
-        });
-        await newNotification.save();
-    } catch (error) {
-        console.error("Lỗi tạo thông báo:", error);
-    }
+  try {
+    const newNotification = new Notification({
+      recipient: recipientId,
+      sender: senderId,
+      targetId: targetId,
+      type: type,
+      content: content,
+    });
+    await newNotification.save();
+  } catch (error) {
+    console.error("Lỗi tạo thông báo:", error);
+  }
 };
 
 // 1. Gửi lời mời kết bạn
 export const sendFriendRequest = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     // 1. Lấy và ép kiểu ID an toàn
-    const userA = req.user?.id as string; 
+    const userA = req.user?.id as string;
     const idParam = req.params.id;
     const userB = Array.isArray(idParam) ? idParam[0] : idParam; // Xử lý nếu là mảng
 
     if (!userA || !userB) {
-      res.status(400).json({ success: false, message: "Thiếu thông tin người dùng." });
+      res
+        .status(400)
+        .json({ success: false, message: "Thiếu thông tin người dùng." });
       return;
     }
 
     if (userA === userB) {
-      res.status(400).json({ success: false, message: "Bạn không thể tự gửi lời mời kết bạn cho chính mình." });
+      res.status(400).json({
+        success: false,
+        message: "Bạn không thể tự gửi lời mời kết bạn cho chính mình.",
+      });
       return;
     }
 
-    const sender = await User.findById(userA); 
+    const sender = await User.findById(userA);
     const recipient = await User.findById(userB);
-    
+
     if (!recipient) {
-      res.status(404).json({ success: false, message: "Người dùng không tồn tại." });
+      res
+        .status(404)
+        .json({ success: false, message: "Người dùng không tồn tại." });
       return;
     }
 
@@ -68,33 +74,38 @@ export const sendFriendRequest = async (
 
     if (existingFriendship) {
       if (existingFriendship.status === "accepted") {
-        res.status(400).json({ success: false, message: "Hai bạn đã là bạn bè." });
+        res
+          .status(400)
+          .json({ success: false, message: "Hai bạn đã là bạn bè." });
         return;
       }
       if (existingFriendship.status === "pending") {
-        res.status(400).json({ success: false, message: "Đã tồn tại lời mời kết bạn đang chờ xử lý." });
+        res.status(400).json({
+          success: false,
+          message: "Đã tồn tại lời mời kết bạn đang chờ xử lý.",
+        });
         return;
       }
-      
+
       if (existingFriendship.status === "declined") {
         existingFriendship.requester = userA as any;
         existingFriendship.recipient = userB as any;
         existingFriendship.status = "pending";
         await existingFriendship.save();
 
-        // TẠO THÔNG BÁO GỬI LẠI LỜI MỜI 
+        // TẠO THÔNG BÁO GỬI LẠI LỜI MỜI
         await createFriendNotification(
-            userA, 
-            userB, 
-            "friend_request", 
-            `${senderName} đã gửi lại lời mời kết bạn cho bạn`, 
-            existingFriendship._id.toString() 
+          userA,
+          userB,
+          "friend_request",
+          `${senderName} đã gửi lại lời mời kết bạn cho bạn`,
+          existingFriendship._id.toString(),
         );
 
-        res.status(200).json({ 
-          success: true, 
+        res.status(200).json({
+          success: true,
           message: "Đã gửi lại lời mời kết bạn.",
-          data: existingFriendship 
+          data: existingFriendship,
         });
         return;
       }
@@ -108,13 +119,13 @@ export const sendFriendRequest = async (
 
     await newRequest.save();
 
-    // TẠO THÔNG BÁO GỬI LỜI MỜI MỚI 
+    // TẠO THÔNG BÁO GỬI LỜI MỜI MỚI
     await createFriendNotification(
-        userA, 
-        userB, 
-        "friend_request", 
-        `${senderName} đã gửi cho bạn một lời mời kết bạn`, 
-        newRequest._id.toString()
+      userA,
+      userB,
+      "friend_request",
+      `${senderName} đã gửi cho bạn một lời mời kết bạn`,
+      newRequest._id.toString(),
     );
 
     res.status(201).json({
@@ -130,11 +141,11 @@ export const sendFriendRequest = async (
 // 2. Chấp nhận lời mời kết bạn
 export const acceptFriendRequest = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userA = req.params.id; // Người gửi lời mời (người nhận thông báo)
-    const userB = req.user?.id;  // Người nhận lời mời (người chấp nhận - là mình)
+    const userB = req.user?.id; // Người nhận lời mời (người chấp nhận - là mình)
 
     // 1. Tìm lời mời kết bạn
     const request = await Friend.findOne({
@@ -144,7 +155,10 @@ export const acceptFriendRequest = async (
     });
 
     if (!request) {
-      res.status(404).json({ success: false, message: "Không tìm thấy lời mời kết bạn này." });
+      res.status(404).json({
+        success: false,
+        message: "Không tìm thấy lời mời kết bạn này.",
+      });
       return;
     }
 
@@ -159,11 +173,11 @@ export const acceptFriendRequest = async (
     // 4. TẠO THÔNG BÁO ĐỒNG Ý KẾT BẠN
     // Gọi hàm hỗ trợ createFriendNotification (đã tạo ở bước trước)
     await createFriendNotification(
-        userB as string,            // sender là mình (userB)
-        userA as string,            // recipient là người gửi lời mời (userA)
-        "friend_accept", 
-        `${myName} đã chấp nhận lời mời kết bạn của bạn`, 
-        request._id.toString()
+      userB as string, // sender là mình (userB)
+      userA as string, // recipient là người gửi lời mời (userA)
+      "friend_accept",
+      `${myName} đã chấp nhận lời mời kết bạn của bạn`,
+      request._id.toString(),
     );
 
     res.status(200).json({
@@ -177,7 +191,10 @@ export const acceptFriendRequest = async (
 };
 
 // 3. Từ chối lời mời kết bạn/ Hủy lời mời đã gửi
-export const declineFriendRequest = async (req: AuthRequest, res: Response): Promise<void> => {
+export const declineFriendRequest = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const me = req.user?.id;
     const otherUser = req.params.id;
@@ -187,19 +204,23 @@ export const declineFriendRequest = async (req: AuthRequest, res: Response): Pro
       {
         $or: [
           { requester: me, recipient: otherUser, status: "pending" },
-          { requester: otherUser, recipient: me, status: "pending" }
-        ]
+          { requester: otherUser, recipient: me, status: "pending" },
+        ],
       },
       { status: "declined" }, // Chuyển sang từ chối thay vì xóa sạch
-      { new: true }
+      { new: true },
     );
 
     if (!request) {
-      res.status(404).json({ success: false, message: "Không tìm thấy lời mời để xử lý." });
+      res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy lời mời để xử lý." });
       return;
     }
 
-    res.status(200).json({ success: true, message: "Đã từ chối/hủy lời mời kết bạn." });
+    res
+      .status(200)
+      .json({ success: true, message: "Đã từ chối/hủy lời mời kết bạn." });
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server", error });
   }
@@ -208,7 +229,7 @@ export const declineFriendRequest = async (req: AuthRequest, res: Response): Pro
 // 4. Huỷ kết bạn
 export const removeFriend = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userA = req.user?.id;
@@ -222,7 +243,9 @@ export const removeFriend = async (
     });
 
     if (!friendship) {
-      res.status(404).json({ success: false, message: "Không tìm thấy thông tin bạn bè." });
+      res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy thông tin bạn bè." });
       return;
     }
 
@@ -238,15 +261,18 @@ export const removeFriend = async (
 // 5. Lấy danh sách bạn bè
 export const getFriends = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
 
     if (!userId) {
-  res.status(401).json({ success: false, message: "Không tìm thấy thông tin xác thực." });
-  return;
-}
+      res.status(401).json({
+        success: false,
+        message: "Không tìm thấy thông tin xác thực.",
+      });
+      return;
+    }
 
     const friendships = await Friend.find({
       $or: [{ requester: userId }, { recipient: userId }],
@@ -259,7 +285,9 @@ export const getFriends = async (
       .map((f: any) => {
         // Bỏ qua nếu populate trả null (user bị xóa)
         if (!f.requester || !f.recipient) return null;
-        return f.requester._id.toString() === userId ? f.recipient : f.requester;
+        return f.requester._id.toString() === userId
+          ? f.recipient
+          : f.requester;
       })
       .filter(Boolean); // Loại bỏ null
 
@@ -275,17 +303,18 @@ export const getFriends = async (
 // 6. Lấy danh sách lời mời kết bạn (chưa xử lý) dành cho mình
 export const getPendingRequests = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
 
     if (!userId) {
-
-      res.status(401).json({ success: false, message: "Không tìm thấy thông tin xác thực." });
+      res.status(401).json({
+        success: false,
+        message: "Không tìm thấy thông tin xác thực.",
+      });
       return;
     }
-
 
     // 1. Lấy danh sách lời mời
     const requests = await Friend.find({
@@ -298,18 +327,18 @@ export const getPendingRequests = async (
       $or: [{ requester: userId }, { recipient: userId }],
       status: "accepted",
     });
-    
+
     const myFriendIds = myFriends.map((f) =>
-      f.requester.toString() === userId ? f.recipient.toString() : f.requester.toString()
+      f.requester.toString() === userId
+        ? f.recipient.toString()
+        : f.requester.toString(),
     );
 
     // 3. Đếm bạn chung cho từng lời mời
     const requestsWithMutual = await Promise.all(
       requests.map(async (reqItem: any) => {
-
         // FIX: Nếu tài khoản người gửi đã bị xóa, reqItem.requester sẽ null -> Bỏ qua
         if (!reqItem.requester) return null;
-
 
         const otherUserId = reqItem.requester._id.toString();
 
@@ -319,14 +348,16 @@ export const getPendingRequests = async (
           status: "accepted",
         });
 
-        
-
         const theirFriendIds = theirFriends.map((f) =>
-          f.requester.toString() === otherUserId ? f.recipient.toString() : f.requester.toString()
+          f.requester.toString() === otherUserId
+            ? f.recipient.toString()
+            : f.requester.toString(),
         );
 
         // Giao của 2 mảng ID chính là số bạn chung
-        const mutualCount = myFriendIds.filter((id) => theirFriendIds.includes(id)).length;
+        const mutualCount = myFriendIds.filter((id) =>
+          theirFriendIds.includes(id),
+        ).length;
 
         // Trả về object mới có thêm trường mutualFriends
         return {
@@ -336,9 +367,8 @@ export const getPendingRequests = async (
           avatar: reqItem.requester.avatar,
           mutualFriends: mutualCount,
         };
-      })
+      }),
     );
-
 
     // Lọc bỏ các giá trị null (những lời mời từ user đã bị xóa)
     const validRequests = requestsWithMutual.filter(Boolean);
@@ -354,8 +384,10 @@ export const getPendingRequests = async (
   }
 };
 
-
-export const getFriendSuggestions = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getFriendSuggestions = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -378,15 +410,25 @@ export const getFriendSuggestions = async (req: AuthRequest, res: Response): Pro
               $match: {
                 $expr: {
                   $or: [
-                    { $and: [{ $eq: ["$requester", userObjectId] }, { $eq: ["$recipient", "$$candidateId"] }] },
-                    { $and: [{ $eq: ["$requester", "$$candidateId"] }, { $eq: ["$recipient", userObjectId] }] }
-                  ]
-                }
-              }
-            }
+                    {
+                      $and: [
+                        { $eq: ["$requester", userObjectId] },
+                        { $eq: ["$recipient", "$$candidateId"] },
+                      ],
+                    },
+                    {
+                      $and: [
+                        { $eq: ["$requester", "$$candidateId"] },
+                        { $eq: ["$recipient", userObjectId] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
           ],
-          as: "connection"
-        }
+          as: "connection",
+        },
       },
 
       // 3. Gắn nhãn isPending và Xác định đối tượng cần lọc bỏ
@@ -394,29 +436,68 @@ export const getFriendSuggestions = async (req: AuthRequest, res: Response): Pro
         $addFields: {
           isPending: {
             $cond: [
-              { $and: [
-                { $gt: [{ $size: "$connection" }, 0] },
-                { $eq: [{ $arrayElemAt: ["$connection.status", 0] }, "pending"] },
-                { $eq: [{ $arrayElemAt: ["$connection.requester", 0] }, userObjectId] }
-              ]},
-              true, false
-            ]
+              {
+                $and: [
+                  { $gt: [{ $size: "$connection" }, 0] },
+                  {
+                    $eq: [
+                      { $arrayElemAt: ["$connection.status", 0] },
+                      "pending",
+                    ],
+                  },
+                  {
+                    $eq: [
+                      { $arrayElemAt: ["$connection.requester", 0] },
+                      userObjectId,
+                    ],
+                  },
+                ],
+              },
+              true,
+              false,
+            ],
           },
           shouldExclude: {
-          $or: [
-    { $eq: [{ $arrayElemAt: ["$connection.status", 0] }, "accepted"] },
-    // CHỈ LOẠI BỎ nếu trạng thái là 'declined' VÀ mình là người nhận
-    { $and: [
-      { $eq: [{ $arrayElemAt: ["$connection.status", 0] }, "declined"] },
-      { $eq: [{ $arrayElemAt: ["$connection.recipient", 0] }, userObjectId] }
-    ]},
-    { $and: [
-      { $eq: [{ $arrayElemAt: ["$connection.status", 0] }, "pending"] },
-      { $eq: [{ $arrayElemAt: ["$connection.requester", 0] }, "$_id"] }
-    ]}
-            ]
-          }
-        }
+            $or: [
+              {
+                $eq: [{ $arrayElemAt: ["$connection.status", 0] }, "accepted"],
+              },
+              // CHỈ LOẠI BỎ nếu trạng thái là 'declined' VÀ mình là người nhận
+              {
+                $and: [
+                  {
+                    $eq: [
+                      { $arrayElemAt: ["$connection.status", 0] },
+                      "declined",
+                    ],
+                  },
+                  {
+                    $eq: [
+                      { $arrayElemAt: ["$connection.recipient", 0] },
+                      userObjectId,
+                    ],
+                  },
+                ],
+              },
+              {
+                $and: [
+                  {
+                    $eq: [
+                      { $arrayElemAt: ["$connection.status", 0] },
+                      "pending",
+                    ],
+                  },
+                  {
+                    $eq: [
+                      { $arrayElemAt: ["$connection.requester", 0] },
+                      "$_id",
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
       },
 
       // 4. Lọc bỏ người đã là bạn hoặc người đã gửi lời mời cho mình
@@ -428,14 +509,35 @@ export const getFriendSuggestions = async (req: AuthRequest, res: Response): Pro
           from: "friends",
           let: { me: userObjectId },
           pipeline: [
-            { $match: { $expr: { $and: [
-              { $or: [{ $eq: ["$requester", "$$me"] }, { $eq: ["$recipient", "$$me"] }] },
-              { $eq: ["$status", "accepted"] }
-            ]}}},
-            { $project: { friendId: { $cond: [{ $eq: ["$requester", "$$me"] }, "$recipient", "$requester"] } } }
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $or: [
+                        { $eq: ["$requester", "$$me"] },
+                        { $eq: ["$recipient", "$$me"] },
+                      ],
+                    },
+                    { $eq: ["$status", "accepted"] },
+                  ],
+                },
+              },
+            },
+            {
+              $project: {
+                friendId: {
+                  $cond: [
+                    { $eq: ["$requester", "$$me"] },
+                    "$recipient",
+                    "$requester",
+                  ],
+                },
+              },
+            },
           ],
-          as: "myFriends"
-        }
+          as: "myFriends",
+        },
       },
 
       // 6. Lấy danh sách bạn bè của NGƯỜI ĐƯỢC GỢI Ý
@@ -444,23 +546,49 @@ export const getFriendSuggestions = async (req: AuthRequest, res: Response): Pro
           from: "friends",
           let: { other: "$_id" },
           pipeline: [
-            { $match: { $expr: { $and: [
-              { $or: [{ $eq: ["$requester", "$$other"] }, { $eq: ["$recipient", "$$other"] }] },
-              { $eq: ["$status", "accepted"] }
-            ]}}},
-            { $project: { friendId: { $cond: [{ $eq: ["$requester", "$$other"] }, "$recipient", "$requester"] } } }
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $or: [
+                        { $eq: ["$requester", "$$other"] },
+                        { $eq: ["$recipient", "$$other"] },
+                      ],
+                    },
+                    { $eq: ["$status", "accepted"] },
+                  ],
+                },
+              },
+            },
+            {
+              $project: {
+                friendId: {
+                  $cond: [
+                    { $eq: ["$requester", "$$other"] },
+                    "$recipient",
+                    "$requester",
+                  ],
+                },
+              },
+            },
           ],
-          as: "theirFriends"
-        }
+          as: "theirFriends",
+        },
       },
 
       // 7. Tính Mutual Friends
       {
         $addFields: {
           mutualFriends: {
-            $size: { $setIntersection: ["$myFriends.friendId", "$theirFriends.friendId"] }
-          }
-        }
+            $size: {
+              $setIntersection: [
+                "$myFriends.friendId",
+                "$theirFriends.friendId",
+              ],
+            },
+          },
+        },
       },
 
       // 8. Trả kết quả về Android
@@ -472,14 +600,115 @@ export const getFriendSuggestions = async (req: AuthRequest, res: Response): Pro
           username: 1,
           avatar: 1,
           mutualFriends: 1,
-          isPending: 1
-        }
-      }
+          isPending: 1,
+        },
+      },
     ]);
 
     res.status(200).json({ success: true, data: suggestions });
   } catch (error: any) {
     console.error("Aggregation Error:", error.message);
-    res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server", error: error.message });
+  }
+};
+export const getFriendsByUserId = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.params.id;
+    const friendships = await Friend.find({
+      $or: [{ requester: userId }, { recipient: userId }],
+      status: "accepted",
+    })
+      .populate("requester", "_id username avatar")
+      .populate("recipient", "_id username avatar");
+    const friends = friendships
+      .map((f: any) => {
+        if (!f.requester || !f.recipient) return null;
+        return f.requester._id.toString() == userId ? f.recipient : f.requester;
+      })
+      .filter(Boolean);
+    res.json({
+      success: true,
+      data: friends,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+export const checkFriendStatus = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const myId = req.user?.id;
+    const otherId = req.params.id;
+    const relation = await Friend.findOne({
+      $or: [
+        {
+          requester: myId,
+          recipient: otherId,
+        },
+        {
+          requester: otherId,
+          recipient: myId,
+        },
+      ],
+    });
+    if (!relation) {
+      res.json({
+        success: true,
+        data: {
+          state: "none",
+        },
+      });
+      return;
+    }
+    if (relation.status === "accepted") {
+      res.json({
+        success: true,
+        data: {
+          state: "friend",
+        },
+      });
+      return;
+    }
+    if (relation.status === "pending") {
+      // mình gửi
+      if (relation.requester.toString() === myId) {
+        res.json({
+          success: true,
+          data: {
+            state: "sent",
+          },
+        });
+      } else {
+        res.json({
+          success: true,
+          data: {
+            state: "received",
+          },
+        });
+      }
+      return;
+    }
+    res.json({
+      success: true,
+      data: {
+        state: "none",
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 };

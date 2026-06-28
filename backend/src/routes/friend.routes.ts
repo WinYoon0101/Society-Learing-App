@@ -8,12 +8,9 @@ import {
   getFriends,
   getPendingRequests,
   getFriendSuggestions,
-
-  // checkFriendStatus,
-
-
+  getFriendsByUserId,
+  checkFriendStatus,
 } from "../controllers/friend.controller";
-
 
 const router = Router();
 
@@ -33,5 +30,7 @@ router.post("/request/:id", sendFriendRequest); // Gửi lời mời tới id
 router.put("/accept/:id", acceptFriendRequest); // Chấp nhận lời mời từ id
 router.delete("/decline/:id", declineFriendRequest); // Từ chối lời mời từ id
 router.delete("/remove/:id", removeFriend); // Huỷ kết bạn với id
+router.get("/user/:id", getFriendsByUserId);
+router.get("/status/:id", checkFriendStatus);
 
 export default router;

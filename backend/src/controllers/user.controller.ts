@@ -290,7 +290,6 @@ export const getUserById = async (req: AuthRequest, res: Response) => {
         message: "Không tìm thấy người dùng",
       });
     }
-
     res.json({
       success: true,
       data: user,

@@ -14,6 +14,7 @@ import {
   getMediaByTarget,
   deleteMedia,
   getMyMedia,
+  getUserMedia,
 } from "../controllers/media.controller";
 
 const router = Router();
@@ -24,7 +25,7 @@ const targetValidators = [
   body("sourceType")
     .notEmpty()
     .withMessage("sourceType là bắt buộc")
-    .isIn(["post", "story", "message","document"])
+    .isIn(["post", "story", "message", "document"])
     .withMessage("sourceType phải là post, story, message hoặc document"),
   body("targetId")
     .notEmpty()
@@ -47,12 +48,6 @@ const targetParamValidators = [
 // ─── Public Routes ────────────────────────────────────────────────────────────
 
 /** Lấy tất cả media của một post/story/message */
-router.get(
-  "/:sourceType/:targetId",
-  targetParamValidators,
-  handleValidationErrors,
-  getMediaByTarget
-);
 
 // ─── Protected Routes ─────────────────────────────────────────────────────────
 
@@ -71,7 +66,7 @@ router.post(
   },
   targetValidators,
   handleValidationErrors,
-  uploadMediaFiles
+  uploadMediaFiles,
 );
 
 /** Upload 1 ảnh đơn, field: "image" */
@@ -87,7 +82,7 @@ router.post(
   },
   targetValidators,
   handleValidationErrors,
-  uploadSingleFile
+  uploadSingleFile,
 );
 
 /** Upload 1 video đơn, field: "video" */
@@ -103,7 +98,7 @@ router.post(
   },
   targetValidators,
   handleValidationErrors,
-  uploadSingleFile
+  uploadSingleFile,
 );
 
 /** Upload 1 tài liệu đơn, field: "media" */
@@ -119,18 +114,19 @@ router.post(
   },
   targetValidators,
   handleValidationErrors,
-  uploadSingleFile
+  uploadSingleFile,
 );
 
 /** Lấy media của chính mình (có filter theo fileType) */
 router.get("/me", getMyMedia);
 
 /** Xoá media (cleanup Cloudinary + DB) */
-router.delete(
-  "/:id",
-  idParamValidator,
+router.delete("/:id", idParamValidator, handleValidationErrors, deleteMedia);
+router.get("/user/:id", getUserMedia);
+router.get(
+  "/:sourceType/:targetId",
+  targetParamValidators,
   handleValidationErrors,
-  deleteMedia
+  getMediaByTarget,
 );
-
 export default router;

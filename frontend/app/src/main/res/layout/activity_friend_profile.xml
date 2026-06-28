@@ -65,7 +65,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text=""
-            android:visibility="gone"
             android:textSize="14sp"
             android:textColor="#666"
             android:gravity="center"
@@ -224,88 +223,14 @@
 
             </LinearLayout>
         </LinearLayout>
-        <LinearLayout
-            android:id="@+id/tabProfile"
-            android:layout_width="match_parent"
+        <FrameLayout
+            android:id="@+id/contentContainer"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+
             app:layout_constraintTop_toBottomOf="@id/tabLayout"
             app:layout_constraintStart_toStartOf="parent"
-            android:padding="18dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Thông tin cá nhân"
-                android:textColor="#111827"
-                android:textSize="19sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/tvLocation"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:drawableStart="@drawable/ic_home"
-                android:drawablePadding="14dp"
-                android:gravity="center_vertical"
-                android:textColor="#4B5563"
-                android:textSize="15sp"/>
-
-            <TextView
-                android:id="@+id/tvHometown"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:drawableStart="@drawable/ic_location"
-                android:drawablePadding="14dp"
-                android:textColor="#4B5563"
-                android:textSize="15sp"/>
-
-            <TextView
-                android:id="@+id/tvBirthday"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:drawableStart="@drawable/ic_calendar"
-                android:drawablePadding="14dp"
-                android:textColor="#4B5563"
-                android:textSize="15sp"/>
-
-            <TextView
-                android:id="@+id/tvGender"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:drawableStart="@drawable/ic_gender"
-                android:drawablePadding="14dp"
-                android:textColor="#4B5563"
-                android:textSize="15sp"/>
-
-        </LinearLayout>
-        <LinearLayout
-            android:id="@+id/tabPost"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintTop_toBottomOf="@id/tabProfile"
-            app:layout_constraintStart_toStartOf="parent"
-            android:padding="18dp">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="18dp"
-                android:layout_marginBottom="10dp"
-                android:text="Bài viết"
-                android:textStyle="bold"
-                android:textSize="18sp"
-                android:textColor="#1F2937"/>
-
-            <FrameLayout
-                android:id="@+id/friendPostsContainer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-        </LinearLayout>
+            app:layout_constraintEnd_toEndOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>

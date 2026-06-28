@@ -9,6 +9,7 @@ import com.example.frontend.data.model.CoverResponse;
 import com.example.frontend.data.model.Document;
 import com.example.frontend.data.model.DocumentListData;
 import com.example.frontend.data.model.Friend;
+import com.example.frontend.data.model.FriendStatus;
 import com.example.frontend.data.model.Group;
 import com.example.frontend.data.model.GroupDetail;
 import com.example.frontend.data.model.GroupInvitation;
@@ -533,4 +534,14 @@ public interface ApiService {
 
     @GET("user/{id}")
     Call<ApiResponse<User>> getUserById(@Path("id") String id);
+
+    @GET("media/user/{id}")
+    Call<ApiResponse<List<Media>>> getUserMedia(@Path("id") String userId,@Query("fileType") String fileType);
+
+    @GET("friends/user/{id}")
+    Call<ApiResponse<List<Friend>>> getFriendsByUser(@Path("id") String userId);
+
+    @GET("friends/status/{id}")
+    Call<ApiResponse<FriendStatus>> checkFriendStatus(@Path("id") String userId);
 }
+

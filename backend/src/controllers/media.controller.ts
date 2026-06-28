@@ -20,7 +20,7 @@ import { MediaSourceType } from "../models/media.model";
  */
 export const uploadMediaFiles = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
@@ -29,27 +29,35 @@ export const uploadMediaFiles = async (
     // Multer đã xử lý upload lên Cloudinary trước khi vào đây
     const files = req.files as Express.Multer.File[];
     if (!files || files.length === 0) {
-      res.status(400).json({ success: false, message: "Chưa có file nào được upload." });
+      res
+        .status(400)
+        .json({ success: false, message: "Chưa có file nào được upload." });
       return;
     }
 
-    if (!sourceType || !["post", "story", "message","document"].includes(sourceType)) {
+    if (
+      !sourceType ||
+      !["post", "story", "message", "document"].includes(sourceType)
+    ) {
       res.status(400).json({
         success: false,
-        message: "sourceType không hợp lệ. Phải là post, story, message hoặc document.",
+        message:
+          "sourceType không hợp lệ. Phải là post, story, message hoặc document.",
       });
       return;
     }
 
     if (!targetId || !mongoose.Types.ObjectId.isValid(targetId as string)) {
-      res.status(400).json({ success: false, message: "targetId không hợp lệ." });
+      res
+        .status(400)
+        .json({ success: false, message: "targetId không hợp lệ." });
       return;
     }
 
     // Tạo Media records cho từng file
     const mediaRecords = files.map((file: any) => ({
       userId,
-      url: file.path,          // Cloudinary trả về URL trong file.path
+      url: file.path, // Cloudinary trả về URL trong file.path
       fileType: resolveFileType(file.mimetype),
       sourceType: sourceType as MediaSourceType,
       targetId: new mongoose.Types.ObjectId(targetId as string),
@@ -83,7 +91,7 @@ export const uploadMediaFiles = async (
  */
 export const uploadSingleFile = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
@@ -91,14 +99,17 @@ export const uploadSingleFile = async (
     const file = req.file as any;
 
     if (!file) {
-       res.status(400).json({ success: false, message: "Chưa có file nào được upload." });
-       return;
+      res
+        .status(400)
+        .json({ success: false, message: "Chưa có file nào được upload." });
+      return;
     }
 
-    // Logic targetId 
-    const finalTargetId = targetId && mongoose.Types.ObjectId.isValid(targetId) 
-                          ? new mongoose.Types.ObjectId(targetId as string)
-                          : new mongoose.Types.ObjectId(userId);
+    // Logic targetId
+    const finalTargetId =
+      targetId && mongoose.Types.ObjectId.isValid(targetId)
+        ? new mongoose.Types.ObjectId(targetId as string)
+        : new mongoose.Types.ObjectId(userId);
 
     const media = await Media.create({
       userId,
@@ -108,7 +119,9 @@ export const uploadSingleFile = async (
       targetId: finalTargetId,
     });
 
-    res.status(201).json({ success: true, message: "Upload thành công!", data: media });
+    res
+      .status(201)
+      .json({ success: true, message: "Upload thành công!", data: media });
   } catch (error: any) {
     console.error("uploadSingleFile error:", error);
     res.status(500).json({
@@ -125,7 +138,7 @@ export const uploadSingleFile = async (
  */
 export const getMediaByTarget = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const sourceType = req.params.sourceType as string;
@@ -140,7 +153,9 @@ export const getMediaByTarget = async (
     }
 
     if (!mongoose.Types.ObjectId.isValid(targetId)) {
-      res.status(400).json({ success: false, message: "targetId không hợp lệ." });
+      res
+        .status(400)
+        .json({ success: false, message: "targetId không hợp lệ." });
       return;
     }
 
@@ -168,7 +183,7 @@ export const getMediaByTarget = async (
  */
 export const deleteMedia = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const id = req.params.id as string;
@@ -181,7 +196,9 @@ export const deleteMedia = async (
 
     const media = await Media.findById(id);
     if (!media) {
-      res.status(404).json({ success: false, message: "Media không tìm thấy." });
+      res
+        .status(404)
+        .json({ success: false, message: "Media không tìm thấy." });
       return;
     }
 
@@ -212,10 +229,12 @@ export const deleteMedia = async (
           media.fileType === "image"
             ? "image"
             : media.fileType === "video"
-            ? "video"
-            : "raw";
+              ? "video"
+              : "raw";
 
-        await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+        await cloudinary.uploader.destroy(publicId, {
+          resource_type: resourceType,
+        });
       }
     } catch (cloudErr) {
       // Không block việc xoá DB nếu Cloudinary lỗi
@@ -244,7 +263,7 @@ export const deleteMedia = async (
  */
 export const getMyMedia = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
@@ -266,6 +285,41 @@ export const getMyMedia = async (
     res.status(500).json({
       success: false,
       message: "Đã xảy ra lỗi, vui lòng thử lại sau.",
+    });
+  }
+};
+
+export const getUserMedia = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const fileType = req.query.fileType as string | undefined;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(400).json({
+        success: false,
+        message: "User id không hợp lệ",
+      });
+      return;
+    }
+    const query: any = {
+      userId: new mongoose.Types.ObjectId(userId),
+    };
+    if (fileType && ["image", "video", "document"].includes(fileType)) {
+      query.fileType = fileType;
+    }
+    const media = await Media.find(query).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: media,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
     });
   }
 };
