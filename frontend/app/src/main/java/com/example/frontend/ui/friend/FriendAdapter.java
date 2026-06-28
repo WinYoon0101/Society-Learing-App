@@ -56,7 +56,6 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
         void onDeclineClick(Friend friend);      // Bấm Xóa/Từ chối lời mời
         void onAddFriendClick(Friend friend);    // Bấm Thêm bạn bè (Gợi ý)
         void onRemoveSuggestClick(Friend friend);// Bấm Gỡ (Gợi ý)
-        void onAvatarClick(Friend friend);
     }
 
     // 2. SỬA LẠI CONSTRUCTOR: Đòi thêm cái listener
@@ -130,25 +129,6 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
                     .centerCrop()
                     .into(imgAvatar);
 
-            // ==============================================================
-            // BẮT CLICK CHO CẢ KHUNG (ITEM), ẢNH AVATAR, VÀ TÊN NGƯỜI DÙNG
-            // ==============================================================
-            View.OnClickListener goToProfileListener = v -> {
-                if (listener != null) {
-                    listener.onAvatarClick(friend);
-                }
-            };
-
-            // Bấm vào bất kỳ đâu trên ô đó cũng sẽ mở Profile
-            itemView.setOnClickListener(goToProfileListener);
-            // Phòng hờ thêm luôn cho Avatar và Tên
-            imgAvatar.setOnClickListener(goToProfileListener);
-            tvName.setOnClickListener(goToProfileListener);
-
-
-            // ==============================================================
-            // LOGIC CÁC NÚT BẤM
-            // ==============================================================
             if (isSuggestionList) {
                 // --- LOGIC CHO DANH SÁCH GỢI Ý ---
                 if (friend.isPending()) {
@@ -168,7 +148,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
                     }
                 });
 
-                // Nút Gỡ
+                // Nút Gỡ (CHỈ dành cho gợi ý - Đưa vào trong IF)
                 btnNegative.setOnClickListener(v -> {
                     if (listener != null) {
                         listener.onRemoveSuggestClick(friend);
@@ -181,13 +161,14 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
                     if (listener != null) listener.onAcceptClick(friend);
                 });
 
-                // Nút Xóa
+                // Nút Xóa (CHỈ dành cho lời mời - Đưa vào trong ELSE)
                 btnNegative.setOnClickListener(v -> {
                     if (listener != null) {
                         listener.onDeclineClick(friend);
                     }
                 });
             }
+
         }
 
 

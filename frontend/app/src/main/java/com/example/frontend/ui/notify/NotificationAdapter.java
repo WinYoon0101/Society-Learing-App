@@ -132,6 +132,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
             // Nếu là thông báo hệ thống
             if (type != null && type.startsWith("system_")) {
+                Toast.makeText(context, "Đã xem thông báo hệ thống", Toast.LENGTH_SHORT).show();
                 return; // Dừng lại, không chạy code chuyển trang bên dưới
             }
 

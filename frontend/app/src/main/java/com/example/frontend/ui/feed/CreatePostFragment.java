@@ -47,7 +47,7 @@ public class CreatePostFragment extends Fragment {
     private String selectedPrivacy = "Public";
     private RecyclerView rvImagePreview;
     private ImagePreviewAdapter previewAdapter;
-    private List<Uri> selectedMediaUris = new ArrayList<>();
+    private List<Uri> selectedImageUris = new ArrayList<>();
     private TextView tvUserName, tvSelectedMeta;
     private ImageView imgAvatar;
     private CreatePostViewModel viewModel;
@@ -86,13 +86,13 @@ public class CreatePostFragment extends Fragment {
 
         rvImagePreview = view.findViewById(R.id.rvImagePreview);
         rvImagePreview.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
-        previewAdapter = new ImagePreviewAdapter(getContext(), selectedMediaUris, new ImagePreviewAdapter.OnImageClickListener() {
+        previewAdapter = new ImagePreviewAdapter(getContext(), selectedImageUris, new ImagePreviewAdapter.OnImageClickListener() {
             @Override
             public void onRemove(int position) {
-                selectedMediaUris.remove(position);
+                selectedImageUris.remove(position);
                 previewAdapter.notifyItemRemoved(position);
-                previewAdapter.notifyItemRangeChanged(position, selectedMediaUris.size());
-                if (selectedMediaUris.isEmpty()) rvImagePreview.setVisibility(View.GONE);
+                previewAdapter.notifyItemRangeChanged(position, selectedImageUris.size());
+                if (selectedImageUris.isEmpty()) rvImagePreview.setVisibility(View.GONE);
             }
             @Override
             public void onImageClick(int position) {}
@@ -107,7 +107,7 @@ public class CreatePostFragment extends Fragment {
             else if (getActivity() != null) getActivity().finish();
         });
 
-        btnPickImage.setOnClickListener(v -> mediaPickerLauncher.launch(new String[]{"image/*", "video/*"}));
+        btnPickImage.setOnClickListener(v -> imagePickerLauncher.launch("image/*"));
 
         if (optFeeling != null) {
             optFeeling.setOnClickListener(v -> {
@@ -124,14 +124,14 @@ public class CreatePostFragment extends Fragment {
 
         btnPost.setOnClickListener(v -> {
             String content = edtContent.getText().toString().trim();
-            if (content.isEmpty() && selectedMediaUris.isEmpty()) {
+            if (content.isEmpty() && selectedImageUris.isEmpty()) {
                 Toast.makeText(getContext(), "Hãy nhập nội dung nhé!", Toast.LENGTH_SHORT).show();
                 return;
             }
             Toast.makeText(getContext(), "Đang đăng bài...", Toast.LENGTH_SHORT).show();
             List<String> tagIds = new ArrayList<>();
             for (User u : selectedTags) tagIds.add(u.getId());
-            viewModel.uploadPost(getContext(), content, selectedPrivacy, selectedFeeling, selectedMediaUris, groupId, tagIds, null);
+            viewModel.uploadPost(getContext(), content, selectedPrivacy, selectedFeeling, selectedImageUris, groupId, tagIds, null);
         });
 
         return view;
@@ -272,26 +272,17 @@ public class CreatePostFragment extends Fragment {
         });
     }
 
-    private final ActivityResultLauncher<String[]> mediaPickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.OpenMultipleDocuments(),
+    private final ActivityResultLauncher<String> imagePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetMultipleContents(),
             uris -> {
                 if (uris != null && !uris.isEmpty()) {
-                    for (Uri uri : uris) {
-                        if (isSupportedMedia(uri)) selectedMediaUris.add(uri);
-                    }
-                    while (selectedMediaUris.size() > 10) {
-                        selectedMediaUris.remove(selectedMediaUris.size() - 1);
-                    }
+                    selectedImageUris.addAll(uris);
+                    if (selectedImageUris.size() > 10) selectedImageUris = selectedImageUris.subList(0, 10);
                     previewAdapter.notifyDataSetChanged();
                     rvImagePreview.setVisibility(View.VISIBLE);
                 }
             }
     );
-
-    private boolean isSupportedMedia(Uri uri) {
-        String mimeType = requireContext().getContentResolver().getType(uri);
-        return mimeType != null && (mimeType.startsWith("image/") || mimeType.startsWith("video/"));
-    }
 
     private void loadProfileFallback() {
         UserRepository repository = new UserRepository(requireContext());

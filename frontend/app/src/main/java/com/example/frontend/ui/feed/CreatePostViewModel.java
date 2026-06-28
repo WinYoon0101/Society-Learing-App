@@ -34,7 +34,7 @@ public class CreatePostViewModel extends ViewModel {
     public void resetSuccess() { isSuccess.setValue(false); }
 
     public void uploadPost(Context context, String content, String privacy, String feeling,
-                           List<Uri> mediaUris, String groupId, List<String> tagIds, String initialReaction) {
+                           List<Uri> imageUris, String groupId, List<String> tagIds, String initialReaction) {
         isLoading.setValue(true);
         ApiService apiService = ApiClient.getApiService(context);
 
@@ -50,30 +50,19 @@ public class CreatePostViewModel extends ViewModel {
                 ? RequestBody.create(MediaType.parse("text/plain"), initialReaction) : null;
 
         List<MultipartBody.Part> imageParts = new ArrayList<>();
-        List<MultipartBody.Part> videoParts = new ArrayList<>();
-        if (mediaUris != null) {
-            for (Uri uri : mediaUris) {
+        if (imageUris != null) {
+            for (Uri uri : imageUris) {
                 try {
-                    String mimeType = context.getContentResolver().getType(uri);
-                    if (mimeType == null) mimeType = "application/octet-stream";
-                    boolean isImage = mimeType.startsWith("image/");
-                    boolean isVideo = mimeType.startsWith("video/");
-                    if (!isImage && !isVideo) continue;
-
                     File file = FileUtils.getFileFromUri(context, uri);
                     if (file != null) {
-                        RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), file);
-                        if (isVideo) {
-                            videoParts.add(MultipartBody.Part.createFormData("videos", file.getName(), requestFile));
-                        } else {
-                            imageParts.add(MultipartBody.Part.createFormData("images", file.getName(), requestFile));
-                        }
+                        RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), file);
+                        imageParts.add(MultipartBody.Part.createFormData("images", file.getName(), requestFile));
                     }
                 } catch (Exception e) { e.printStackTrace(); }
             }
         }
 
-        apiService.createPost(contentBody, privacyBody,feelingBody, groupIdBody, tagsBody, reactionBody, imageParts, videoParts)
+        apiService.createPost(contentBody, privacyBody,feelingBody, groupIdBody, tagsBody, reactionBody, imageParts)
                 .enqueue(new Callback<ApiResponse<Post>>() {
                     @Override
                     public void onResponse(Call<ApiResponse<Post>> call, Response<ApiResponse<Post>> response) {

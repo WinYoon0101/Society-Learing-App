@@ -80,11 +80,6 @@ public class SavedPostAdapter extends RecyclerView.Adapter<SavedPostAdapter.Save
             Glide.with(context).load(post.getImages().get(0))
                     .placeholder(R.drawable.ic_image)
                     .into(holder.imgPostThumbnail);
-        } else if (post.getVideos() != null && !post.getVideos().isEmpty()) {
-            Glide.with(context).load(post.getVideos().get(0))
-                    .placeholder(R.drawable.ic_video)
-                    .error(R.drawable.ic_video)
-                    .into(holder.imgPostThumbnail);
         } else {
             // Nếu bài viết KHÔNG CÓ ẢNH -> Đắp một cái ảnh mặc định vào cho khỏi trống
             // Bạn có thể đổi R.drawable.ic_image thành R.drawable.logo nếu muốn hiện logo app
@@ -120,9 +115,6 @@ public class SavedPostAdapter extends RecyclerView.Adapter<SavedPostAdapter.Save
             }
             if (post.getImages() != null) {
                 intent.putStringArrayListExtra("POST_IMAGES", new ArrayList<>(post.getImages()));
-            }
-            if (post.getVideos() != null) {
-                intent.putStringArrayListExtra(PostDetailActivity.EXTRA_POST_VIDEOS, new ArrayList<>(post.getVideos()));
             }
             intent.putExtra("COMMENT_COUNT", post.getcountComment());
             intent.putExtra("REACTION_COUNT", post.getcountReaction());

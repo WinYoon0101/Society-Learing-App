@@ -206,6 +206,7 @@ public class FriendProfileActivity extends AppCompatActivity {
     private void init(){
         loadUser();
         loadFriendStatus();
+        loadFriendCount();
         initClick();
         selectTab(tabAll);
         showTabAll();
@@ -229,20 +230,7 @@ public class FriendProfileActivity extends AppCompatActivity {
         tvFriendName.setText(currentUser.getUsername());
         tvBio.setText(currentUser.getBio()==null ? "" : currentUser.getBio());
         Glide.with(this).load(currentUser.getAvatar()).placeholder(R.drawable.ic_profile).error(R.drawable.ic_profile).into(imgAvatar);
-        // 2. Xử lý load Ảnh bìa (Cover)
-        String coverUrl = currentUser.getCover();
-        if (coverUrl == null || coverUrl.trim().isEmpty()) {
-            // Nếu rỗng hoặc null, set trực tiếp ảnh mặc định
-            imgCover.setImageResource(R.drawable.anhbia);
-        } else {
-            // Nếu có URL, dùng Glide load, nếu URL lỗi hoặc đang load thì dùng anhbia
-            Glide.with(this)
-                    .load(coverUrl)
-                    .placeholder(R.drawable.anhbia)
-                    .error(R.drawable.anhbia)
-                    .into(imgCover);
-        }
-        tvStats.setText(currentUser.getFriendCount()+" bạn bè");
+        Glide.with(this).load(currentUser.getCover()).placeholder(R.drawable.bg_cover_default).error(R.drawable.bg_cover_default).into(imgCover);
     }
     private void loadFriendStatus(){
         friendRepository.checkFriendStatus(friendId, friendStatusLiveData);
@@ -497,5 +485,16 @@ public class FriendProfileActivity extends AppCompatActivity {
             friendRepository.declineFriendRequest(friendId, actionLiveData);
         });
         dialog.show();
+    }
+    private void loadFriendCount() {
+        friendRepository.getFriendsByUser(friendId, friendLiveData);
+        friendLiveData.observe(this, result -> {
+            if (result == null) return;
+            if (result.status == Result.Status.SUCCESS) {
+                List<Friend> list = result.data;
+                int count = list == null ? 0 : list.size();
+                tvStats.setText(count + " bạn bè");
+            }
+        });
     }
 }
