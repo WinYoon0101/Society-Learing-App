@@ -4,6 +4,7 @@ import {
   getConversations,
   getOrCreateConversation,
   getMessages,
+  sendMessage,
   setNickname,
   setColor,
   deleteMessage,
@@ -34,6 +35,7 @@ router.post("/conversations/group", createGroup);
 
 // Messages
 router.get("/conversations/:conversationId/messages", getMessages);
+router.post("/messages", sendMessage);
 
 // Customization
 router.patch("/conversations/:conversationId/nickname", setNickname);

@@ -377,7 +377,7 @@ public class ChatDetailFragment extends Fragment {
                 ? message.getSender().getUsername() : "";
         tvReplyPreviewSender.setText("Đang trả lời " + senderName);
 
-        String snippet = message.getText();
+        String snippet = SharedPostMessage.previewText(message.getText());
         if (snippet == null || snippet.isEmpty()) {
             if (message.getMediaUrl() != null && !message.getMediaUrl().isEmpty()) {
                 String mt = message.getMediaType();

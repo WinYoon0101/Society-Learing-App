@@ -19,6 +19,7 @@ import com.example.frontend.data.model.Group;
 import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.SearchItem;
 import com.example.frontend.data.model.User;
+import com.example.frontend.ui.feed.HashtagTextHelper;
 import com.example.frontend.ui.profile.FriendProfileActivity;
 
 // LƯU Ý: Import các Activity đích của bạn vào đây
@@ -153,7 +154,7 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             Post post = (Post) item.getData();
             PostViewHolder postHolder = (PostViewHolder) holder;
 
-            postHolder.tvPostContent.setText(post.getContent() != null ? post.getContent() : "");
+            postHolder.tvPostContent.setText(HashtagTextHelper.highlight(post.getContent()));
 
             if (post.getAuthorId() != null) {
                 postHolder.tvAuthorName.setText(post.getAuthorId().getUsername());

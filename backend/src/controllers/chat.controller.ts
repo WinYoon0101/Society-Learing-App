@@ -226,6 +226,74 @@ export const getMessages = async (
   }
 };
 
+// POST /api/chat/messages - Gui tin nhan qua REST (dung cho share post/ngoai man chat)
+export const sendMessage = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const { conversationId, text, replyTo, mediaUrl, mediaType } = req.body;
+
+    if (!conversationId) {
+      res.status(400).json({ success: false, message: "Thieu conversationId" });
+      return;
+    }
+
+    if (!text?.trim() && !mediaUrl) {
+      res.status(400).json({ success: false, message: "Tin nhan rong" });
+      return;
+    }
+
+    const conversation = await Conversation.findOne({
+      _id: conversationId,
+      members: userId,
+    });
+
+    if (!conversation) {
+      res.status(403).json({ success: false, message: "Khong co quyen gui tin nhan" });
+      return;
+    }
+
+    const messageData: Record<string, any> = {
+      conversationId,
+      sender: userId,
+      text: text?.trim() || "",
+    };
+
+    if (replyTo) messageData.replyTo = new mongoose.Types.ObjectId(replyTo);
+    if (mediaUrl) messageData.mediaUrl = mediaUrl;
+    if (mediaType) messageData.mediaType = mediaType;
+
+    const message = await Message.create(messageData);
+
+    await Conversation.findByIdAndUpdate(conversationId, {
+      lastMessage: message._id,
+      updatedAt: new Date(),
+      deletedBy: [],
+    });
+
+    const populated = await Message.findById(message._id)
+      .populate("sender", "username avatar _id")
+      .populate({
+        path: "replyTo",
+        populate: { path: "sender", select: "username avatar _id" },
+      })
+      .lean();
+
+    emitToConversation(conversationId.toString(), "message:new", populated);
+
+    res.status(201).json({
+      success: true,
+      message: "Da gui tin nhan",
+      data: populated,
+    });
+  } catch (error) {
+    console.error("sendMessage error:", error);
+    res.status(500).json({ success: false, message: "Loi server" });
+  }
+};
+
 // PATCH /api/chat/conversations/:conversationId/nickname - Đặt nickname
 export const setNickname = async (
   req: AuthRequest,

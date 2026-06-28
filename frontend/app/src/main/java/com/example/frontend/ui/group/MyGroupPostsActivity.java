@@ -24,6 +24,7 @@ import com.example.frontend.data.model.GroupPost;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.data.repository.GroupRepository;
+import com.example.frontend.ui.feed.HashtagTextHelper;
 import com.example.frontend.ui.feed.PostImageAdapter;
 import com.example.frontend.utils.Result;
 
@@ -163,7 +164,7 @@ public class MyGroupPostsActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull VH h, int pos) {
             GroupPost p = items.get(pos);
             h.tvTime.setText(formatTime(p.getCreatedAt()));
-            h.tvContent.setText(p.getContent());
+            h.tvContent.setText(HashtagTextHelper.highlight(p.getContent()));
             h.tvContent.setVisibility(
                     p.getContent() != null && !p.getContent().isEmpty() ? View.VISIBLE : View.GONE);
 

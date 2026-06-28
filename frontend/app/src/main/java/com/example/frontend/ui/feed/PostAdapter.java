@@ -19,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -86,10 +87,14 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
         Post post = postList.get(position);
 
-        holder.tvContent.setText(post.getContent());
+        holder.tvContent.setText(HashtagTextHelper.highlight(post.getContent()));
 
         if (post.getAuthorId() != null) {
             String authorName = post.getAuthorId().getUsername();
+            if (authorName == null || authorName.trim().isEmpty()) {
+                authorName = "Người dùng";
+            }
+            final String finalAuthorName = authorName;
             List<User> tags = post.getTags();
 
             View.OnClickListener goToAuthorProfile = v -> {
@@ -97,7 +102,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     ProfileNavigationHelper.openProfile(
                             context,
                             post.getAuthorId().getId(),
-                            post.getAuthorId().getUsername(),
+                            finalAuthorName,
                             post.getAuthorId().getAvatar()
                     );
                 }
@@ -107,6 +112,10 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
             if (tags != null && !tags.isEmpty() && tags.get(0) != null) {
                 String taggedName = tags.get(0).getUsername();
+                if (taggedName == null || taggedName.trim().isEmpty()) {
+                    taggedName = "Người dùng";
+                }
+                final String finalTaggedName = taggedName;
                 String prefix = " — cùng với ";
                 String suffix = "";
                 if (tags.size() > 1) {
@@ -119,7 +128,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     feelingText = " đang cảm thấy " + getFeelingTextInVietnamese(post.getFeeling());
                 }
 
-                String fullText = authorName + prefix + taggedName + suffix + feelingText;
+                String fullText = finalAuthorName + prefix + finalTaggedName + suffix + feelingText;
                 SpannableString spannableString = new SpannableString(fullText);
 
                 ClickableSpan authorSpan = new ClickableSpan() {
@@ -135,7 +144,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                         ds.setFakeBoldText(true);
                     }
                 };
-                spannableString.setSpan(authorSpan, 0, authorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                spannableString.setSpan(authorSpan, 0, finalAuthorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                 ClickableSpan taggedSpan = new ClickableSpan() {
                     @Override
@@ -144,7 +153,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                             ProfileNavigationHelper.openProfile(
                                     context,
                                     tags.get(0).getId(),
-                                    tags.get(0).getUsername(),
+                                    finalTaggedName,
                                     tags.get(0).getAvatar()
                             );
                         }
@@ -158,8 +167,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     }
                 };
 
-                int startTag = authorName.length() + prefix.length();
-                int endTag = startTag + taggedName.length();
+                int startTag = finalAuthorName.length() + prefix.length();
+                int endTag = startTag + finalTaggedName.length();
                 spannableString.setSpan(taggedSpan, startTag, endTag, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                 if (!suffix.isEmpty()) {
@@ -188,7 +197,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 holder.tvUserName.setOnClickListener(null);
 
             } else {
-                String displayName = authorName;
+                String displayName = finalAuthorName;
 
                 if (post.getFeeling() != null && !post.getFeeling().trim().isEmpty()) {
                     displayName += " đang cảm thấy " + getFeelingTextInVietnamese(post.getFeeling());
@@ -208,7 +217,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                         ds.setFakeBoldText(true);
                     }
                 };
-                spannableString.setSpan(authorSpan, 0, authorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                spannableString.setSpan(authorSpan, 0, finalAuthorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 holder.tvUserName.setText(spannableString);
                 holder.tvUserName.setMovementMethod(LinkMovementMethod.getInstance());
                 holder.tvUserName.setHighlightColor(Color.TRANSPARENT);
@@ -308,6 +317,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         if (holder.btnShare != null) {
             holder.btnShare.setOnClickListener(v -> {
+                if (showSharePostSheet(post)) {
+                    return;
+                }
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
 
@@ -476,6 +488,38 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             String typeToSend = newReactionType != null ? newReactionType : oldReaction;
             reactionListener.onReactClick(post.getId(), typeToSend);
         }
+    }
+
+    private boolean showSharePostSheet(Post post) {
+        if (!(context instanceof AppCompatActivity)) {
+            return false;
+        }
+        if (post == null || post.getId() == null || post.getId().trim().isEmpty()) {
+            Toast.makeText(context, "Không tìm thấy bài viết để chia sẻ", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        SharePostBottomSheet.newInstance(
+                post.getId(),
+                getAuthorDisplayName(post),
+                post.getContent(),
+                getFirstImage(post.getImages())
+        ).show(((AppCompatActivity) context).getSupportFragmentManager(), SharePostBottomSheet.TAG);
+        return true;
+    }
+
+    private String getAuthorDisplayName(Post post) {
+        if (post != null && post.getAuthorId() != null) {
+            String name = post.getAuthorId().getUsername();
+            if (name != null && !name.trim().isEmpty()) {
+                return name;
+            }
+        }
+        return "Người dùng";
+    }
+
+    private String getFirstImage(List<String> images) {
+        return images != null && !images.isEmpty() ? images.get(0) : "";
     }
 
     private String formatTime(String dateString) {

@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.repository.GroupRepository;
+import com.example.frontend.ui.feed.HashtagTextHelper;
 import com.example.frontend.ui.feed.PostImageAdapter;
 import com.example.frontend.utils.Result;
 
@@ -74,7 +75,7 @@ public class PendingPostDetailActivity extends AppCompatActivity {
 
         tvAuthor.setText(authorName != null ? authorName : "");
         tvTime.setText(time != null ? time : "");
-        tvContent.setText(content);
+        tvContent.setText(HashtagTextHelper.highlight(content));
         tvContent.setVisibility(content != null && !content.isEmpty() ? View.VISIBLE : View.GONE);
 
         if (authorAvatar != null && !authorAvatar.isEmpty()) {

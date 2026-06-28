@@ -19,6 +19,7 @@ import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.model.GroupPost;
 import com.example.frontend.data.repository.GroupRepository;
+import com.example.frontend.ui.feed.HashtagTextHelper;
 import com.example.frontend.ui.feed.PostImageAdapter;
 import com.example.frontend.utils.Result;
 
@@ -196,7 +197,7 @@ public class PendingPostsActivity extends AppCompatActivity {
 
             h.tvTime.setText(formatTime(p.getCreatedAt()));
 
-            h.tvContent.setText(p.getContent());
+            h.tvContent.setText(HashtagTextHelper.highlight(p.getContent()));
             h.tvContent.setVisibility(
                     p.getContent() != null && !p.getContent().isEmpty() ? View.VISIBLE : View.GONE);
 

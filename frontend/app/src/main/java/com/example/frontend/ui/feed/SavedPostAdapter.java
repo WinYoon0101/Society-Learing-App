@@ -58,7 +58,7 @@ public class SavedPostAdapter extends RecyclerView.Adapter<SavedPostAdapter.Save
         Post post = savedPostList.get(position);
 
         // 1. Gán nội dung thu gọn
-        holder.tvPostContent.setText(post.getContent());
+        holder.tvPostContent.setText(HashtagTextHelper.highlight(post.getContent()));
 
         // 2. Gán Tác giả & Avatar
         if (post.getAuthorId() != null) {

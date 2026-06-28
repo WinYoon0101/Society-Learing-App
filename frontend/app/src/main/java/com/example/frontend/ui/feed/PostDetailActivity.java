@@ -56,6 +56,9 @@ public class PostDetailActivity extends AppCompatActivity {
     private View btnShare;
 
     private String currentPostId;
+    private String currentPostAuthorName = "";
+    private String currentPostContent = "";
+    private String currentPostImageUrl = "";
     private String replyingToId = null;
 
     @Override
@@ -123,6 +126,9 @@ public class PostDetailActivity extends AppCompatActivity {
 
         if (btnShare != null) {
             btnShare.setOnClickListener(v -> {
+                if (showSharePostSheet()) {
+                    return;
+                }
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
 
@@ -176,7 +182,7 @@ public class PostDetailActivity extends AppCompatActivity {
                 suffix = " và " + (tags.size() - 1) + " người khác";
             }
 
-            String fullText = authorName + prefix + tagName + suffix + feelingText;
+            String fullText = finalAuthorName + prefix + tagName + suffix + feelingText;
             SpannableString spannableString = new SpannableString(fullText);
 
             ClickableSpan authorSpan = new ClickableSpan() {
@@ -192,7 +198,7 @@ public class PostDetailActivity extends AppCompatActivity {
                     ds.setFakeBoldText(true);
                 }
             };
-            spannableString.setSpan(authorSpan, 0, authorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannableString.setSpan(authorSpan, 0, finalAuthorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
             ClickableSpan taggedSpan = new ClickableSpan() {
                 @Override
@@ -215,7 +221,7 @@ public class PostDetailActivity extends AppCompatActivity {
                 }
             };
 
-            int startTag = authorName.length() + prefix.length();
+            int startTag = finalAuthorName.length() + prefix.length();
             int endTag = startTag + tagName.length();
             spannableString.setSpan(taggedSpan, startTag, endTag, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
@@ -244,7 +250,7 @@ public class PostDetailActivity extends AppCompatActivity {
             tvAuthorName.setHighlightColor(Color.TRANSPARENT);
             tvAuthorName.setOnClickListener(null);
         } else {
-            String fullText = authorName + feelingText;
+            String fullText = finalAuthorName + feelingText;
             SpannableString spannableString = new SpannableString(fullText);
             ClickableSpan authorSpan = new ClickableSpan() {
                 @Override
@@ -260,7 +266,7 @@ public class PostDetailActivity extends AppCompatActivity {
                     ds.setFakeBoldText(true);
                 }
             };
-            spannableString.setSpan(authorSpan, 0, authorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannableString.setSpan(authorSpan, 0, finalAuthorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             tvAuthorName.setText(spannableString);
             tvAuthorName.setMovementMethod(LinkMovementMethod.getInstance());
             tvAuthorName.setHighlightColor(Color.TRANSPARENT);
@@ -299,7 +305,9 @@ public class PostDetailActivity extends AppCompatActivity {
             String myReaction = getIntent().getStringExtra("MY_REACTION");
             ArrayList<String> topReactions = getIntent().getStringArrayListExtra("TOP_REACTIONS");
 
-            if (tvContent != null) tvContent.setText(content);
+            currentPostContent = content;
+            currentPostAuthorName = authorName != null ? authorName : "";
+            if (tvContent != null) tvContent.setText(HashtagTextHelper.highlight(content));
 
             // 👉 Gọi hàm Setup UI Tên + Tag
             setAuthorAndTags(authorId, authorName, authorAvatar, tags, feeling);
@@ -307,10 +315,12 @@ public class PostDetailActivity extends AppCompatActivity {
             if (tvTime != null) tvTime.setText(formatTime(postTime));
 
             if (postImages != null && !postImages.isEmpty() && rvPostImagesFeed != null) {
+                currentPostImageUrl = postImages.get(0);
                 rvPostImagesFeed.setVisibility(View.VISIBLE);
                 PostImageAdapter imageAdapter = new PostImageAdapter(this, postImages);
                 rvPostImagesFeed.setAdapter(imageAdapter);
             } else if (rvPostImagesFeed != null) {
+                currentPostImageUrl = "";
                 rvPostImagesFeed.setVisibility(View.GONE);
             }
 
@@ -405,9 +415,13 @@ public class PostDetailActivity extends AppCompatActivity {
         viewModel.getPostLiveData().observe(this, post -> {
             if (post == null) return;
 
-            if (tvContent != null) tvContent.setText(post.getContent());
+            currentPostContent = post.getContent() != null ? post.getContent() : "";
+            if (tvContent != null) tvContent.setText(HashtagTextHelper.highlight(currentPostContent));
 
             if (post.getAuthorId() != null) {
+                currentPostAuthorName = post.getAuthorId().getUsername() != null
+                        ? post.getAuthorId().getUsername()
+                        : "";
                 // 👉 Tự động vẽ Tên và Tag khi cập nhật xong API
                 setAuthorAndTags(
                         post.getAuthorId().getId(),
@@ -432,13 +446,40 @@ public class PostDetailActivity extends AppCompatActivity {
             );
 
             if (post.getImages() != null && !post.getImages().isEmpty() && rvPostImagesFeed != null) {
+                currentPostImageUrl = post.getImages().get(0);
                 rvPostImagesFeed.setVisibility(View.VISIBLE);
                 PostImageAdapter imageAdapter = new PostImageAdapter(this, post.getImages());
                 rvPostImagesFeed.setAdapter(imageAdapter);
             } else if (rvPostImagesFeed != null) {
+                currentPostImageUrl = "";
                 rvPostImagesFeed.setVisibility(View.GONE);
             }
         });
+    }
+
+    private boolean showSharePostSheet() {
+        if (currentPostId == null || currentPostId.trim().isEmpty()) {
+            Toast.makeText(this, "Không tìm thấy bài viết để chia sẻ", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        String authorName = currentPostAuthorName;
+        if ((authorName == null || authorName.trim().isEmpty()) && tvAuthorName != null) {
+            authorName = tvAuthorName.getText().toString();
+        }
+
+        String content = currentPostContent;
+        if ((content == null || content.trim().isEmpty()) && tvContent != null) {
+            content = tvContent.getText().toString();
+        }
+
+        SharePostBottomSheet.newInstance(
+                currentPostId,
+                authorName,
+                content,
+                currentPostImageUrl
+        ).show(getSupportFragmentManager(), SharePostBottomSheet.TAG);
+        return true;
     }
 
     private String formatTime(String dateString) {

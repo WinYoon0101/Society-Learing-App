@@ -1,8 +1,10 @@
 package com.example.frontend.ui.chat;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -21,6 +23,7 @@ import com.example.frontend.R;
 import com.example.frontend.data.model.Message;
 import com.example.frontend.data.model.Reaction;
 import com.example.frontend.data.model.User;
+import com.example.frontend.ui.feed.PostDetailActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -235,6 +238,44 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         scrollContainer.setVisibility(View.VISIBLE);
     }
 
+    private boolean bindSharedPost(Message message, View card, TextView tvMessage,
+                                   TextView tvAuthor, TextView tvContent, ImageView imgPreview) {
+        SharedPostMessage sharedPost = SharedPostMessage.parse(message.getText());
+        if (sharedPost == null) {
+            card.setVisibility(View.GONE);
+            card.setOnClickListener(null);
+            return false;
+        }
+
+        tvMessage.setVisibility(View.GONE);
+        card.setVisibility(View.VISIBLE);
+        String author = sharedPost.getAuthorName();
+        tvAuthor.setText(!TextUtils.isEmpty(author) ? author : "Bài viết");
+
+        String content = sharedPost.getContent();
+        tvContent.setText(!TextUtils.isEmpty(content) ? content : "Nhấn để xem bài viết");
+
+        String imageUrl = sharedPost.getImageUrl();
+        if (!TextUtils.isEmpty(imageUrl)) {
+            imgPreview.setVisibility(View.VISIBLE);
+            Glide.with(imgPreview.getContext())
+                    .load(imageUrl)
+                    .centerCrop()
+                    .placeholder(R.drawable.bg_rounded_image_placeholder)
+                    .error(R.drawable.bg_rounded_image_placeholder)
+                    .into(imgPreview);
+        } else {
+            imgPreview.setVisibility(View.GONE);
+        }
+
+        card.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), PostDetailActivity.class);
+            intent.putExtra("POST_ID", sharedPost.getPostId());
+            v.getContext().startActivity(intent);
+        });
+        return true;
+    }
+
     private int dp(View v, int dp) {
         return Math.round(v.getResources().getDisplayMetrics().density * dp);
     }
@@ -258,7 +299,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
         });
 
-        String snippet = replyTo.getText();
+        String snippet = SharedPostMessage.previewText(replyTo.getText());
         if (snippet == null || snippet.isEmpty()) {
             if (replyTo.getMediaUrl() != null && !replyTo.getMediaUrl().isEmpty()) {
                 String mt = replyTo.getMediaType();
@@ -413,6 +454,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ImageButton btnReact, btnReply, btnMore;
         View replyQuote;
         TextView tvReplyQuoteSender, tvReplyQuoteText;
+        View sharedPostCard;
+        TextView tvSharedPostAuthor, tvSharedPostContent;
+        ImageView imgSharedPostImage;
         ImageView imgMediaPreview;
         LinearLayout layoutFilePreview;
         TextView tvFileIcon, tvFileName;
@@ -430,6 +474,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             replyQuote = itemView.findViewById(R.id.replyQuote);
             tvReplyQuoteSender = itemView.findViewById(R.id.tvReplyQuoteSender);
             tvReplyQuoteText = itemView.findViewById(R.id.tvReplyQuoteText);
+            sharedPostCard = itemView.findViewById(R.id.sharedPostCard);
+            tvSharedPostAuthor = itemView.findViewById(R.id.tvSharedPostAuthor);
+            tvSharedPostContent = itemView.findViewById(R.id.tvSharedPostContent);
+            imgSharedPostImage = itemView.findViewById(R.id.imgSharedPostImage);
             imgMediaPreview = itemView.findViewById(R.id.imgMediaPreview);
             layoutFilePreview = itemView.findViewById(R.id.layoutFilePreview);
             tvFileIcon = itemView.findViewById(R.id.tvFileIcon);
@@ -437,12 +485,23 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
 
         void bind(Message message) {
+            sharedPostCard.setVisibility(View.GONE);
             if (bindRecalled(message, itemView, tvMessage, tvTime, messageActionBar,
                     reactionScroll, replyQuote, imgMediaPreview, layoutFilePreview)) {
                 return;
             }
             String text = message.getText();
-            if (text == null || text.isEmpty()) {
+            boolean isSharedPost = bindSharedPost(
+                    message,
+                    sharedPostCard,
+                    tvMessage,
+                    tvSharedPostAuthor,
+                    tvSharedPostContent,
+                    imgSharedPostImage
+            );
+            if (isSharedPost) {
+                // Card handles its own visible content.
+            } else if (text == null || text.isEmpty()) {
                 tvMessage.setVisibility(View.GONE);
             } else {
                 tvMessage.setVisibility(View.VISIBLE);
@@ -451,7 +510,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (message.getCreatedAt() != null) {
                 tvTime.setText(formatTime(message.getCreatedAt()));
             }
-            wireActionBar(message, tvMessage, itemView, messageActionBar, btnReact, btnReply, btnMore);
+            wireActionBar(message, isSharedPost ? sharedPostCard : tvMessage,
+                    itemView, messageActionBar, btnReact, btnReply, btnMore);
             bindReplyQuote(message, replyQuote, tvReplyQuoteSender, tvReplyQuoteText);
             bindMedia(message, imgMediaPreview, layoutFilePreview, tvFileIcon, tvFileName);
             bindReactions(message, reactionScroll, reactionContainer);
@@ -467,6 +527,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ImageButton btnReact, btnReply, btnMore;
         View replyQuote;
         TextView tvReplyQuoteSender, tvReplyQuoteText;
+        View sharedPostCard;
+        TextView tvSharedPostAuthor, tvSharedPostContent;
+        ImageView imgSharedPostImage;
         ImageView imgMediaPreview;
         LinearLayout layoutFilePreview;
         TextView tvFileIcon, tvFileName;
@@ -485,6 +548,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             replyQuote = itemView.findViewById(R.id.replyQuote);
             tvReplyQuoteSender = itemView.findViewById(R.id.tvReplyQuoteSender);
             tvReplyQuoteText = itemView.findViewById(R.id.tvReplyQuoteText);
+            sharedPostCard = itemView.findViewById(R.id.sharedPostCard);
+            tvSharedPostAuthor = itemView.findViewById(R.id.tvSharedPostAuthor);
+            tvSharedPostContent = itemView.findViewById(R.id.tvSharedPostContent);
+            imgSharedPostImage = itemView.findViewById(R.id.imgSharedPostImage);
             imgMediaPreview = itemView.findViewById(R.id.imgMediaPreview);
             layoutFilePreview = itemView.findViewById(R.id.layoutFilePreview);
             tvFileIcon = itemView.findViewById(R.id.tvFileIcon);
@@ -504,12 +571,23 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 imgAvatar.setImageResource(R.drawable.ic_user);
             }
 
+            sharedPostCard.setVisibility(View.GONE);
             if (bindRecalled(message, itemView, tvMessage, tvTime, messageActionBar,
                     reactionScroll, replyQuote, imgMediaPreview, layoutFilePreview)) {
                 return;
             }
             String text = message.getText();
-            if (text == null || text.isEmpty()) {
+            boolean isSharedPost = bindSharedPost(
+                    message,
+                    sharedPostCard,
+                    tvMessage,
+                    tvSharedPostAuthor,
+                    tvSharedPostContent,
+                    imgSharedPostImage
+            );
+            if (isSharedPost) {
+                // Card handles its own visible content.
+            } else if (text == null || text.isEmpty()) {
                 tvMessage.setVisibility(View.GONE);
             } else {
                 tvMessage.setVisibility(View.VISIBLE);
@@ -519,7 +597,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 tvTime.setText(formatTime(message.getCreatedAt()));
             }
 
-            wireActionBar(message, tvMessage, itemView, messageActionBar, btnReact, btnReply, btnMore);
+            wireActionBar(message, isSharedPost ? sharedPostCard : tvMessage,
+                    itemView, messageActionBar, btnReact, btnReply, btnMore);
             bindReplyQuote(message, replyQuote, tvReplyQuoteSender, tvReplyQuoteText);
             bindMedia(message, imgMediaPreview, layoutFilePreview, tvFileIcon, tvFileName);
             bindReactions(message, reactionScroll, reactionContainer);

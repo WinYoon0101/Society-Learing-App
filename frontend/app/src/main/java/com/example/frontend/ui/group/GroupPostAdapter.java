@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.model.GroupPost;
+import com.example.frontend.ui.feed.HashtagTextHelper;
 import com.example.frontend.ui.feed.PostDetailActivity;
 import com.example.frontend.ui.feed.PostImageAdapter;
 import com.example.frontend.ui.feed.ReactionListBottomSheet;
@@ -95,7 +96,7 @@ public class GroupPostAdapter extends RecyclerView.Adapter<GroupPostAdapter.VH> 
         h.tvTime.setText(formatTime(p.getCreatedAt()));
 
         // Nội dung
-        h.tvContent.setText(p.getContent());
+        h.tvContent.setText(HashtagTextHelper.highlight(p.getContent()));
         h.tvContent.setVisibility(
                 p.getContent() != null && !p.getContent().isEmpty() ? View.VISIBLE : View.GONE);
 

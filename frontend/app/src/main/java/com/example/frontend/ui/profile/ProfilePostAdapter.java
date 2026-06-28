@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.model.Post;
+import com.example.frontend.ui.feed.HashtagTextHelper;
 import com.example.frontend.ui.feed.PostDetailActivity;
 import com.example.frontend.ui.feed.PostImageAdapter;
 import com.example.frontend.ui.feed.ReactionUiHelper;
@@ -51,7 +52,7 @@ public class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.
         Post post = posts.get(pos);
 
         // ── Nội dung bài viết ──
-        h.tvContent.setText(post.getContent() != null ? post.getContent() : "");
+        h.tvContent.setText(HashtagTextHelper.highlight(post.getContent()));
 
         // ── Tác giả ──
         if (post.getAuthorId() != null) {

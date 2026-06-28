@@ -113,7 +113,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
 
             // Last message
             if (conversation.getLastMessage() != null) {
-                String text = conversation.getLastMessage().getText();
+                String text = SharedPostMessage.previewText(conversation.getLastMessage().getText());
                 boolean isSystem = conversation.getLastMessage().isSystem();
                 String senderName = "";
                 User sender = conversation.getLastMessage().getSender();
