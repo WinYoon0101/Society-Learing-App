@@ -18,6 +18,7 @@ import com.example.frontend.R;
 import com.example.frontend.data.model.Post;
 import com.example.frontend.ui.feed.PostDetailActivity;
 import com.example.frontend.ui.feed.PostImageAdapter;
+import com.example.frontend.ui.feed.ReactionUiHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,36 +79,17 @@ public class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.
         int rc = post.getcountReaction();
         List<String> topReactions = post.getTopReactions();
 
-        if (h.layoutTopReactions != null) {
-            if (rc > 0) {
-                h.layoutTopReactions.setVisibility(android.view.View.VISIBLE);
-                if (h.tvReactionCount != null) {
-                    h.tvReactionCount.setText(String.valueOf(rc));
-                    h.tvReactionCount.setVisibility(android.view.View.VISIBLE);
-                }
-                if (h.imgReact1 != null) h.imgReact1.setVisibility(android.view.View.GONE);
-                if (h.imgReact2 != null) h.imgReact2.setVisibility(android.view.View.GONE);
-
-                if (topReactions != null && !topReactions.isEmpty()) {
-                    if (h.imgReact1 != null) {
-                        h.imgReact1.setVisibility(android.view.View.VISIBLE);
-                        h.imgReact1.setText(getEmojiForReaction(topReactions.get(0)));
-                    }
-                    if (topReactions.size() > 1 && h.imgReact2 != null) {
-                        h.imgReact2.setVisibility(android.view.View.VISIBLE);
-                        h.imgReact2.setText(getEmojiForReaction(topReactions.get(1)));
-                    }
-                }
-            } else {
-                h.layoutTopReactions.setVisibility(android.view.View.GONE);
-            }
-        }
+        ReactionUiHelper.bindTopReactions(
+                h.layoutTopReactions,
+                h.imgReact1,
+                h.imgReact2,
+                h.tvReactionCount,
+                rc,
+                topReactions
+        );
 
         // ── Nhãn nút Like ──
-        if (h.tvLikeLabel != null) {
-            String myReaction = post.getMyReaction();
-            h.tvLikeLabel.setText(myReaction != null ? myReaction : "Thích");
-        }
+        ReactionUiHelper.bindReactionButton(h.imgLikeIcon, h.tvLikeLabel, post.getMyReaction());
 
         // ── Số comment ──
         if (h.tvCommentCount != null) {
@@ -122,6 +104,7 @@ public class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.
             Intent intent = new Intent(context, PostDetailActivity.class);
             intent.putExtra("POST_ID", post.getId());
             intent.putExtra("POST_CONTENT", post.getContent());
+            intent.putExtra(PostDetailActivity.EXTRA_POST_FEELING, post.getFeeling());
             if (post.getAuthorId() != null) {
                 intent.putExtra("AUTHOR_NAME", post.getAuthorId().getUsername());
                 intent.putExtra("AUTHOR_AVATAR", post.getAuthorId().getAvatar());
@@ -143,23 +126,10 @@ public class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.
     @Override
     public int getItemCount() { return posts.size(); }
 
-    private String getEmojiForReaction(String type) {
-        if (type == null) return "👍";
-        switch (type) {
-            case "Like": return "👍";
-            case "Love": return "❤️";
-            case "Haha": return "😆";
-            case "Wow":  return "😮";
-            case "Sad":  return "😢";
-            case "Angry":return "😡";
-            default: return "👍";
-        }
-    }
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvUserName, tvContent, tvCommentCount, tvReactionCount, tvLikeLabel;
-        ImageView imgAvatar;
-        TextView imgReact1, imgReact2;
+        ImageView imgAvatar, imgLikeIcon;
+        ImageView imgReact1, imgReact2;
         RecyclerView rvPostImages;
         android.widget.LinearLayout layoutTopReactions;
 
@@ -172,6 +142,7 @@ public class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.
             tvCommentCount  = itemView.findViewById(R.id.tvCommentCount);
             tvReactionCount = itemView.findViewById(R.id.tvReactionCount);
             tvLikeLabel     = itemView.findViewById(R.id.tvLikeCount);
+            imgLikeIcon     = itemView.findViewById(R.id.imgLike);
             imgReact1       = itemView.findViewById(R.id.imgReact1);
             imgReact2       = itemView.findViewById(R.id.imgReact2);
             layoutTopReactions = itemView.findViewById(R.id.layoutTopReactions);

@@ -93,9 +93,9 @@ public class FriendProfileActivity extends AppCompatActivity {
 
         friendPostsContainer = findViewById(R.id.friendPostsContainer);
         friendId = getIntent().getStringExtra("USER_ID");
-        Toast.makeText(this,
-                "friendId = " + friendId,
-                Toast.LENGTH_LONG).show();
+        if (friendId == null) {
+            friendId = getIntent().getStringExtra("FRIEND_ID");
+        }
         if(friendId == null){
             finish();
             return;

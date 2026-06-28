@@ -36,6 +36,8 @@ public class GroupPost {
     private String myReaction;
     @SerializedName("topReactions")
     private List<String> topReactions;
+    @SerializedName("feeling")
+    private String feeling;
 
     public String getId() { return id; }
     public String getContent() { return content; }
@@ -50,6 +52,8 @@ public class GroupPost {
     public List<String> getTopReactions() { return topReactions; }
     public void setTopReactions(List<String> topReactions) { this.topReactions = topReactions; }
     public void setCountReaction(int countReaction) { this.countReaction = countReaction; }
+    public String getFeeling() { return feeling; }
+    public void setFeeling(String feeling) { this.feeling = feeling; }
 
     /**
      * Gson custom deserializer: nếu groupId là primitive String thì tạo Group rỗng với chỉ _id,

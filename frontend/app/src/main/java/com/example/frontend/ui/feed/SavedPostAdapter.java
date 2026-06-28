@@ -108,6 +108,7 @@ public class SavedPostAdapter extends RecyclerView.Adapter<SavedPostAdapter.Save
             Intent intent = new Intent(context, PostDetailActivity.class);
             intent.putExtra("POST_ID", post.getId());
             intent.putExtra("POST_CONTENT", post.getContent());
+            intent.putExtra(PostDetailActivity.EXTRA_POST_FEELING, post.getFeeling());
             if (post.getAuthorId() != null) {
                 intent.putExtra("AUTHOR_NAME", post.getAuthorId().getUsername());
                 intent.putExtra("AUTHOR_AVATAR", post.getAuthorId().getAvatar());

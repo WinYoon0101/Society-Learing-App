@@ -27,11 +27,18 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.model.Comment;
+import com.example.frontend.data.model.User;
+import com.example.frontend.ui.profile.ProfileNavigationHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class PostDetailActivity extends AppCompatActivity {
+
+    public static final String EXTRA_POST_FEELING = "POST_FEELING";
+    public static final String EXTRA_TAG_IDS = "TAG_IDS";
+    public static final String EXTRA_TAG_NAMES = "TAG_NAMES";
+    public static final String EXTRA_TAG_AVATARS = "TAG_AVATARS";
 
     private PostDetailViewModel viewModel;
     private CommentAdapter commentAdapter;
@@ -45,7 +52,7 @@ public class PostDetailActivity extends AppCompatActivity {
 
     private LinearLayout layoutTopReactions, btnLikeContainer;
     private TextView tvReactionCount, tvLikeLabel;
-    private TextView imgReact1, imgReact2, imgLikeIcon;
+    private ImageView imgReact1, imgReact2, imgLikeIcon;
     private View btnShare;
 
     private String currentPostId;
@@ -143,16 +150,15 @@ public class PostDetailActivity extends AppCompatActivity {
     // ==========================================
     // 👉 HÀM TIỆN ÍCH DÙNG CHUNG: VẼ TÊN VÀ TAG BẤM ĐƯỢC
     // ==========================================
-    private void setAuthorAndTags(String authorId, String authorName, String authorAvatar, String tagId, String tagName, int tagCount) {
+    private void setAuthorAndTags(String authorId, String authorName, String authorAvatar, List<User> tags, String feeling) {
         if (tvAuthorName == null) return;
+        if (authorName == null || authorName.trim().isEmpty()) authorName = "Người dùng";
+        String feelingText = getFeelingDisplayText(feeling);
 
+        String finalAuthorName = authorName;
         View.OnClickListener goToAuthorProfile = v -> {
             if (authorId != null) {
-                Intent intent = new Intent(this, com.example.frontend.ui.profile.FriendProfileActivity.class);
-                intent.putExtra("FRIEND_ID", authorId);
-                intent.putExtra("FRIEND_NAME", authorName);
-                intent.putExtra("FRIEND_AVATAR", authorAvatar);
-                startActivity(intent);
+                ProfileNavigationHelper.openProfile(this, authorId, finalAuthorName, authorAvatar);
             }
         };
 
@@ -161,14 +167,16 @@ public class PostDetailActivity extends AppCompatActivity {
             imgAvatar.setOnClickListener(goToAuthorProfile);
         }
 
-        if (tagName != null && !tagName.isEmpty()) {
+        if (tags != null && !tags.isEmpty() && tags.get(0) != null && tags.get(0).getUsername() != null) {
+            User firstTag = tags.get(0);
+            String tagName = firstTag.getUsername();
             String prefix = " — cùng với ";
             String suffix = "";
-            if (tagCount > 1) {
-                suffix = " và " + (tagCount - 1) + " người khác";
+            if (tags.size() > 1) {
+                suffix = " và " + (tags.size() - 1) + " người khác";
             }
 
-            String fullText = authorName + prefix + tagName + suffix;
+            String fullText = authorName + prefix + tagName + suffix + feelingText;
             SpannableString spannableString = new SpannableString(fullText);
 
             ClickableSpan authorSpan = new ClickableSpan() {
@@ -189,11 +197,13 @@ public class PostDetailActivity extends AppCompatActivity {
             ClickableSpan taggedSpan = new ClickableSpan() {
                 @Override
                 public void onClick(@NonNull View widget) {
-                    if (tagId != null) {
-                        Intent intent = new Intent(PostDetailActivity.this, com.example.frontend.ui.profile.FriendProfileActivity.class);
-                        intent.putExtra("FRIEND_ID", tagId);
-                        intent.putExtra("FRIEND_NAME", tagName);
-                        startActivity(intent);
+                    if (firstTag.getId() != null) {
+                        ProfileNavigationHelper.openProfile(
+                                PostDetailActivity.this,
+                                firstTag.getId(),
+                                firstTag.getUsername(),
+                                firstTag.getAvatar()
+                        );
                     }
                 }
                 @Override
@@ -209,20 +219,70 @@ public class PostDetailActivity extends AppCompatActivity {
             int endTag = startTag + tagName.length();
             spannableString.setSpan(taggedSpan, startTag, endTag, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
+            if (!suffix.isEmpty()) {
+                int startMore = endTag;
+                int endMore = startMore + suffix.length();
+                ClickableSpan moreTaggedSpan = new ClickableSpan() {
+                    @Override
+                    public void onClick(@NonNull View widget) {
+                        showTaggedUsers(tags);
+                    }
+
+                    @Override
+                    public void updateDrawState(@NonNull TextPaint ds) {
+                        super.updateDrawState(ds);
+                        ds.setUnderlineText(false);
+                        ds.setColor(Color.parseColor("#050505"));
+                        ds.setFakeBoldText(true);
+                    }
+                };
+                spannableString.setSpan(moreTaggedSpan, startMore, endMore, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+
             tvAuthorName.setText(spannableString);
             tvAuthorName.setMovementMethod(LinkMovementMethod.getInstance());
             tvAuthorName.setHighlightColor(Color.TRANSPARENT);
             tvAuthorName.setOnClickListener(null);
         } else {
-            tvAuthorName.setText(authorName);
-            tvAuthorName.setOnClickListener(goToAuthorProfile);
-            tvAuthorName.setMovementMethod(null);
+            String fullText = authorName + feelingText;
+            SpannableString spannableString = new SpannableString(fullText);
+            ClickableSpan authorSpan = new ClickableSpan() {
+                @Override
+                public void onClick(@NonNull View widget) {
+                    goToAuthorProfile.onClick(widget);
+                }
+
+                @Override
+                public void updateDrawState(@NonNull TextPaint ds) {
+                    super.updateDrawState(ds);
+                    ds.setUnderlineText(false);
+                    ds.setColor(Color.parseColor("#050505"));
+                    ds.setFakeBoldText(true);
+                }
+            };
+            spannableString.setSpan(authorSpan, 0, authorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            tvAuthorName.setText(spannableString);
+            tvAuthorName.setMovementMethod(LinkMovementMethod.getInstance());
+            tvAuthorName.setHighlightColor(Color.TRANSPARENT);
+            tvAuthorName.setOnClickListener(null);
         }
+    }
+
+    private void showTaggedUsers(List<User> tags) {
+        if (tags == null || tags.isEmpty()) return;
+        TaggedUsersBottomSheet bottomSheet = TaggedUsersBottomSheet.newInstance(tags);
+        bottomSheet.show(getSupportFragmentManager(), "TaggedUsersBottomSheet");
+    }
+
+    private String getFeelingDisplayText(String feeling) {
+        if (feeling == null || feeling.trim().isEmpty()) return "";
+        return " đang cảm thấy " + getFeelingTextInVietnamese(feeling);
     }
 
     private void receiveDataFromIntent() {
         currentPostId = getIntent().getStringExtra("POST_ID");
         String content = getIntent().getStringExtra("POST_CONTENT");
+        String feeling = getIntent().getStringExtra(EXTRA_POST_FEELING);
 
         if (content != null && !content.isEmpty()) {
             String authorId = getIntent().getStringExtra("AUTHOR_ID");
@@ -231,9 +291,7 @@ public class PostDetailActivity extends AppCompatActivity {
             String postTime = getIntent().getStringExtra("POST_TIME");
 
             // Dữ liệu Tag từ Adapter chuyển sang
-            String tagId = getIntent().getStringExtra("TAG_ID");
-            String tagName = getIntent().getStringExtra("TAG_NAME");
-            int tagCount = getIntent().getIntExtra("TAG_COUNT", 0);
+            List<User> tags = readTaggedUsersFromIntent();
 
             ArrayList<String> postImages = getIntent().getStringArrayListExtra("POST_IMAGES");
             int commentCount = getIntent().getIntExtra("COMMENT_COUNT", 0);
@@ -244,7 +302,7 @@ public class PostDetailActivity extends AppCompatActivity {
             if (tvContent != null) tvContent.setText(content);
 
             // 👉 Gọi hàm Setup UI Tên + Tag
-            setAuthorAndTags(authorId, authorName, authorAvatar, tagId, tagName, tagCount);
+            setAuthorAndTags(authorId, authorName, authorAvatar, tags, feeling);
 
             if (tvTime != null) tvTime.setText(formatTime(postTime));
 
@@ -258,35 +316,39 @@ public class PostDetailActivity extends AppCompatActivity {
 
             if (tvCommentCount != null) tvCommentCount.setText(String.valueOf(commentCount));
 
-            if (imgLikeIcon != null && tvLikeLabel != null) {
-                imgLikeIcon.setText(getEmojiForReaction(myReaction));
-                if (myReaction != null) {
-                    tvLikeLabel.setText(myReaction);
-                } else {
-                    tvLikeLabel.setText("Thích");
-                }
-            }
-
-            if (layoutTopReactions != null) {
-                if (reactionCount > 0) {
-                    layoutTopReactions.setVisibility(View.VISIBLE);
-                    tvReactionCount.setText(String.valueOf(reactionCount));
-                    imgReact1.setVisibility(View.GONE);
-                    imgReact2.setVisibility(View.GONE);
-
-                    if (topReactions != null && !topReactions.isEmpty()) {
-                        imgReact1.setVisibility(View.VISIBLE);
-                        imgReact1.setText(getEmojiForReaction(topReactions.get(0)));
-                        if (topReactions.size() > 1) {
-                            imgReact2.setVisibility(View.VISIBLE);
-                            imgReact2.setText(getEmojiForReaction(topReactions.get(1)));
-                        }
-                    }
-                } else {
-                    layoutTopReactions.setVisibility(View.GONE);
-                }
-            }
+            ReactionUiHelper.bindReactionButton(imgLikeIcon, tvLikeLabel, myReaction);
+            ReactionUiHelper.bindTopReactions(
+                    layoutTopReactions,
+                    imgReact1,
+                    imgReact2,
+                    tvReactionCount,
+                    reactionCount,
+                    topReactions
+            );
         }
+    }
+
+    private List<User> readTaggedUsersFromIntent() {
+        ArrayList<String> ids = getIntent().getStringArrayListExtra(EXTRA_TAG_IDS);
+        ArrayList<String> names = getIntent().getStringArrayListExtra(EXTRA_TAG_NAMES);
+        ArrayList<String> avatars = getIntent().getStringArrayListExtra(EXTRA_TAG_AVATARS);
+        List<User> users = new ArrayList<>();
+
+        if (names != null && !names.isEmpty()) {
+            for (int i = 0; i < names.size(); i++) {
+                String id = ids != null && i < ids.size() ? ids.get(i) : "";
+                String avatar = avatars != null && i < avatars.size() ? avatars.get(i) : "";
+                users.add(new User(id, names.get(i), avatar));
+            }
+            return users;
+        }
+
+        String tagId = getIntent().getStringExtra("TAG_ID");
+        String tagName = getIntent().getStringExtra("TAG_NAME");
+        if (tagName != null && !tagName.trim().isEmpty()) {
+            users.add(new User(tagId, tagName, ""));
+        }
+        return users;
     }
 
     private void setupRecyclerView() {
@@ -346,21 +408,28 @@ public class PostDetailActivity extends AppCompatActivity {
             if (tvContent != null) tvContent.setText(post.getContent());
 
             if (post.getAuthorId() != null) {
-                String tagId = null;
-                String tagName = null;
-                int tagCount = 0;
-
-                if (post.getTags() != null && !post.getTags().isEmpty() && post.getTags().get(0) != null) {
-                    tagId = post.getTags().get(0).getId();
-                    tagName = post.getTags().get(0).getUsername();
-                    tagCount = post.getTags().size();
-                }
-
                 // 👉 Tự động vẽ Tên và Tag khi cập nhật xong API
-                setAuthorAndTags(post.getAuthorId().getId(), post.getAuthorId().getUsername(), post.getAuthorId().getAvatar(), tagId, tagName, tagCount);
+                setAuthorAndTags(
+                        post.getAuthorId().getId(),
+                        post.getAuthorId().getUsername(),
+                        post.getAuthorId().getAvatar(),
+                        post.getTags(),
+                        post.getFeeling()
+                );
             }
 
             if (tvTime != null) tvTime.setText(formatTime(post.getCreatedAt()));
+            if (tvCommentCount != null) tvCommentCount.setText(String.valueOf(post.getcountComment()));
+
+            ReactionUiHelper.bindReactionButton(imgLikeIcon, tvLikeLabel, post.getMyReaction());
+            ReactionUiHelper.bindTopReactions(
+                    layoutTopReactions,
+                    imgReact1,
+                    imgReact2,
+                    tvReactionCount,
+                    post.getcountReaction(),
+                    post.getTopReactions()
+            );
 
             if (post.getImages() != null && !post.getImages().isEmpty() && rvPostImagesFeed != null) {
                 rvPostImagesFeed.setVisibility(View.VISIBLE);
@@ -396,16 +465,22 @@ public class PostDetailActivity extends AppCompatActivity {
         }
     }
 
-    private String getEmojiForReaction(String type) {
-        if (type == null) return "👍";
+    private String getFeelingTextInVietnamese(String type) {
+        if (type == null) return "";
         switch (type) {
-            case "Like": return "👍";
-            case "Love": return "❤️";
-            case "Haha": return "😆";
-            case "Wow":  return "😮";
-            case "Sad":  return "😢";
-            case "Angry":return "😡";
-            default: return "👍";
+            case "Like": return "tuyệt vời 👍";
+            case "Love": return "được yêu ❤️";
+            case "Haha": return "vui vẻ 😆";
+            case "Wow": return "ngạc nhiên 😮";
+            case "Sad": return "buồn 😢";
+            case "Angry": return "tức giận 😡";
+            case "Lucky": return "may mắn 🍀";
+            case "Loved": return "đong đầy tình yêu 🥰";
+            case "Sick": return "mệt mỏi 🤒";
+            case "Question": return "tò mò 🤔";
+            case "Cool": return "rất ngầu 😎";
+            case "Smart": return "thông minh 🧠";
+            default: return type;
         }
     }
 

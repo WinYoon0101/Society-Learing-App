@@ -10,6 +10,7 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -216,19 +217,38 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         }
 
         if (comment.getCountReaction() > 0) {
+            View.OnClickListener openReactionList = v -> showReactionList(v.getContext(), comment.getId());
             if (holder.tvReactionCount != null) {
                 holder.tvReactionCount.setVisibility(View.VISIBLE);
                 holder.tvReactionCount.setText(String.valueOf(comment.getCountReaction()));
+                holder.tvReactionCount.setOnClickListener(openReactionList);
             }
             if (holder.imgReact1 != null) {
                 holder.imgReact1.setVisibility(View.VISIBLE);
                 holder.imgReact1.setText(getEmojiForReaction(comment.getMyReaction() != null ? comment.getMyReaction() : "Like"));
+                holder.imgReact1.setOnClickListener(openReactionList);
             }
+            if (holder.imgReact2 != null) holder.imgReact2.setOnClickListener(openReactionList);
         } else {
-            if (holder.tvReactionCount != null) holder.tvReactionCount.setVisibility(View.GONE);
-            if (holder.imgReact1 != null) holder.imgReact1.setVisibility(View.GONE);
-            if (holder.imgReact2 != null) holder.imgReact2.setVisibility(View.GONE);
+            if (holder.tvReactionCount != null) {
+                holder.tvReactionCount.setVisibility(View.GONE);
+                holder.tvReactionCount.setOnClickListener(null);
+            }
+            if (holder.imgReact1 != null) {
+                holder.imgReact1.setVisibility(View.GONE);
+                holder.imgReact1.setOnClickListener(null);
+            }
+            if (holder.imgReact2 != null) {
+                holder.imgReact2.setVisibility(View.GONE);
+                holder.imgReact2.setOnClickListener(null);
+            }
         }
+    }
+
+    private void showReactionList(Context context, String commentId) {
+        if (commentId == null || !(context instanceof AppCompatActivity)) return;
+        ReactionListBottomSheet bottomSheet = ReactionListBottomSheet.newInstance(commentId);
+        bottomSheet.show(((AppCompatActivity) context).getSupportFragmentManager(), "CommentReactionBottomSheet");
     }
 
     private String getEmojiForReaction(String type) {

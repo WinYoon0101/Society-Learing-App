@@ -24,6 +24,7 @@ import com.example.frontend.data.model.GroupPost;
 import com.example.frontend.ui.feed.PostDetailActivity;
 import com.example.frontend.ui.feed.PostImageAdapter;
 import com.example.frontend.ui.feed.ReactionListBottomSheet;
+import com.example.frontend.ui.feed.ReactionUiHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -111,22 +112,14 @@ public class GroupPostAdapter extends RecyclerView.Adapter<GroupPostAdapter.VH> 
         int reactCount = p.getCountReaction();
         List<String> topReactions = p.getTopReactions();
 
-        if (reactCount > 0) {
-            h.layoutTopReactions.setVisibility(View.VISIBLE);
-            h.tvReactionCount.setText(String.valueOf(reactCount));
-            h.imgReact1.setVisibility(View.GONE);
-            h.imgReact2.setVisibility(View.GONE);
-            if (topReactions != null && !topReactions.isEmpty()) {
-                h.imgReact1.setVisibility(View.VISIBLE);
-                h.imgReact1.setText(getEmojiForReaction(topReactions.get(0)));
-                if (topReactions.size() > 1) {
-                    h.imgReact2.setVisibility(View.VISIBLE);
-                    h.imgReact2.setText(getEmojiForReaction(topReactions.get(1)));
-                }
-            }
-        } else {
-            h.layoutTopReactions.setVisibility(View.GONE);
-        }
+        ReactionUiHelper.bindTopReactions(
+                h.layoutTopReactions,
+                h.imgReact1,
+                h.imgReact2,
+                h.tvReactionCount,
+                reactCount,
+                topReactions
+        );
 
         h.layoutTopReactions.setOnClickListener(v -> {
             Context ctx = v.getContext();
@@ -138,8 +131,7 @@ public class GroupPostAdapter extends RecyclerView.Adapter<GroupPostAdapter.VH> 
 
         // --- Reaction button ---
         String currentReaction = p.getMyReaction();
-        h.imgLike.setText(getEmojiForReaction(currentReaction));
-        h.tvLikeLabel.setText(currentReaction != null ? currentReaction : "Thích");
+        ReactionUiHelper.bindReactionButton(h.imgLike, h.tvLikeLabel, currentReaction);
 
         h.btnLike.setOnClickListener(v -> {
             String newType = (p.getMyReaction() != null) ? null : "Like";
@@ -154,12 +146,12 @@ public class GroupPostAdapter extends RecyclerView.Adapter<GroupPostAdapter.VH> 
             pw.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
                     android.graphics.Color.TRANSPARENT));
 
-            TextView btnReactLike = popupView.findViewById(R.id.btnReactLike);
-            TextView btnReactLove = popupView.findViewById(R.id.btnReactLove);
-            TextView btnReactHaha = popupView.findViewById(R.id.btnReactHaha);
-            TextView btnReactWow = popupView.findViewById(R.id.btnReactWow);
-            TextView btnReactSad = popupView.findViewById(R.id.btnReactSad);
-            TextView btnReactAngry = popupView.findViewById(R.id.btnReactAngry);
+            View btnReactLike = popupView.findViewById(R.id.btnReactLike);
+            View btnReactLove = popupView.findViewById(R.id.btnReactLove);
+            View btnReactHaha = popupView.findViewById(R.id.btnReactHaha);
+            View btnReactWow = popupView.findViewById(R.id.btnReactWow);
+            View btnReactSad = popupView.findViewById(R.id.btnReactSad);
+            View btnReactAngry = popupView.findViewById(R.id.btnReactAngry);
 
             btnReactLike.setOnClickListener(x -> { handleReactionUpdate(h, p, "Like"); pw.dismiss(); });
             btnReactLove.setOnClickListener(x -> { handleReactionUpdate(h, p, "Love"); pw.dismiss(); });
@@ -178,6 +170,7 @@ public class GroupPostAdapter extends RecyclerView.Adapter<GroupPostAdapter.VH> 
             Intent intent = new Intent(ctx, PostDetailActivity.class);
             intent.putExtra("POST_ID", p.getId());
             intent.putExtra("POST_CONTENT", p.getContent());
+            intent.putExtra(PostDetailActivity.EXTRA_POST_FEELING, p.getFeeling());
             if (p.getAuthorId() != null) {
                 intent.putExtra("AUTHOR_NAME", p.getAuthorId().getUsername());
                 intent.putExtra("AUTHOR_AVATAR", p.getAuthorId().getAvatar());
@@ -220,42 +213,20 @@ public class GroupPostAdapter extends RecyclerView.Adapter<GroupPostAdapter.VH> 
         p.setCountReaction(count);
         p.setTopReactions(top);
 
-        h.imgLike.setText(getEmojiForReaction(newType));
-        h.tvLikeLabel.setText(newType != null ? newType : "Thích");
+        ReactionUiHelper.bindReactionButton(h.imgLike, h.tvLikeLabel, newType);
 
-        if (count > 0) {
-            h.layoutTopReactions.setVisibility(View.VISIBLE);
-            h.tvReactionCount.setText(String.valueOf(count));
-            h.imgReact1.setVisibility(View.GONE);
-            h.imgReact2.setVisibility(View.GONE);
-            if (!top.isEmpty()) {
-                h.imgReact1.setVisibility(View.VISIBLE);
-                h.imgReact1.setText(getEmojiForReaction(top.get(0)));
-                if (top.size() > 1) {
-                    h.imgReact2.setVisibility(View.VISIBLE);
-                    h.imgReact2.setText(getEmojiForReaction(top.get(1)));
-                }
-            }
-        } else {
-            h.layoutTopReactions.setVisibility(View.GONE);
-        }
+        ReactionUiHelper.bindTopReactions(
+                h.layoutTopReactions,
+                h.imgReact1,
+                h.imgReact2,
+                h.tvReactionCount,
+                count,
+                top
+        );
 
         if (reactionListener != null) {
             String toSend = newType != null ? newType : oldType;
             reactionListener.onReactClick(p.getId(), toSend);
-        }
-    }
-
-    private String getEmojiForReaction(String type) {
-        if (type == null) return "👍";
-        switch (type) {
-            case "Like":  return "👍";
-            case "Love":  return "❤️";
-            case "Haha":  return "😆";
-            case "Wow":   return "😮";
-            case "Sad":   return "😢";
-            case "Angry": return "😡";
-            default:      return "👍";
         }
     }
 
@@ -280,7 +251,7 @@ public class GroupPostAdapter extends RecyclerView.Adapter<GroupPostAdapter.VH> 
         TextView tvAuthor, tvGroupName, tvTime, tvContent, tvReactionCount, tvCommentCount, tvLikeLabel;
         RecyclerView rvPostImages;
         LinearLayout layoutTopReactions, btnLike, btnComment;
-        TextView imgReact1, imgReact2, imgLike;
+        ImageView imgReact1, imgReact2, imgLike;
 
         VH(@NonNull View v) {
             super(v);

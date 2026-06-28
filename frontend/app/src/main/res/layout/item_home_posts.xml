@@ -34,7 +34,6 @@
             android:text="Tên người dùng"
             android:textColor="#000000"
             android:textSize="16sp"
-            android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@id/btnMoreOptions"
             app:layout_constraintStart_toEndOf="@id/imgAvatar"
             app:layout_constraintTop_toTopOf="@id/imgAvatar" />
@@ -121,21 +120,25 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
 
-                <TextView
+                <ImageView
                     android:id="@+id/imgReact2"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
                     android:layout_marginStart="14dp"
-                    android:gravity="center"
-                    android:textSize="14sp"
+                    android:background="@drawable/bg_reaction_chip"
+                    android:padding="2dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_like_color"
                     android:visibility="gone" />
 
-                <TextView
+                <ImageView
                     android:id="@+id/imgReact1"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:gravity="center"
-                    android:textSize="14sp" />
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:background="@drawable/bg_reaction_chip"
+                    android:padding="2dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_like_color" />
             </FrameLayout>
 
             <TextView
@@ -176,13 +179,12 @@
                 android:paddingVertical="10dp"
                 android:paddingEnd="16dp">
 
-                <TextView
+                <ImageView
                     android:id="@+id/imgLike"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:gravity="center"
-                    android:textSize="14sp"
-                    android:text="👍" />
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_like" />
 
                 <TextView
                     android:id="@+id/tvLikeCount"

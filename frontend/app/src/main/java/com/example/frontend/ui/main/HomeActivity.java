@@ -329,6 +329,11 @@ public class HomeActivity extends AppCompatActivity {
 
     }
 
+    public void openProfileTab() {
+        currentTab = 5;
+        selectTab(imgProfile, lineProfile, new ProfileFragment());
+    }
+
     private void performLogout() {
         // Ngắt kết nối socket
         try {

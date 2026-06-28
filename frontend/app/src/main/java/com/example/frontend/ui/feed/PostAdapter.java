@@ -30,6 +30,7 @@ import com.bumptech.glide.Glide;
 import com.example.frontend.R;
 import com.example.frontend.data.model.Post;
 import com.example.frontend.data.model.User;
+import com.example.frontend.ui.profile.ProfileNavigationHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,11 +94,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
             View.OnClickListener goToAuthorProfile = v -> {
                 if (post.getAuthorId().getId() != null) {
-                    Intent intent = new Intent(context, com.example.frontend.ui.profile.FriendProfileActivity.class);
-                    intent.putExtra("FRIEND_ID", post.getAuthorId().getId());
-                    intent.putExtra("FRIEND_NAME", post.getAuthorId().getUsername());
-                    intent.putExtra("FRIEND_AVATAR", post.getAuthorId().getAvatar());
-                    context.startActivity(intent);
+                    ProfileNavigationHelper.openProfile(
+                            context,
+                            post.getAuthorId().getId(),
+                            post.getAuthorId().getUsername(),
+                            post.getAuthorId().getAvatar()
+                    );
                 }
             };
 
@@ -139,11 +141,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     @Override
                     public void onClick(@NonNull View widget) {
                         if (tags.get(0).getId() != null) {
-                            Intent intent = new Intent(context, com.example.frontend.ui.profile.FriendProfileActivity.class);
-                            intent.putExtra("FRIEND_ID", tags.get(0).getId());
-                            intent.putExtra("FRIEND_NAME", tags.get(0).getUsername());
-                            intent.putExtra("FRIEND_AVATAR", tags.get(0).getAvatar());
-                            context.startActivity(intent);
+                            ProfileNavigationHelper.openProfile(
+                                    context,
+                                    tags.get(0).getId(),
+                                    tags.get(0).getUsername(),
+                                    tags.get(0).getAvatar()
+                            );
                         }
                     }
                     @Override
@@ -159,6 +162,26 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 int endTag = startTag + taggedName.length();
                 spannableString.setSpan(taggedSpan, startTag, endTag, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
+                if (!suffix.isEmpty()) {
+                    int startMore = endTag;
+                    int endMore = startMore + suffix.length();
+                    ClickableSpan moreTaggedSpan = new ClickableSpan() {
+                        @Override
+                        public void onClick(@NonNull View widget) {
+                            showTaggedUsers(tags);
+                        }
+
+                        @Override
+                        public void updateDrawState(@NonNull TextPaint ds) {
+                            super.updateDrawState(ds);
+                            ds.setUnderlineText(false);
+                            ds.setColor(Color.parseColor("#050505"));
+                            ds.setFakeBoldText(true);
+                        }
+                    };
+                    spannableString.setSpan(moreTaggedSpan, startMore, endMore, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+
                 holder.tvUserName.setText(spannableString);
                 holder.tvUserName.setMovementMethod(LinkMovementMethod.getInstance());
                 holder.tvUserName.setHighlightColor(Color.TRANSPARENT);
@@ -170,9 +193,26 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 if (post.getFeeling() != null && !post.getFeeling().trim().isEmpty()) {
                     displayName += " đang cảm thấy " + getFeelingTextInVietnamese(post.getFeeling());
                 }
-                holder.tvUserName.setOnClickListener(goToAuthorProfile);
-                holder.tvUserName.setMovementMethod(null);
-                holder.tvUserName.setText(displayName);
+                SpannableString spannableString = new SpannableString(displayName);
+                ClickableSpan authorSpan = new ClickableSpan() {
+                    @Override
+                    public void onClick(@NonNull View widget) {
+                        goToAuthorProfile.onClick(widget);
+                    }
+
+                    @Override
+                    public void updateDrawState(@NonNull TextPaint ds) {
+                        super.updateDrawState(ds);
+                        ds.setUnderlineText(false);
+                        ds.setColor(Color.parseColor("#050505"));
+                        ds.setFakeBoldText(true);
+                    }
+                };
+                spannableString.setSpan(authorSpan, 0, authorName.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                holder.tvUserName.setText(spannableString);
+                holder.tvUserName.setMovementMethod(LinkMovementMethod.getInstance());
+                holder.tvUserName.setHighlightColor(Color.TRANSPARENT);
+                holder.tvUserName.setOnClickListener(null);
             }
 
             Glide.with(context).load(post.getAuthorId().getAvatar()).placeholder(R.drawable.ic_user).into(holder.imgAvatar);
@@ -250,24 +290,14 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         int reactCount = post.getcountReaction();
         List<String> topReactions = post.getTopReactions();
 
-        if (reactCount > 0) {
-            holder.layoutTopReactions.setVisibility(View.VISIBLE);
-            holder.tvReactionCount.setText(String.valueOf(reactCount));
-
-            holder.imgReact1.setVisibility(View.GONE);
-            holder.imgReact2.setVisibility(View.GONE);
-
-            if (topReactions != null && !topReactions.isEmpty()) {
-                holder.imgReact1.setVisibility(View.VISIBLE);
-                holder.imgReact1.setText(getEmojiForReaction(topReactions.get(0)));
-                if (topReactions.size() > 1) {
-                    holder.imgReact2.setVisibility(View.VISIBLE);
-                    holder.imgReact2.setText(getEmojiForReaction(topReactions.get(1)));
-                }
-            }
-        } else {
-            holder.layoutTopReactions.setVisibility(View.GONE);
-        }
+        ReactionUiHelper.bindTopReactions(
+                holder.layoutTopReactions,
+                holder.imgReact1,
+                holder.imgReact2,
+                holder.tvReactionCount,
+                reactCount,
+                topReactions
+        );
 
         holder.layoutTopReactions.setOnClickListener(v -> {
             if (context instanceof AppCompatActivity) {
@@ -304,6 +334,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 intent.putExtra("POST_ID", post.getId());
                 intent.putExtra("POST_CONTENT", post.getContent());
                 intent.putExtra("POST_TIME", post.getCreatedAt());
+                intent.putExtra(PostDetailActivity.EXTRA_POST_FEELING, post.getFeeling());
 
                 if (post.getAuthorId() != null) {
                     intent.putExtra("AUTHOR_ID", post.getAuthorId().getId());
@@ -316,6 +347,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     intent.putExtra("TAG_ID", post.getTags().get(0).getId());
                     intent.putExtra("TAG_NAME", post.getTags().get(0).getUsername());
                     intent.putExtra("TAG_COUNT", post.getTags().size());
+                    intent.putStringArrayListExtra(PostDetailActivity.EXTRA_TAG_IDS, getTagIds(post.getTags()));
+                    intent.putStringArrayListExtra(PostDetailActivity.EXTRA_TAG_NAMES, getTagNames(post.getTags()));
+                    intent.putStringArrayListExtra(PostDetailActivity.EXTRA_TAG_AVATARS, getTagAvatars(post.getTags()));
                 }
 
                 if (post.getImages() != null) {
@@ -334,13 +368,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         if (holder.btnLikeContainer != null) {
             String currentReaction = post.getMyReaction();
-            holder.imgLikeIcon.setText(getEmojiForReaction(currentReaction));
-
-            if (currentReaction != null) {
-                holder.tvLikeLabel.setText(currentReaction);
-            } else {
-                holder.tvLikeLabel.setText("Thích");
-            }
+            ReactionUiHelper.bindReactionButton(holder.imgLikeIcon, holder.tvLikeLabel, currentReaction);
 
             holder.btnLikeContainer.setOnClickListener(v -> {
                 String newReaction = (post.getMyReaction() != null) ? null : "Like";
@@ -352,12 +380,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 PopupWindow popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
                 popupWindow.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
 
-                TextView btnReactLike = popupView.findViewById(R.id.btnReactLike);
-                TextView btnReactLove = popupView.findViewById(R.id.btnReactLove);
-                TextView btnReactHaha = popupView.findViewById(R.id.btnReactHaha);
-                TextView btnReactWow = popupView.findViewById(R.id.btnReactWow);
-                TextView btnReactSad = popupView.findViewById(R.id.btnReactSad);
-                TextView btnReactAngry = popupView.findViewById(R.id.btnReactAngry);
+                View btnReactLike = popupView.findViewById(R.id.btnReactLike);
+                View btnReactLove = popupView.findViewById(R.id.btnReactLove);
+                View btnReactHaha = popupView.findViewById(R.id.btnReactHaha);
+                View btnReactWow = popupView.findViewById(R.id.btnReactWow);
+                View btnReactSad = popupView.findViewById(R.id.btnReactSad);
+                View btnReactAngry = popupView.findViewById(R.id.btnReactAngry);
 
                 btnReactLike.setOnClickListener(view -> { handleReactionUpdate(holder, post, "Like"); popupWindow.dismiss(); });
                 btnReactLove.setOnClickListener(view -> { handleReactionUpdate(holder, post, "Love"); popupWindow.dismiss(); });
@@ -370,6 +398,33 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 return true;
             });
         }
+    }
+
+    private void showTaggedUsers(List<User> tags) {
+        if (tags == null || tags.isEmpty() || !(context instanceof AppCompatActivity)) return;
+        TaggedUsersBottomSheet bottomSheet = TaggedUsersBottomSheet.newInstance(tags);
+        bottomSheet.show(((AppCompatActivity) context).getSupportFragmentManager(), "TaggedUsersBottomSheet");
+    }
+
+    private ArrayList<String> getTagIds(List<User> tags) {
+        ArrayList<String> values = new ArrayList<>();
+        if (tags == null) return values;
+        for (User user : tags) values.add(user != null && user.getId() != null ? user.getId() : "");
+        return values;
+    }
+
+    private ArrayList<String> getTagNames(List<User> tags) {
+        ArrayList<String> values = new ArrayList<>();
+        if (tags == null) return values;
+        for (User user : tags) values.add(user != null && user.getUsername() != null ? user.getUsername() : "");
+        return values;
+    }
+
+    private ArrayList<String> getTagAvatars(List<User> tags) {
+        ArrayList<String> values = new ArrayList<>();
+        if (tags == null) return values;
+        for (User user : tags) values.add(user != null && user.getAvatar() != null ? user.getAvatar() : "");
+        return values;
     }
 
     @Override
@@ -407,44 +462,19 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         post.setcountReaction(currentCount);
         post.setTopReactions(topReactions);
 
-        holder.imgLikeIcon.setText(getEmojiForReaction(newReactionType));
-        if (newReactionType != null) holder.tvLikeLabel.setText(newReactionType);
-        else holder.tvLikeLabel.setText("Thích");
-
-        if (currentCount > 0) {
-            holder.layoutTopReactions.setVisibility(View.VISIBLE);
-            holder.tvReactionCount.setText(String.valueOf(currentCount));
-
-            holder.imgReact1.setVisibility(View.GONE);
-            holder.imgReact2.setVisibility(View.GONE);
-
-            if (!topReactions.isEmpty()) {
-                holder.imgReact1.setVisibility(View.VISIBLE);
-                holder.imgReact1.setText(getEmojiForReaction(topReactions.get(0)));
-                if (topReactions.size() > 1) {
-                    holder.imgReact2.setVisibility(View.VISIBLE);
-                    holder.imgReact2.setText(getEmojiForReaction(topReactions.get(1)));
-                }
-            }
-        } else {
-            holder.layoutTopReactions.setVisibility(View.GONE);
-        }
+        ReactionUiHelper.bindReactionButton(holder.imgLikeIcon, holder.tvLikeLabel, newReactionType);
+        ReactionUiHelper.bindTopReactions(
+                holder.layoutTopReactions,
+                holder.imgReact1,
+                holder.imgReact2,
+                holder.tvReactionCount,
+                currentCount,
+                topReactions
+        );
 
         if (reactionListener != null) {
             String typeToSend = newReactionType != null ? newReactionType : oldReaction;
             reactionListener.onReactClick(post.getId(), typeToSend);
-        }
-    }
-
-    private String getEmojiForReaction(String type) {
-        if (type == null) return "👍";
-        switch (type) {
-            case "Love": return "❤️";
-            case "Haha": return "😆";
-            case "Wow":  return "😮";
-            case "Sad":  return "😢";
-            case "Angry":return "😡";
-            default: return "👍";
         }
     }
 
@@ -482,9 +512,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         RecyclerView rvPostImages;
         LinearLayout layoutTopReactions;
         TextView tvReactionCount;
-        TextView imgReact1, imgReact2;
+        ImageView imgReact1, imgReact2;
         LinearLayout btnLikeContainer;
-        TextView imgLikeIcon;
+        ImageView imgLikeIcon;
         TextView tvLikeLabel;
 
 
