@@ -17,6 +17,8 @@ public class GroupPost {
     private String content;
     @SerializedName("images")
     private List<String> images;
+    @SerializedName("videos")
+    private List<String> videos;
     @SerializedName("authorId")
     private User authorId;
 
@@ -42,6 +44,7 @@ public class GroupPost {
     public String getId() { return id; }
     public String getContent() { return content; }
     public List<String> getImages() { return images; }
+    public List<String> getVideos() { return videos; }
     public User getAuthorId() { return authorId; }
     public Group getGroupId() { return groupId; }
     public String getCreatedAt() { return createdAt; }

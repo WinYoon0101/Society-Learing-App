@@ -70,9 +70,10 @@ public class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.
         // ── Ảnh bài viết ──
         if (h.rvPostImages != null) {
             boolean hasImages = post.getImages() != null && !post.getImages().isEmpty();
-            h.rvPostImages.setVisibility(hasImages ? View.VISIBLE : View.GONE);
-            if (hasImages) {
-                h.rvPostImages.setAdapter(new PostImageAdapter(context, post.getImages()));
+            boolean hasVideos = post.getVideos() != null && !post.getVideos().isEmpty();
+            h.rvPostImages.setVisibility((hasImages || hasVideos) ? View.VISIBLE : View.GONE);
+            if (hasImages || hasVideos) {
+                h.rvPostImages.setAdapter(new PostImageAdapter(context, post.getImages(), post.getVideos()));
             }
         }
 
@@ -112,6 +113,9 @@ public class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.
             }
             if (post.getImages() != null) {
                 intent.putStringArrayListExtra("POST_IMAGES", new ArrayList<>(post.getImages()));
+            }
+            if (post.getVideos() != null) {
+                intent.putStringArrayListExtra(PostDetailActivity.EXTRA_POST_VIDEOS, new ArrayList<>(post.getVideos()));
             }
             intent.putExtra("COMMENT_COUNT", post.getcountComment());
             intent.putExtra("REACTION_COUNT", post.getcountReaction());
