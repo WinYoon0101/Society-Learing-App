@@ -84,9 +84,15 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Medi
 
         holder.imgSliderItem.setOnClickListener(v -> {
             android.app.Dialog dialog = new android.app.Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+            FrameLayout container = new FrameLayout(context);
             com.github.chrisbanes.photoview.PhotoView photoView = new com.github.chrisbanes.photoview.PhotoView(context);
+            container.addView(photoView, new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    Gravity.CENTER));
+            container.addView(createCloseButton(dialog));
             Glide.with(context).load(item.url).into(photoView);
-            dialog.setContentView(photoView);
+            dialog.setContentView(container);
             dialog.show();
             photoView.setOnClickListener(view -> dialog.dismiss());
         });
@@ -105,6 +111,7 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Medi
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 Gravity.CENTER));
+        container.addView(createCloseButton(dialog));
 
         MediaController mediaController = new MediaController(context);
         mediaController.setAnchorView(videoView);
@@ -118,6 +125,24 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Medi
         dialog.setOnDismissListener(d -> videoView.stopPlayback());
         dialog.setContentView(container);
         dialog.show();
+    }
+
+    private ImageView createCloseButton(android.app.Dialog dialog) {
+        ImageView closeButton = new ImageView(context);
+        closeButton.setImageResource(R.drawable.ic_close);
+        closeButton.setBackgroundResource(R.drawable.bg_circle_avatar);
+        closeButton.setPadding(dp(10), dp(10), dp(10), dp(10));
+        closeButton.setContentDescription("Dong");
+        closeButton.setOnClickListener(v -> dialog.dismiss());
+
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(dp(44), dp(44), Gravity.TOP | Gravity.END);
+        params.setMargins(0, dp(24), dp(16), 0);
+        closeButton.setLayoutParams(params);
+        return closeButton;
+    }
+
+    private int dp(int value) {
+        return (int) (value * context.getResources().getDisplayMetrics().density + 0.5f);
     }
 
     public static class MediaViewHolder extends RecyclerView.ViewHolder {
