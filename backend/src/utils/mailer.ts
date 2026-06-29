@@ -1,14 +1,17 @@
 import nodemailer from "nodemailer";
 
-// 1. Khởi tạo transporter bên ngoài để dùng chung cho mọi request 
+// 1. Khởi tạo transporter
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // true đối với cổng 465 (SSL)
+  family: 4,   
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS, 
   },
-  // 2. Thêm giới hạn thời gian chờ kết nối 
-  connectionTimeout: 10000, // 10 giây không kết nối được thì hủy
+  // 2. Giới hạn thời gian chờ kết nối 
+  connectionTimeout: 10000, 
   greetingTimeout: 10000,
   socketTimeout: 10000,
 });
@@ -54,7 +57,7 @@ export const sendOtpEmail = async (to: string, otp: string) => {
 
   // Thực hiện gửi mail
   await transporter.sendMail({
-    from: `"Society" <${process.env.EMAIL_USER}>`, 
+    from: `"Society"`, 
     to,
     subject: "🔒 Mã OTP khôi phục mật khẩu", 
     html: htmlContent, 
