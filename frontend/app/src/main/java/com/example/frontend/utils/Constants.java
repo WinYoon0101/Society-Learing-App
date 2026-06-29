@@ -5,8 +5,8 @@ public class Constants {
 
 
 
-    public static final String BASE_URL = "http://192.168.54.22:3000/api/";
-    public static final String SOCKET_URL = "http://192.168.54.22:3000";
+public static final String BASE_URL = "https://society-learing-app.onrender.com/api/";
+public static final String SOCKET_URL = "https://society-learing-app.onrender.com";
 
 
 
@@ -24,5 +24,3 @@ public class Constants {
 //BASE_URL = "http://192.168.54.22:3000/api/"
 //SOCKET_URL = "http://192.168.54.22:3000"
 
-//public static final String BASE_URL = "https://society-learing-app.onrender.com/api/";
-//public static final String SOCKET_URL = "https://society-learing-app.onrender.com";
