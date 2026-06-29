@@ -142,7 +142,9 @@
             android:name=".ui.auth.LoginActivity"
             android:exported="false" />
         <activity android:name=".ui.onboarding.OnboardingActivity" />
-        <activity android:name=".ui.auth.ForgotPasswordActivity" />
+        <activity
+            android:name=".ui.auth.ForgotPasswordActivity"
+            android:windowSoftInputMode="adjustResize" />
         <activity android:name=".ui.auth.RegisterActivity" />
         <activity android:name=".ui.main.HomeActivity" />
         <activity
