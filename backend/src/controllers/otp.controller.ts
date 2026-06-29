@@ -29,9 +29,14 @@ export const sendOtp = async (req: Request, res: Response) => {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 phút
     });
 
-    await sendOtpEmail(normalizedEmail, otp);
+    sendOtpEmail(normalizedEmail, otp).catch((mailError) => {
+  console.error("Lỗi gửi mail chạy ngầm:", mailError);
+});
 
-    return res.json({ success: true, message: "OTP đã gửi" });
+// Trả về kết quả ngay lập tức cho client
+return res.json({ success: true, message: "OTP đã gửi" });
+
+
   } catch (error) {
     console.error("Lỗi gửi OTP:", error);
     return res.status(500).json({
