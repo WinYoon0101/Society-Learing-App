@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.example.frontend.data.model.Message;
+import com.example.frontend.data.model.Post;
 import com.example.frontend.utils.Constants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -58,6 +59,7 @@ public class ApiClient {
             // "Expected BEGIN_OBJECT but was STRING" khi load conversations/messages.
             Gson gson = new GsonBuilder()
                     .registerTypeAdapter(Message.class, new MessageDeserializer())
+                    .registerTypeAdapter(Post.class, new PostDeserializer())
                     .create();
 
             retrofit = new Retrofit.Builder()

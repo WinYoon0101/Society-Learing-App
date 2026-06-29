@@ -21,7 +21,7 @@ export const getNotifications = async (req: AuthRequest, res: Response): Promise
         const formattedNotifications = notifications.map((n: any) => {
             let targetType = 'Post'; // Giá trị mặc định
 
-            if (n.type.startsWith('post_') || n.type.startsWith('comment_')) {
+            if (n.type.startsWith('post_') || n.type.startsWith('comment_') || n.type === 'group_post_approved') {
                 targetType = 'Post';
             } else if (n.type.startsWith('group_')) {
                 targetType = 'Group';

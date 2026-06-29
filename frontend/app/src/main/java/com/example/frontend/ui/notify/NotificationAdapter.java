@@ -147,7 +147,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             try {
                 if (targetType.equalsIgnoreCase("Post") || targetType.equalsIgnoreCase("Comment")) {
                     Intent intent = new Intent(context, PostDetailActivity.class);
-                    intent.putExtra("POST_ID", targetId);
+                    String postId = n.getPostId() != null ? n.getPostId() : targetId;
+                    intent.putExtra("POST_ID", postId);
                     context.startActivity(intent);
 
                 } else if (targetType.equalsIgnoreCase("Friend") || targetType.equalsIgnoreCase("User")) {

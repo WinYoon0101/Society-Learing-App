@@ -222,19 +222,38 @@ export const getSavedPosts = async (req: AuthRequest, res: Response): Promise<an
 
         const posts = await Post.find({ _id: { $in: user.savedPosts } })
             .populate('authorId', 'username avatar')
-            .populate('mediaFiles')
-            .sort({ createdAt: -1 });
+            .populate('tags', 'username avatar')
+            .sort({ createdAt: -1 })
+            .lean();
 
-        const formattedPosts = posts.map((post: any) => {
-            const postObj = post.toJSON({ virtuals: true });
-            const mediaFiles = postObj.mediaFiles || [];
-            postObj.images = mediaFiles.filter((media: any) => media.fileType === 'image').map((media: any) => media.url);
-            postObj.videos = mediaFiles.filter((media: any) => media.fileType === 'video').map((media: any) => media.url);
-            delete postObj.mediaFiles;
-            return postObj;
-        });
+        const formattedPosts = await Promise.all(posts.map(async (post: any) => {
+            const postIdObj = new mongoose.Types.ObjectId(post._id.toString());
+            const mediaList = await Media.find({ targetId: post._id });
+            const imageUrls = mediaList.filter(m => m.fileType === 'image').map(m => m.url);
+            const videoUrls = mediaList.filter(m => m.fileType === 'video').map(m => m.url);
 
-        return res.status(200).json({ data: formattedPosts });
+            const commentCount = await Comment.countDocuments({ postId: post._id });
+            const countReaction = await Reaction.countDocuments({ targetId: postIdObj });
+            const myReactDoc = await Reaction.findOne({ targetId: postIdObj, userId });
+            const topReactDocs = await Reaction.aggregate([
+                { $match: { targetId: postIdObj } },
+                { $group: { _id: "$type", count: { $sum: 1 } } },
+                { $sort: { count: -1 } },
+                { $limit: 2 }
+            ]);
+
+            return {
+                ...post,
+                images: imageUrls,
+                videos: videoUrls,
+                countComment: commentCount,
+                countReaction,
+                myReaction: myReactDoc?.type ?? null,
+                topReactions: topReactDocs.map(doc => doc._id),
+            };
+        }));
+
+        return res.status(200).json({ success: true, data: formattedPosts });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Lỗi Server" });

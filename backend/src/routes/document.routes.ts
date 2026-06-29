@@ -129,18 +129,34 @@ router.get(
 );
 
 router.get(
-  "/:id",
-  mongoIdParamValidator,
-  handleValidationErrors,
-  getDocumentById
-);
-
-router.get(
   "/user/:userId",
   userIdParamValidator,
   listQueryValidators,
   handleValidationErrors,
   getDocumentsByUser
+);
+
+router.get(
+  "/me/list",
+  authenticate,
+  listQueryValidators,
+  handleValidationErrors,
+  getMyDocuments
+);
+
+router.get(
+  "/me/saved",
+  authenticate,
+  listQueryValidators,
+  handleValidationErrors,
+  getSavedDocuments
+);
+
+router.get(
+  "/:id",
+  mongoIdParamValidator,
+  handleValidationErrors,
+  getDocumentById
 );
 
 // Protected routes
@@ -179,20 +195,6 @@ router.post(
   mongoIdParamValidator,
   handleValidationErrors,
   toggleSaveDocument
-);
-
-router.get(
-  "/me/list",
-  listQueryValidators,
-  handleValidationErrors,
-  getMyDocuments
-);
-
-router.get(
-  "/me/saved",
-  listQueryValidators,
-  handleValidationErrors,
-  getSavedDocuments
 );
 
 router.post("/:id/mindmap", mongoIdParamValidator, handleValidationErrors, generateDocumentMindmap);
