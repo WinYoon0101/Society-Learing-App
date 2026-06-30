@@ -81,10 +81,14 @@ public class StoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             StoryVH h = (StoryVH) holder;
             h.tvName.setText(g.getAuthor() != null ? g.getAuthor().getUsername() : "");
 
-            // Load Avatar của người đăng Story
             if (g.getAuthor() != null && g.getAuthor().getAvatar() != null) {
                 Glide.with(context).load(g.getAuthor().getAvatar())
-                        .placeholder(R.drawable.ic_user).into(h.imgAvatar);
+                        .placeholder(R.drawable.ic_user)
+                        .error(R.drawable.ic_user)
+                        .centerCrop()
+                        .into(h.imgAvatar);
+            } else {
+                h.imgAvatar.setImageResource(R.drawable.ic_user);
             }
 
             // Load Background (ảnh của story mới nhất)
@@ -100,8 +104,10 @@ public class StoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                         g.getAuthor() != null ? g.getAuthor().getId() : "");
                 intent.putExtra("STORY_GROUP_AUTHOR_NAME",
                         g.getAuthor() != null ? g.getAuthor().getUsername() : "");
+                if (g.getAuthor() != null && g.getAuthor().getAvatar() != null) {
+                    intent.putExtra("STORY_GROUP_AUTHOR_AVATAR", g.getAuthor().getAvatar());
+                }
 
-                // Truyền ID của story đầu tiên sang màn hình View
                 if (g.getStories() != null && !g.getStories().isEmpty()) {
                     intent.putExtra("STORY_ID", g.getStories().get(0).getId());
                 }

@@ -62,6 +62,13 @@ public class CreatePostFragment extends Fragment {
         if (getArguments() != null) groupId = getArguments().getString("groupId");
 
         edtContent = view.findViewById(R.id.edtContent);
+        if (getArguments() != null) {
+            String scannedContent = getArguments().getString("SCANNED_CONTENT");
+            if (scannedContent != null && !scannedContent.isEmpty()) {
+                edtContent.setText(scannedContent);
+                edtContent.setSelection(scannedContent.length());
+            }
+        }
         btnPost = view.findViewById(R.id.btnPost);
         btnPickImage = view.findViewById(R.id.optImage);
         optFeeling = view.findViewById(R.id.optFeeling);
