@@ -34,7 +34,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:shapeAppearanceOverlay="@style/CircleImage"
-            app:strokeColor="#0B8A00"
+            app:strokeColor="#10B981"
             app:strokeWidth="2dp" />
 
         <TextView

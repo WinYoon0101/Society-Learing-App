@@ -6,8 +6,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -22,7 +22,9 @@ import com.example.frontend.data.model.Story;
 import com.example.frontend.data.remote.ApiClient;
 import com.example.frontend.data.remote.ApiService;
 import com.example.frontend.utils.FileUtils;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.File;
@@ -37,8 +39,10 @@ import retrofit2.Response;
 public class CreateStoryActivity extends AppCompatActivity {
 
     private ImageView imgPreview;
+    private LinearLayout layoutPlaceholder;
     private TextInputEditText edtCaption;
     private MaterialButton btnPost;
+    private MaterialButton btnPickImage;
     private Uri selectedUri;
     private ApiService apiService;
 
@@ -46,9 +50,7 @@ public class CreateStoryActivity extends AppCompatActivity {
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
                     selectedUri = uri;
-                    Glide.with(this).load(uri).into(imgPreview);
-                    imgPreview.setVisibility(View.VISIBLE);
-                    btnPost.setEnabled(true);
+                    showPreview(uri);
                 }
             });
 
@@ -63,18 +65,29 @@ public class CreateStoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_story);
 
-        ImageButton btnBack = findViewById(R.id.btnBack);
-        imgPreview          = findViewById(R.id.imgPreview);
-        edtCaption          = findViewById(R.id.edtCaption);
-        btnPost             = findViewById(R.id.btnPostStory);
-        MaterialButton btnPickImage = findViewById(R.id.btnPickImage);
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        imgPreview = findViewById(R.id.imgPreview);
+        layoutPlaceholder = findViewById(R.id.layoutPlaceholder);
+        edtCaption = findViewById(R.id.edtCaption);
+        btnPost = findViewById(R.id.btnPostStory);
+        btnPickImage = findViewById(R.id.btnPickImage);
+        MaterialCardView cardPreview = findViewById(R.id.cardPreview);
 
         apiService = ApiClient.getApiService(this);
 
-        btnBack.setOnClickListener(v -> finish());
+        toolbar.setNavigationOnClickListener(v -> finish());
+        cardPreview.setOnClickListener(v -> checkPermAndPick());
         btnPickImage.setOnClickListener(v -> checkPermAndPick());
         btnPost.setEnabled(false);
         btnPost.setOnClickListener(v -> uploadStory());
+    }
+
+    private void showPreview(Uri uri) {
+        Glide.with(this).load(uri).centerCrop().into(imgPreview);
+        imgPreview.setVisibility(View.VISIBLE);
+        layoutPlaceholder.setVisibility(View.GONE);
+        btnPost.setEnabled(true);
+        btnPickImage.setText("Chọn ảnh khác");
     }
 
     private void checkPermAndPick() {
