@@ -28,9 +28,9 @@ Dự án bao gồm ba phần chính: **Backend (Node.js/Express)**, **Frontend (
   - Giữ lại người mình đã gửi lời mời (hiển thị trạng thái `isPending`) để có thể hủy yêu cầu ngay tại chỗ.
   - Tính **số bạn chung (mutual friends)** của danh sách bạn bè hai bên, sắp xếp giảm dần theo số bạn chung, trả về tối đa 15 gợi ý.
   - Giao diện hỗ trợ thêm bạn, hủy lời mời đã gửi, gỡ gợi ý khỏi danh sách.
-- **Không gian Nhóm độc lập:** Cho phép người dùng khởi tạo, tham gia và quản trị các cộng đồng học tập riêng. Mỗi nhóm sở hữu một không gian độc lập với bảng tin riêng, hệ thống quản lý thành viên và phân quyền quản trị viên chặt chẽ.
-- **Trò chuyện Real-time đa luồng:** Tích hợp kiến trúc Socket.io mang đến trải nghiệm nhắn tin 1-1 với độ trễ cực thấp. Hỗ trợ hiển thị trạng thái hoạt động (Online/Offline).
-- **Gọi video & Livestream chất lượng cao:** Ứng dụng công nghệ ZegoCloud để cung cấp tính năng gọi thoại/video trực tiếp và phát sóng trực tiếp (Livestreaming). Hoạt động mượt mà ngay cả trong môi trường mạng yếu, tối ưu hóa cho các buổi học nhóm hoặc chia sẻ kiến thức trực tuyến.
+- **Không gian Nhóm độc lập:** Cho phép người dùng khởi tạo, tham gia và quản trị các cộng đồng học tập riêng. Mỗi nhóm sở hữu một không gian độc lập với bảng tin riêng, hệ thống quản lý thành viên, phân loại Nhóm Công khai/Riêng tư và phân quyền quản trị viên chặt chẽ.
+- **Trò chuyện Real-time đa luồng:** Tích hợp kiến trúc Socket.io mang đến trải nghiệm nhắn tin 1-1 và nhắn tin nhóm với độ trễ cực thấp (<100ms). Hỗ trợ hiển thị trạng thái hoạt động (Online/Offline), vòng đời tin nhắn (Đang gửi/Đã gửi/Đã xem), gửi tệp/ảnh/video/voice note, thả cảm xúc, reply tin nhắn.
+- **Gọi video & Livestream chất lượng cao:** Ứng dụng công nghệ ZegoCloud để cung cấp tính năng gọi thoại/video trực tiếp (1-1 và nhóm) và phát sóng trực tiếp (Livestreaming) tích hợp khung chat real-time, thả tim bay và tính năng khán giả giơ tay tham gia luồng live (Co-host). Hoạt động mượt mà ngay cả trong môi trường mạng yếu, tối ưu hóa cho các buổi học nhóm hoặc chia sẻ kiến thức trực tuyến.
 
 ### 👨‍💼 Ứng dụng Admin (Quản trị hệ thống)
 Ứng dụng Android riêng dành cho quản trị viên, kết nối các API `/admin/*` trên Backend:
